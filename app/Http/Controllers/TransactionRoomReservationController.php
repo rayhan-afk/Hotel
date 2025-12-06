@@ -95,7 +95,7 @@ class TransactionRoomReservationController extends Controller
         ]);
     }
 
-    public function confirmation(Customer $customer, Room $room, $stayFrom, $stayUntil)
+    public function confirmation(Customer $customer, Room $room, $stayFrom, $stayUntil, Request $request)
     {
         // PERBAIKAN: Pastikan minimal 1 hari (jika 0, paksa jadi 1)
         $dayDifference = Helper::getDateDifference($stayFrom, $stayUntil);
@@ -112,6 +112,8 @@ class TransactionRoomReservationController extends Controller
         // Total Awal yang harus dibayar (Kamar + Pajak)
         $downPayment = $roomPriceTotal + $tax; 
 
+        $countPerson = $request->input('count_person', 1);
+
         return view('transaction.reservation.confirmation', [
             'customer' => $customer,
             'room' => $room,
@@ -119,7 +121,8 @@ class TransactionRoomReservationController extends Controller
             'stayUntil' => $stayUntil,
             'downPayment' => $downPayment, 
             'dayDifference' => $dayDifference,
-            'minimumTax' => $tax // Kirim data pajak awal ke view
+            'minimumTax' => $tax,// Kirim data pajak awal ke view
+            'countPerson' => $countPerson
         ]);
     }
 

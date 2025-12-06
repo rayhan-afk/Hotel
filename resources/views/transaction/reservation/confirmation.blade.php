@@ -152,19 +152,23 @@
                                         </tr>
                                     </tfoot>
                                 </table>
-                            </div>
+                            </div>{{-- [PENTING] Form DITUTUP DISINI sebelum tombol aksi --}}
+                </form>
 
-                            {{-- Tombol Aksi --}}
-                            <div class="d-flex justify-content-between mt-4">
-                                <a href="{{ route('transaction.reservation.chooseRoom', ['customer' => $customer->id]) }}?check_in={{$stayFrom}}&check_out={{$stayUntil}}" 
-                                   class="btn btn-modal-close px-4 py-2" id="btn-modal-close">
-                                    <i class="fas fa-arrow-left me-2"></i>Kembali
-                                </a>
-                                <button type="submit" class="btn btn-modal-save" id="btn-modal-save">
-                                    Konfirmasi & Bayar Lunas <i class="fas fa-money-bill-wave ms-2"></i>
-                                </button>
-                            </div>
-                        </form>
+                {{-- Tombol Aksi (Sekarang DI LUAR Form) --}}
+                <div class="d-flex justify-content-between mt-4">
+                    {{-- Tombol Kembali: Tetap pakai class & ID asli karena Anda bilang ini bekerja di halaman lain --}}
+                    <a href="{{ route('transaction.reservation.chooseRoom', ['customer' => $customer->id]) }}?check_in={{$stayFrom}}&check_out={{$stayUntil}}&count_person={{$countPerson}}" 
+                       class="btn btn-modal-close px-4 py-2" id="btn-modal-close">
+                        <i class="fas fa-arrow-left me-2"></i>Kembali
+                    </a>
+
+                    {{-- Tombol Submit: Ditambahkan atribut form="reservation-form" agar tetap nyambung ke form di atas --}}
+                    <button type="submit" form="reservation-form" class="btn btn-modal-save" id="btn-modal-save">
+                        Konfirmasi & Bayar Lunas <i class="fas fa-money-bill-wave ms-2"></i>
+                    </button>
+                </div>
+                        
                     </div>
                 </div>
             </div>

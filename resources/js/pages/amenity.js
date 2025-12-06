@@ -238,15 +238,17 @@ $(function () {
                 render: function (data) {
                     let stok = parseInt(data);
 
-                    if (stok === 0)
-                        return '<span class="badge fs-6" style="background-color: #F2C2B8; color: #50200C !important;"><i class="fas fa-times-circle me-1" style="color: #50200C !important;"></i>HABIS</span>';
-                    if (stok < 5)
-                        return '<span class="badge fs-6" style="background-color: #FAE8A4; color: #50200C !important;"><i class="fas fa-exclamation-triangle me-1" style="color: #50200C !important;"></i>KRITIS!</span>';
-                    if (stok < 20)
-                        return '<span class="badge" style="background-color: #F7B267; color: #50200C; font-weight: bold;">Menipis</span>';
-                    if (stok > 50)
-                        return '<span class="badge" style="background-color: #A8D5BA; color: #50200C; font-weight: bold;">Tersedia</span>';
-                    return '<span class="badge" style="background-color: #8FB8E1; color: #50200C; font-weight: bold;">Cukup</span>';
+                    if (stok === 0) {
+                        return '<span class="badge bg-danger fs-6"><i class="fas fa-times-circle me-1"></i>HABIS</span>';
+                    } else if (stok < 5) {
+                        return '<span class="badge bg-warning text-dark fs-6"><i class="fas fa-exclamation-triangle me-1"></i>KRITIS!</span>';
+                    } else if (stok < 20) {
+                        return '<span class="badge bg-warning text-dark">Menipis</span>';
+                    } else if (stok > 50) {
+                        return '<span class="badge bg-success">Tersedia</span>';
+                    } else {
+                        return '<span class="badge bg-primary">Cukup</span>';
+                    }
                 },
                 className: "align-middle",
             },
@@ -262,20 +264,23 @@ $(function () {
                 searchable: false,
                 className: "text-center align-middle",
                 render: function (id) {
+                    // Tombol dan Form Terpisah (Hidden)
                     return `
                         <button class="btn btn-sm btn-light border text-primary shadow-sm me-1" 
                             data-action="edit-amenity" data-id="${id}"
                             data-bs-toggle="tooltip" data-bs-placement="top" title="Edit">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <form class="btn btn-sm delete-amenity" method="POST"
-                            id="delete-amenity-form-${id}"
-                            action="/amenity/${id}" style="display:inline; padding:0;">
-                            <a class="btn btn-light btn-sm rounded shadow-sm border delete"
-                                href="#" data-id="${id}" data-bs-toggle="tooltip"
-                                data-bs-placement="top" title="Delete">
-                                <i class="fas fa-trash-alt"></i>
-                            </a>
+                        
+                        <button class="btn btn-sm btn-light border text-danger shadow-sm delete-btn" 
+                            data-id="${id}" 
+                            data-bs-toggle="tooltip" data-bs-placement="top" title="Hapus">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+
+                        <form id="delete-form-${id}" action="/amenity/${id}" method="POST" style="display:none;">
+                            <input type="hidden" name="_token" value="${$('meta[name="csrf-token"]').attr("content")}">
+                            <input type="hidden" name="_method" value="DELETE">
                         </form>
                     `;
                 },
@@ -287,7 +292,7 @@ $(function () {
                 $(row)
                     .find("td:eq(1)")
                     .prepend(
-                        '<i class="fas fa-exclamation-triangle me-2 low-stock-icon" style="background-color: red !important;"></i>'
+                        '<i class="fas fa-exclamation-triangle me-2 low-stock-icon"></i>'
                     );
                 $(row).attr(
                     "title",
@@ -300,11 +305,6 @@ $(function () {
                 $(this).css("background-color", "#ff6b6b");
             });
         },
-        language: {
-            emptyTable: "Tidak ada data amenities saat ini.",
-            processing: "Memuat data...",
-            zeroRecords: "Data tidak ditemukan"
-        }
     });
 
     // --- LOGIKA MODAL & BUTTONS ---
@@ -315,7 +315,6 @@ $(function () {
         focus: true,
     });
 
-    // $('[data-bs-dismiss="modal"]').text("Batal");
     $('button[data-bs-dismiss="modal"]:not(.btn-close)').text("Batal");
     $('.btn-close[data-bs-dismiss="modal"]').text('');
 
@@ -331,29 +330,46 @@ $(function () {
         $("#main-modal .modal-body").html("Fetching data...");
     });
 
-    $(document)
-        .on("click", ".delete", function (e) {
-            e.preventDefault();
-            var id = $(this).data("id");
-            Swal.fire({
-                title: "Yakin ingin menghapus?",
-                text: "Data tidak bisa dikembalikan!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#F2C2B8",
-                cancelButtonColor: "#8FB8E1",
-                confirmButtonText: "Ya, Hapus!",
-                cancelButtonText: "Batal",
-                customClass: {
-                    confirmButton: "text-50200C",
-                    cancelButton: "text-50200C",
-                },
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $(`#delete-amenity-form-${id}`).trigger("submit");
+    // === REVISI: TOMBOL DELETE MENGGUNAKAN POPUP STANDAR (ADA TOMBOL OK) ===
+    $(document).on("click", ".delete-btn", function () {
+        const id = $(this).data("id");
+        Swal.fire({
+            title: "Yakin ingin menghapus?",
+            text: "Data amenities ini tidak bisa dikembalikan!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#F2C2B8",
+            cancelButtonColor: "#8FB8E1",
+            confirmButtonText: "Ya, Hapus!",
+            cancelButtonText: "Batal",
+            customClass: {
+                confirmButton: "text-50200C",
+                cancelButton: "text-50200C",
+            },
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    await $.ajax({
+                        url: $(`#delete-form-${id}`).attr("action"),
+                        method: "POST", // Form sudah mengandung _method=DELETE
+                        data: $(`#delete-form-${id}`).serialize(),
+                    });
+                    
+                    // === PERBAIKAN DISINI: HAPUS CONFIG LAMA, GANTI YG SIMPLE ===
+                    // Ini akan memunculkan tombol OK, dan tidak hilang otomatis
+                    Swal.fire("Terhapus!", "Data amenities berhasil dihapus.", "success");
+
+                    hasPlayedWarningSound = false;
+                    datatable.ajax.reload();
+                } catch (e) {
+                    Swal.fire("Gagal", "Gagal menghapus data.", "error");
                 }
-            });
-        })
+            }
+        });
+    });
+
+    // --- LOGIKA ADD / EDIT FORM (SAMA SEPERTI SEBELUMNYA) ---
+    $(document)
         .on("click", "#add-button", async function () {
             modal.show();
             $("#btn-modal-save").text("Simpan").attr("disabled", true);
@@ -408,6 +424,7 @@ $(function () {
                     },
                 });
 
+                // Untuk Simpan/Edit tetap pakai timer agar cepat
                 Swal.fire({
                     icon: "success",
                     title: response.message,
@@ -429,35 +446,6 @@ $(function () {
                 }
             } finally {
                 $("#btn-modal-save").attr("disabled", false).text("Simpan");
-            }
-        })
-        .on("submit", ".delete-amenity", async function (e) {
-            e.preventDefault();
-            try {
-                const response = await $.ajax({
-                    url: $(this).attr("action"),
-                    data: $(this).serialize(),
-                    method: "POST",
-                    headers: {
-                        "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr(
-                            "content"
-                        ),
-                    },
-                });
-                Swal.fire({
-                    icon: "success",
-                    title: response.message,
-                    showConfirmButton: false,
-                    timer: 1500,
-                });
-                hasPlayedWarningSound = false;
-                datatable.ajax.reload();
-            } catch (e) {
-                Swal.fire({
-                    icon: "error",
-                    title: "Error",
-                    text: "Failed to delete data.",
-                });
             }
         });
 });

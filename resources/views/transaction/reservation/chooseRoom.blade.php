@@ -168,7 +168,7 @@
                                                 </p>
                                             </div>
 
-                                            <a href="{{ route('transaction.reservation.confirmation', ['customer' => $customer->id, 'room' => $room->id, 'from' => request()->input('check_in'), 'to' => request()->input('check_out')]) }}"
+                                            <a href="{{ route('transaction.reservation.confirmation', ['customer' => $customer->id, 'room' => $room->id, 'from' => request()->input('check_in'), 'to' => request()->input('check_out'), 'count_person' => request()->input('count_person')]) }}"
                                                 class="btn btn-choose w-100 mt-auto py-2 fw-bold shadow-sm">
                                                 Pilih Kamar Ini <i class="fas fa-arrow-right ms-1"></i>
                                             </a>
@@ -213,12 +213,14 @@
                         
                         <hr class="my-4">
 
-                        {{-- Tombol Kembali (DIBAWAH & COKLAT) --}}
+                        {{-- Tombol Kembali (DIBAWAH & COKLAT -> DIGANTI JADI PINK BTN-MODAL-CLOSE) --}}
                         <div class="d-flex justify-content-between align-items-center">
-                            <a href="{{ route('transaction.reservation.viewCountPerson', ['customer' => $customer->id]) }}" class="btn btn-secondary me-3" id="btn-modal-close">
+                            {{-- Hapus 'btn-secondary', ganti dengan 'btn-modal-close' --}}
+                            <a href="{{ route('transaction.reservation.viewCountPerson', ['customer' => $customer->id]) }}" 
+                            class="btn btn-modal-close me-3" 
+                            id="btn-modal-close">
                                 <i class="fas fa-arrow-left me-2"></i> Kembali
                             </a>
-                            <!-- <small class="text-muted">Langkah 2 dari 4</small> -->
                         </div>
 
                     </div>

@@ -16,6 +16,35 @@
                 <h4><i class="fas fa-soap me-2"></i>Manajemen Amenities</h4>
                 <p>Daftar stok amenities untuk setiap kamar hotel</p>
             </div>
+
+            {{-- 2. STATUS STOK WIDGET (Dari Kode Kedua) --}}
+            <div class="stock-status-compact" style="background-color: #fff8e1; border: 1px solid #ffc107; padding: 8px 16px; border-radius: 4px;">
+                <div style="font-size: 13px; color: #50200C; margin-bottom: 4px;">
+                    <strong>📊 Status Stok:</strong>
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; align-items: center;">
+                    <span>
+                        <span class="badge" style="background-color: #F2C2B8; color: #50200C !important;"><i class="fas fa-times-circle me-1"></i>HABIS</span>
+                        <span style="color: #50200C; margin-left: 2px;">(0)</span>
+                    </span>
+                    <span style="color: #ddd;">|</span>
+                    <span>
+                        <span class="badge" style="background-color: #FAE8A4; color: #50200C !important;"></i>KRITIS</span>
+                        <span style="color: #50200C; margin-left: 2px;">(&lt;5)</span>
+                    </span>
+                    <span style="color: #ddd;">|</span>
+                    <span>
+                        <span <span class="badge" style="background-color: #F7B267; color: #50200C; font-weight: bold;">Menipis</span>
+                        <span style="color: #50200C; margin-left: 2px;">(&lt;20)</span>
+                    </span>
+                    <span style="color: #ddd;">|</span>
+                    <span>
+                        <span class="badge" style="background-color: #A8D5BA; color: #50200C; font-weight: bold;">Tersedia</span>
+                        <span style="color: #50200C; margin-left: 2px;">(&gt;21)</span>
+                    </span>
+                </div>
+            </div>
+            
             <div class="table-responsive">
                 <table id="amenity-table" class="professional-table table" style="width: 100%;">
                     <thead>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Models\Amenity;
 use App\Repositories\Interface\AmenityRepositoryInterface;
 use Illuminate\Http\Request;
@@ -26,14 +27,12 @@ class AmenityController extends Controller
         // Render view partial untuk dimuat di Modal
         $view = view('amenity.create')->render();
 
-        return response()->json([
-            'view' => $view,
-        ]);
+        return response()->json(['view' => $view]);
     }
 
     public function store(Request $request)
     {
-        // Validasi sederhana (bisa dipindah ke FormRequest terpisah seperti StoreRoomRequest)
+        // Validasi sederhana
         $validated = $request->validate([
             'nama_barang' => 'required|string|max:255',
             'satuan' => 'required|string|max:50',
@@ -41,25 +40,19 @@ class AmenityController extends Controller
             'keterangan' => 'nullable|string',
         ]);
 
-        $amenity = Amenity::create($validated);
+        Amenity::create($validated);
 
-        return response()->json([
-            'message' => 'Amenity ' . $amenity->nama_barang . ' created',
-        ]);
+        return response()->json(['message' => 'Amenity berhasil ditambahkan!']);
     }
 
     public function edit(Amenity $amenity)
     {
-        $view = view('amenity.edit', [
-            'amenity' => $amenity,
-        ])->render();
+        $view = view('amenity.edit', compact('amenity'))->render();
 
-        return response()->json([
-            'view' => $view,
-        ]);
+        return response()->json(['view' => $view]);
     }
 
-    public function update(Amenity $amenity, Request $request)
+    public function update(Request $request, Amenity $amenity)
     {
         $validated = $request->validate([
             'nama_barang' => 'required|string|max:255',
@@ -70,23 +63,12 @@ class AmenityController extends Controller
 
         $amenity->update($validated);
 
-        return response()->json([
-            'message' => 'Amenity ' . $amenity->nama_barang . ' updated!',
-        ]);
+        return response()->json(['message' => 'Amenity berhasil diperbarui!']);
     }
 
     public function destroy(Amenity $amenity)
     {
-        try {
-            $amenity->delete();
-
-            return response()->json([
-                'message' => 'Amenity ' . $amenity->nama_barang . ' deleted!',
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Amenity cannot be deleted! Error Code:' . $e->errorInfo[1],
-            ], 500);
-        }
+        $amenity->delete();
+        return response()->json(['message' => 'Amenity berhasil dihapus!']);
     }
 }

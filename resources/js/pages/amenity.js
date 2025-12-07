@@ -236,19 +236,18 @@ $(function () {
                 name: "stok",
                 data: "stok",
                 render: function (data) {
+                    // === UPDATED RENDER FUNCTION ===
                     let stok = parseInt(data);
 
-                    if (stok === 0) {
-                        return '<span class="badge bg-danger fs-6"><i class="fas fa-times-circle me-1"></i>HABIS</span>';
-                    } else if (stok < 5) {
-                        return '<span class="badge bg-warning text-dark fs-6"><i class="fas fa-exclamation-triangle me-1"></i>KRITIS!</span>';
-                    } else if (stok < 20) {
-                        return '<span class="badge bg-warning text-dark">Menipis</span>';
-                    } else if (stok > 50) {
-                        return '<span class="badge bg-success">Tersedia</span>';
-                    } else {
-                        return '<span class="badge bg-primary">Cukup</span>';
-                    }
+                    if (stok === 0)
+                        return '<span class="badge fs-6" style="background-color: #F2C2B8; color: #50200C !important;"><i class="fas fa-times-circle me-1" style="color: #50200C !important;"></i>HABIS</span>';
+                    if (stok < 5)
+                        return '<span class="badge fs-6" style="background-color: #FAE8A4; color: #50200C !important;"><i class="fas fa-exclamation-triangle me-1" style="color: #50200C !important;"></i>KRITIS!</span>';
+                    if (stok < 20)
+                        return '<span class="badge" style="background-color: #F7B267; color: #50200C; font-weight: bold;">Menipis</span>';
+                    if (stok > 21) // Note: Changed to match ingredient logic > 21 vs > 50 in previous amenity
+                        return '<span class="badge" style="background-color: #A8D5BA; color: #50200C; font-weight: bold;">Tersedia</span>';
+                    return '<span class="badge" style="background-color: #8FB8E1; color: #50200C; font-weight: bold;">Cukup</span>';
                 },
                 className: "align-middle",
             },

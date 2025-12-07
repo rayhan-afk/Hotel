@@ -29,9 +29,9 @@
                     <div class="modal-body">
                     </div>
                     <div class="modal-footer border-0 bg-light">
-                        <button id="btn-modal-close" type="button" class="btn btn-outline-secondary"
+                        <button id="btn-modal-close" type="button" class="btn-modal-close"
                             data-bs-dismiss="modal">Close</button>
-                        <button id="btn-modal-save" type="button" class="btn btn-hotel-primary">Save</button>
+                        <button id="btn-modal-save" type="button" class="btn-modal-save">Save</button>
                     </div>
                 </div>
             </div>

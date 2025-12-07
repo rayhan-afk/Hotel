@@ -110,11 +110,21 @@
                 <div class="modal-body">
                     {{-- Form akan di-load di sini via AJAX --}}
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" id="btn-modal-save">Save changes</button>
-                </div>
+               <div class="modal-footer">
+                {{-- TOMBOL BATAL --}}
+                {{-- Hapus 'btn-secondary', ganti jadi 'btn-modal-close' --}}
+                <button type="button" class="btn btn-modal-close" data-bs-dismiss="modal">
+                    Batal
+                </button>
+
+                {{-- TOMBOL SIMPAN --}}
+                {{-- Hapus 'btn-primary', ganti jadi 'btn-modal-save' --}}
+                {{-- PENTING: Jangan hapus id="btn-modal-save" karena dipakai oleh JS --}}
+                <button type="button" class="btn btn-modal-save" id="btn-modal-save">
+                    Simpan
+                </button>
             </div>
-        </div>
-    </div>
+        </div> {{-- Penutup modal-content --}}
+    </div> {{-- Penutup modal-dialog --}}
+</div> {{-- Penutup modal fade --}}
 @endsection

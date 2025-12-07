@@ -172,14 +172,28 @@ class ApprovalController extends Controller
      */
     private function applyChanges(Approval $approval)
     {
-        // Sesuaikan dengan logic model kamu
+        // 1. Logic untuk Tipe Kamar
         if ($approval->type === 'type') {
-            $type = Type::find($approval->reference_id);
-            if ($type) $type->update($approval->new_data);
+            $model = \App\Models\Type::find($approval->reference_id);
+            if ($model) {
+                $model->update($approval->new_data);
+            }
         }
+
+        // 2. Logic untuk Paket Ruang Rapat
         if ($approval->type === 'ruang_rapat_paket') {
-            $paket = RuangRapatPaket::find($approval->reference_id);
-            if ($paket) $paket->update($approval->new_data);
+            $model = \App\Models\RuangRapatPaket::find($approval->reference_id);
+            if ($model) {
+                $model->update($approval->new_data);
+            }
+        }
+
+        // 3. [PERBAIKAN] Logic Baru untuk Kamar (Room)
+        if ($approval->type === 'room') {
+            $model = \App\Models\Room::find($approval->reference_id);
+            if ($model) {
+                $model->update($approval->new_data);
+            }
         }
     }
 }

@@ -19,14 +19,9 @@ class DashboardController extends Controller
         // 2. Kamar Dibersihkan (Status Fisik Kamar)
         $cleaningRoomsCount = Room::where('status', 'Cleaning')->count();
 
-        // 3. Reservasi Datang / Belum Check In (PERBAIKAN UTAMA)
-        // Hitung semua tamu yang statusnya masih 'Reservation'.
-        // Tidak peduli jam berapa, pokoknya kalau masih 'Reservation' dan jadwalnya
-        // adalah HARI INI atau MASA DEPAN, berarti dia masuk hitungan.
-        // Kita gunakan whereDate (>= hari ini) agar reservasi jam berapapun hari ini tetap masuk.
-        
+        // 3. Reservasi Datang / Belum Check In
         $todayReservationsCount = Transaction::where('status', 'Reservation')
-            ->whereDate('check_in', '>=', Carbon::today()) // Perbaikan: Pakai whereDate
+            ->whereDate('check_in', '>=', Carbon::today()) 
             ->count();
 
         // 4. Kamar Tersedia (Total - Sibuk)
@@ -35,6 +30,17 @@ class DashboardController extends Controller
         
         $availableRoomsCount = $totalRooms - $unavailableCount;
         if ($availableRoomsCount < 0) $availableRoomsCount = 0;
+
+        // === [PERBAIKAN UTAMA: TAMU BULANAN] ===
+        // Masalah sebelumnya: Hanya menghitung 'Check In'/'Reservation', jadi pas Checkout datanya hilang.
+        // Solusi: Hitung semua transaksi bulan ini yang statusnya BUKAN 'Cancel'.
+        // Ini otomatis mencakup: Reservation, Check In, DAN Payment Success (History Tamu).
+        
+        $thisMonth = Transaction::whereMonth('check_in', Carbon::now()->month)
+            ->whereYear('check_in', Carbon::now()->year)
+            ->where('status', '!=', 'Cancel') // <-- KUNCI: Jangan filter status aktif saja, tapi filter "Tidak Batal"
+            ->count();
+
 
         // === TABEL DASHBOARD (Tamu Hari Ini) ===
         // Menampilkan daftar tamu yang sedang aktif (Check In) atau akan datang hari ini.
@@ -55,6 +61,7 @@ class DashboardController extends Controller
             'occupiedRoomsCount',
             'cleaningRoomsCount',
             'todayReservationsCount',
+            'thisMonth', // <-- Jangan lupa kirim variabel ini ke View
             'transactions'
         ));
     }

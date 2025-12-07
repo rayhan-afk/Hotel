@@ -224,7 +224,7 @@
                 <div class="text-center mb-4">
                     <div class="d-flex justify-content-center align-items-center">
                         <div class="text-center" style="color:#50200C">
-                            <div class="h2 mb-0">{{ count($transactions) }}</div>
+                            <div class="h2 mb-0">{{ $thisMonth }}</div>
                             <small class=" ">Jumlah Tamu Bulan Ini</small>
                         </div>
                     </div>

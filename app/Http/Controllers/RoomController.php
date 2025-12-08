@@ -5,10 +5,11 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreRoomRequest;
 use App\Models\Room;
 use App\Models\Type;
+use App\Models\Approval;
 use App\Repositories\Interface\RoomRepositoryInterface;
 use Illuminate\Http\Request;
-use App\Models\Approval;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class RoomController extends Controller
 {
@@ -45,34 +46,30 @@ class RoomController extends Controller
 
     public function store(StoreRoomRequest $request)
     {
-        // Ambil semua data yang sudah tervalidasi
         $data = $request->validated();
 
         // === LOGIKA UPLOAD GAMBAR ===
         if ($request->hasFile('image')) {
-            // 1. Ambil file
             $file = $request->file('image');
             
-            // 2. Buat nama file unik (biar tidak tertimpa)
-            // Contoh: room_101_1699999999.jpg
+            // Nama file unik
             $filename = 'room_' . $data['number'] . '_' . time() . '.' . $file->getClientOriginalExtension();
             
-            // 3. Simpan file ke folder 'public/img/rooms'
-            // Menggunakan disk 'public' agar bisa diakses dari web
+            // Simpan ke storage/app/public/img/rooms
+            // $path akan berisi: "img/rooms/room_101_123456.jpg"
             $path = $file->storeAs('img/rooms', $filename, 'public');
             
-            // 4. Simpan path yang bisa diakses publik ke database
-            // 'storage/img/rooms/namafile.jpg'
-            $data['main_image_path'] = 'storage/' . $path;
+            // PERBAIKAN: Simpan path relatif saja, jangan pakai 'storage/' di depannya.
+            // Biarkan Model Accessor (getImage) yang menambahkan 'storage/' saat ditampilkan.
+            $data['image'] = $path; // Pastikan nama kolom di DB adalah 'image' atau 'main_image_path'
+            // Jika kolom di DB namanya 'main_image_path', gunakan baris bawah ini:
+            // $data['main_image_path'] = $path;
         }
 
-        // Simpan data ke database menggunakan Eloquent langsung atau Repository
-        // Karena repository Anda mungkin belum support array $data yang dimodifikasi,
-        // kita pakai Room::create() langsung di sini agar aman dan cepat.
         Room::create($data);
 
         return response()->json([
-            'message' => 'Room created successfully',
+            'message' => 'Kamar berhasil ditambahkan!',
         ]);
     }
 
@@ -102,81 +99,95 @@ class RoomController extends Controller
     {
         // 1. Validasi Data
         $data = $request->validated();
+        $oldImage = $room->image ?? $room->main_image_path; // Ambil path gambar lama
 
         // 2. Handle Upload Gambar Baru (Jika Ada)
         if ($request->hasFile('image')) {
             $file = $request->file('image');
             $filename = 'room_' . $data['number'] . '_' . time() . '.' . $file->getClientOriginalExtension();
             
-            // Simpan gambar baru ke folder public
+            // Upload gambar baru
             $path = $file->storeAs('img/rooms', $filename, 'public');
             
-            // Masukkan path baru ke array data yang akan di-request
-            $data['main_image_path'] = 'storage/' . $path;
+            // Simpan path relatif ke array data
+            // Sesuaikan nama kolom DB Anda ('image' atau 'main_image_path')
+            if (isset($room->image)) {
+                $data['image'] = $path;
+            } else {
+                $data['main_image_path'] = $path;
+            }
         }
 
-        // 3. Persiapkan Data Lama (Untuk history & mencegah error old_data required)
+        // 3. Persiapkan Data Lama (Untuk history approval)
         $oldData = $room->toArray();
 
-        // 4. Cek apakah user adalah Manager atau Super (bisa langsung update tanpa approval)
-        if (auth()->user()->hasRole(['Super', 'Manager'])) {
-            // === LOGIKA UPDATE LANGSUNG (Untuk Manager/Super) ===
+        // 4. Cek Role User
+        // Menggunakan helper Auth::user() agar lebih aman
+        $user = Auth::user();
+
+        if ($user->role === 'Super' || $user->role === 'Manager') {
+            // === JALUR MANAGER/SUPER (LANGSUNG UPDATE) ===
             
-            // Hapus gambar lama jika ada dan ada gambar baru yang diupload (Opsional tapi disarankan biar storage gak penuh)
-            if ($request->hasFile('image') && $room->main_image_path) {
-                // Ubah path 'storage/img/...' menjadi path relatif storage asli 'img/...'
-                $oldPath = str_replace('storage/', '', $room->main_image_path);
-                if (Storage::disk('public')->exists($oldPath)) {
-                    Storage::disk('public')->delete($oldPath);
+            // Update Data Kamar
+            $room->update($data);
+
+            // Hapus gambar lama HANYA JIKA update berhasil DAN ada gambar baru
+            if ($request->hasFile('image') && $oldImage) {
+                // Hapus file fisik jika ada
+                if (Storage::disk('public')->exists($oldImage)) {
+                    Storage::disk('public')->delete($oldImage);
                 }
             }
 
-            // Update room langsung
-            $room->update($data);
-
             return response()->json([
-                'message' => 'Room updated successfully!',
+                'message' => 'Data kamar berhasil diperbarui!',
             ]);
+
         } else {
-            // === LOGIKA APPROVAL (Untuk Admin yang butuh persetujuan) ===
+            // === JALUR ADMIN/STAFF (BUTUH APPROVAL) ===
             
-            // BUAT TICKET APPROVAL
+            // Buat Ticket Approval
             Approval::create([
-                'type' => 'room',
+                'type' => 'room', // Pastikan ini sesuai dengan logic di ApprovalController
                 'reference_id' => $room->id,
-                'requested_by' => auth()->id(), // Pastikan kolom ini benar di DB
-                'new_data' => $data,
-                'old_data' => $oldData,         // Kirim data lama juga
-                'status' => 'pending'
+                'requested_by' => $user->id,
+                'new_data' => $data, // Data baru (termasuk path gambar baru jika ada)
+                'old_data' => $oldData,
+                'status' => 'Pending'
             ]);
 
             return response()->json([
-                'message' => 'Permintaan perubahan kamar berhasil diajukan ke Manager!',
+                'message' => 'Perubahan diajukan! Menunggu persetujuan Manager.',
             ]);
         }
     }
 
     public function destroy(Room $room)
     {
-        try {
-            // Hapus gambar jika ada
-            if ($room->main_image_path) {
-                $oldPath = str_replace('storage/', '', $room->main_image_path);
-                if (Storage::disk('public')->exists($oldPath)) {
-                    Storage::disk('public')->delete($oldPath);
-                }
-            }
+        // Cek permission manual (Opsional)
+        if (!in_array(Auth::user()->role, ['Super', 'Manager'])) {
+            return response()->json(['message' => 'Hanya Manager yang dapat menghapus kamar!'], 403);
+        }
 
-            // Hapus data kamar
+        try {
+            // Ambil path gambar
+            // Sesuaikan kolom DB Anda
+            $imagePath = $room->image ?? $room->main_image_path;
+
+            // Hapus data kamar dari DB
             $room->delete();
 
+            // Hapus file gambar fisik SETELAH data berhasil dihapus (agar aman)
+            if ($imagePath && Storage::disk('public')->exists($imagePath)) {
+                Storage::disk('public')->delete($imagePath);
+            }
+
             return response()->json([
-                'message' => 'Room deleted successfully!',
+                'message' => 'Kamar berhasil dihapus!',
             ]);
         } catch (\Exception $e) {
-            // Return error 500 agar masuk ke blok catch di JS
             return response()->json([
-                'message' => 'Error deleting room: ' . $e->getMessage()
+                'message' => 'Gagal menghapus kamar: ' . $e->getMessage()
             ], 500);
         }
     }

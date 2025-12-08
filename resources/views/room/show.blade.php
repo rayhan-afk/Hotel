@@ -50,12 +50,11 @@
             @endif
         </div>
 
-        {{-- KOLOM TENGAH: Detail Kamar (DATA BARU) --}}
+        {{-- KOLOM TENGAH: Detail Kamar --}}
         <div class="col-md-5 mb-3">
             <div class="card shadow-sm h-100">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <div>
-                        {{-- Tampilkan Nomor dan Nama Kamar --}}
                         <h3 class="mb-0">Kamar {{ $room->number }}</h3>
                         <small class="text-muted">{{ $room->name }}</small>
                     </div>
@@ -69,7 +68,7 @@
                         {{-- Status Dinamis --}}
                         <div class="col-12">
                             @php
-                                $status = $room->dynamic_status; // Menggunakan Accessor di Model Room
+                                $status = $room->dynamic_status; 
                                 $badgeClass = match($status) {
                                     'Available' => 'bg-success',
                                     'Occupied' => 'bg-danger',
@@ -124,33 +123,27 @@
             </div>
         </div>
 
-        {{-- KOLOM KANAN: Gambar Kamar (UPDATED: Main Image) --}}
+        {{-- KOLOM KANAN: Gambar Kamar (UPDATED) --}}
         <div class="col-md-4">
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-transparent border-0 pb-0">
                     <h5 class="card-title">Gambar Utama</h5>
                 </div>
                 <div class="card-body">
-                    {{-- Menampilkan Gambar Utama dari path database --}}
                     <div class="position-relative rounded overflow-hidden shadow-sm">
-                        @if($room->main_image_path)
-                            <img src="{{ asset($room->main_image_path) }}" alt="Room Image" class="w-100" 
-                                style="height: 300px; object-fit: cover;">
-                        @else
-                            <div class="bg-light d-flex justify-content-center align-items-center" style="height: 300px;">
-                                <div class="text-center text-muted">
-                                    <i class="fas fa-image fa-3x mb-2"></i>
-                                    <p>Tidak ada gambar</p>
-                                </div>
-                            </div>
-                        @endif
+                        {{-- PERBAIKAN DISINI: Gunakan $room->getImage() --}}
+                        {{-- Fungsi ini otomatis mengecek storage/public/dummy --}}
+                        <img src="{{ $room->getImage() }}" 
+                             alt="Room Image" 
+                             class="w-100" 
+                             style="height: 300px; object-fit: cover;"
+                             onerror="this.src='{{ asset('img/default/default-room.png') }}'">
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal Upload Gambar (Updated Logic) -->
     <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -158,12 +151,11 @@
                     <h5 class="modal-title">Update Gambar Kamar</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                {{-- Form mengarah ke route update, karena kita mengupdate kolom main_image_path di tabel rooms --}}
                 <form action="{{ route('room.update', $room->id) }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
                     <div class="modal-body">
-                        {{-- Trik: Kita kirim input hidden untuk field mandatory lain agar validasi tidak gagal --}}
+                        {{-- Hidden inputs agar validasi update tidak gagal --}}
                         <input type="hidden" name="type_id" value="{{ $room->type_id }}">
                         <input type="hidden" name="number" value="{{ $room->number }}">
                         <input type="hidden" name="name" value="{{ $room->name }}">
@@ -189,7 +181,10 @@
 @section('footer')
     @if(session('success'))
         <script>
-            toastr.success("{{ session('success') }}", "Berhasil");
+            // Pastikan Anda menggunakan Toastr atau SweetAlert
+            if(typeof toastr !== 'undefined'){
+                toastr.success("{{ session('success') }}", "Berhasil");
+            }
         </script>
     @endif
 @endsection

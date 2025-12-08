@@ -34,7 +34,7 @@
         <div id="error_number" class="text-danger error"></div>
     </div>
 
-    {{-- Nama Kamar (BARU) --}}
+    {{-- Nama Kamar --}}
     <div class="col-md-12">
         <label for="name" class="form-label">Nama Kamar <span class="text-danger">*</span></label>
         <input type="text" class="form-control" id="name" name="name" 
@@ -58,7 +58,7 @@
         <div id="error_capacity" class="text-danger error"></div>
     </div>
 
-    {{-- Luas Kamar (BARU) --}}
+    {{-- Luas Kamar --}}
     <div class="col-md-3">
         <label for="area_sqm" class="form-label">Luas (m²)</label>
         <input type="number" step="0.1" class="form-control" id="area_sqm" name="area_sqm" 
@@ -66,7 +66,7 @@
         <div id="error_area_sqm" class="text-danger error"></div>
     </div>
 
-    {{-- Fasilitas Kamar (BARU) --}}
+    {{-- Fasilitas Kamar --}}
     <div class="col-md-12">
         <label for="room_facilities" class="form-label">Fasilitas Kamar</label>
         <textarea class="form-control" id="room_facilities" name="room_facilities" rows="3" 
@@ -74,7 +74,7 @@
         <div id="error_room_facilities" class="text-danger error"></div>
     </div>
 
-    {{-- Fasilitas Kamar Mandi (BARU) --}}
+    {{-- Fasilitas Kamar Mandi --}}
     <div class="col-md-12">
         <label for="bathroom_facilities" class="form-label">Fasilitas Kamar Mandi</label>
         <textarea class="form-control" id="bathroom_facilities" name="bathroom_facilities" rows="2" 
@@ -86,20 +86,21 @@
     <div class="col-md-12">
         <label for="image" class="form-label">Gambar Kamar Utama (Opsional)</label>
         
-        {{-- Input File untuk Upload --}}
+        {{-- Input File --}}
         <input type="file" class="form-control" id="image" name="image" accept="image/*">
-        
-        {{-- Hidden input untuk menyimpan path gambar lama saat update, jika user tidak upload baru --}}
-        {{-- Namun, di controller biasanya kita cek if($request->hasFile('image')). --}}
-        
         <div id="error_image" class="text-danger error"></div>
+        <small class="text-muted">Format: JPG, PNG. Maks: 2MB.</small>
 
-        {{-- Preview Gambar Lama (Jika Edit) --}}
-        @if($room && $room->main_image_path)
-            <div class="mt-2">
-                <small class="text-muted">Gambar Saat Ini:</small><br>
-                {{-- Asumsi helper asset() mengarah ke public folder --}}
-                <img src="{{ asset($room->main_image_path) }}" alt="Room Image" class="img-thumbnail" style="max-height: 150px;">
+        {{-- Preview Gambar Lama (Hanya Muncul saat Edit) --}}
+        @if($room)
+            <div class="mt-3 p-2 border rounded bg-light text-center">
+                <small class="text-muted d-block mb-2">Gambar Saat Ini:</small>
+                
+                {{-- PERBAIKAN UTAMA: Gunakan $room->getImage() --}}
+                <img src="{{ $room->getImage() }}" 
+                     alt="Room Image" 
+                     class="img-thumbnail shadow-sm" 
+                     style="max-height: 200px; object-fit: cover;">
             </div>
         @endif
     </div>

@@ -1,4 +1,4 @@
-<form id="form-save-room" class="row g-3" method="POST" action="{{ isset($room) ? route('room.update', $room->id) : route('room.store') }}">
+<form id="form-save-room" class="row g-3" method="POST" action="{{ isset($room) ? route('room.update', $room->id) : route('room.store') }}" enctype="multipart/form-data">
     @if(isset($room))
         @method('PUT')
     @endif

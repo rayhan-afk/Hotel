@@ -16,6 +16,7 @@ use App\Repositories\Interface\RoomRepositoryInterface;
 use App\Repositories\Interface\TransactionRepositoryInterface;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class TransactionRoomReservationController extends Controller
 {
@@ -37,13 +38,11 @@ class TransactionRoomReservationController extends Controller
     public function pickFromCustomer(Request $request, CustomerRepositoryInterface $customerRepository)
     {
         $customers = $customerRepository->getCustomers($request);
-        
-        // [PERBAIKAN] Ambil total data dari paginator
         $customersCount = $customers->total(); 
 
         return view('transaction.reservation.pickFromCustomer', [
             'customers'      => $customers,
-            'customersCount' => $customersCount, // [PERBAIKAN] Kirim variabel ke view
+            'customersCount' => $customersCount,
         ]);
     }
 
@@ -97,21 +96,14 @@ class TransactionRoomReservationController extends Controller
 
     public function confirmation(Customer $customer, Room $room, $stayFrom, $stayUntil, Request $request)
     {
-        // PERBAIKAN: Pastikan minimal 1 hari (jika 0, paksa jadi 1)
         $dayDifference = Helper::getDateDifference($stayFrom, $stayUntil);
         if ($dayDifference < 1) {
             $dayDifference = 1;
         }
 
-        // Hitung Harga Dasar (Kamar x Hari)
         $roomPriceTotal = $room->price * $dayDifference;
-
-        // Hitung Pajak Awal (10% dari harga kamar)
         $tax = $roomPriceTotal * 0.10;
-
-        // Total Awal yang harus dibayar (Kamar + Pajak)
         $downPayment = $roomPriceTotal + $tax; 
-
         $countPerson = $request->input('count_person', 1);
 
         return view('transaction.reservation.confirmation', [
@@ -121,9 +113,51 @@ class TransactionRoomReservationController extends Controller
             'stayUntil' => $stayUntil,
             'downPayment' => $downPayment, 
             'dayDifference' => $dayDifference,
-            'minimumTax' => $tax,// Kirim data pajak awal ke view
+            'minimumTax' => $tax,
             'countPerson' => $countPerson
         ]);
+    }
+
+    // ==========================================
+    // [UPDATE] Preview Invoice dengan No. Urut
+    // ==========================================
+    public function previewInvoice(Customer $customer, Room $room, $stayFrom, $stayUntil, Request $request)
+    {
+        $dayDifference = Helper::getDateDifference($stayFrom, $stayUntil);
+        if ($dayDifference < 1) $dayDifference = 1;
+
+        $breakfast = $request->query('breakfast', 'No');
+
+        $roomPriceTotal = $room->price * $dayDifference;
+        $breakfastPrice = ($breakfast === 'Yes') ? (140000 * $dayDifference) : 0;
+        
+        $subTotal   = $roomPriceTotal + $breakfastPrice;
+        $tax        = $subTotal * 0.10; 
+        $grandTotal = $subTotal + $tax;
+
+        // [LOGIKA BARU] Generate Nomor: TanggalHariIni - UrutanTransaksiBerikutnya
+        // Contoh: 09122025-105
+        $dateCode = Carbon::now()->format('dmY');
+        $nextId = Transaction::count() + 1; 
+        $transactionCode = $dateCode . '-' . str_pad($nextId, 3, '0', STR_PAD_LEFT);
+
+        $invoiceData = [
+            'customer' => $customer,
+            'room' => $room,
+            'check_in' => $stayFrom,
+            'check_out' => $stayUntil,
+            'days' => $dayDifference,
+            'breakfast_status' => $breakfast,
+            'room_price_total' => $roomPriceTotal,
+            'breakfast_price_total' => $breakfastPrice,
+            'tax' => $tax,
+            'grand_total' => $grandTotal,
+            'transaction_code' => $transactionCode, // Menggunakan format baru
+            'date' => Carbon::now()->format('Y-m-d'),
+            'user_name' => auth()->user()->name
+        ];
+
+        return view('transaction.reservation.invoice_preview', $invoiceData);
     }
 
     public function payDownPayment(Customer $customer, Room $room, Request $request) 
@@ -140,15 +174,14 @@ class TransactionRoomReservationController extends Controller
                 ->with('failed', 'Maaf, Kamar ini baru saja dipesan orang lain di tanggal yang sama.');
         }
 
-        // LOGIKA PERHITUNGAN FINAL
         $dayDifference = Helper::getDateDifference($request->check_in, $request->check_out);
-        if ($dayDifference < 1) $dayDifference = 1; // Safety check
+        if ($dayDifference < 1) $dayDifference = 1; 
 
         $roomPriceTotal = $room->price * $dayDifference;
         $breakfastPrice = ($request->breakfast === 'Yes') ? (140000 * $dayDifference) : 0;
         
         $subTotal       = $roomPriceTotal + $breakfastPrice;
-        $tax            = $subTotal * 0.10; // Pajak 10%
+        $tax            = $subTotal * 0.10; 
         $grandTotal     = $subTotal + $tax;
 
         $request->merge([

@@ -53,6 +53,8 @@
                                 <th class="text-center">Sarapan</th>
                                 <th class="text-end">Total Harga</th>
                                 <th class="text-center">Status</th>
+                                {{-- [UPDATE] Penambahan Kolom Aksi --}}
+                                <th class="text-center" width="15%">Aksi</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -61,7 +63,6 @@
                 
                 {{-- FOOTER --}}
                 <div class="table-footer d-flex justify-content-end align-items-center p-4">
-                   
                    <button type="button" id="btn-export-kamar" class="btn btn-lg text-white shadow-sm btn-brown px-4">
                        <i class="fas fa-file-excel me-2"></i> Export Excel
                    </button>
@@ -74,7 +75,6 @@
 @endsection
 
 @section('footer')
-
 <style>
     .btn-brown {
         background-color: #50200C !important;

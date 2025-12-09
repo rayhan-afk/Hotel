@@ -23,7 +23,7 @@ $(function () {
             { 
                 data: "tamu", 
                 name: "customers.name", 
-                className: "fw-bold text-dark align-middle" // Style Teks Tebal & Tengah
+                className: "fw-bold text-dark align-middle" 
             },
             // 1. Kamar
             { 
@@ -49,11 +49,10 @@ $(function () {
                 name: "transactions.breakfast", 
                 className: "text-center align-middle",
                 render: function(data) {
-                    // Style Badge Rounded Pill Transparan
                     if (data === 'Yes' || data === 1 || data === '1') {
                         return `<span class="badge rounded-pill" style="background-color: #A8D5BA; color: #50200C;
                             font-size: 10px; padding: 6px 12px; font-weight: 700;">
-                                        <i class="fas fa-utensils me-1" style="color: #50200C; font-size: 10px;"></i>Ya
+                                            <i class="fas fa-utensils me-1" style="color: #50200C; font-size: 10px;"></i>Ya
                                     </span>`;
                     }
                     return `<span class="badge rounded-pill" style="background-color: #F2C2B8; color: #50200C; 
@@ -66,7 +65,6 @@ $(function () {
                 name: "transactions.total_price", 
                 className: "text-end fw-bold align-middle",
                 render: function(data) {
-                    // Format Rupiah Standar Laporan
                     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(data);
                 }
             },
@@ -74,12 +72,16 @@ $(function () {
             { 
                 data: "status", 
                 name: "transactions.status", 
-                className: "text-center align-middle",
-                render: function(data) {
-                    // Style Badge Status Laporan Rapat (Lunas Hijau)
-                    return `<span class="badge rounded-pill" style="background-color: #A8D5BA; color: #50200C;
-                            font-size: 10px; padding: 6px 12px; font-weight: 700;">Lunas</span>`;
-                }
+                className: "text-center align-middle"
+                // [UPDATE] Render dihapus agar menggunakan HTML badge dinamis dari Controller/Repository
+            },
+            // 7. [BARU] Aksi (Tombol Invoice)
+            { 
+                data: "aksi", 
+                name: "aksi", 
+                orderable: false, 
+                searchable: false, 
+                className: "text-center align-middle" 
             }
         ],
         order: [[2, 'desc']], // Urutkan Check-In Terbaru

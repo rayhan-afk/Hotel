@@ -84,6 +84,7 @@ class LaporanKamarRepository implements LaporanKamarRepositoryInterface
             4 => 'transactions.breakfast',
             5 => 'transactions.total_price', 
             6 => 'transactions.status',
+            // 7 => Aksi (Tidak perlu sorting)
         ];
 
         // Hitung Total Data (Sesuai Filter Status di atas)
@@ -96,7 +97,7 @@ class LaporanKamarRepository implements LaporanKamarRepositoryInterface
         $orderColumnIndex = $request->input('order.0.column');
         $orderDir = $request->input('order.0.dir') ?? 'desc';
 
-        $orderBy = $columns[$orderColumnIndex] ?? 'transactions.check_out'; // Default sort by checkout
+        $orderBy = $columns[$orderColumnIndex] ?? 'transactions.updated_at'; // Default sort update terakhir
 
         if ($limit) {
             $query->offset($start)->limit($limit);
@@ -112,14 +113,35 @@ class LaporanKamarRepository implements LaporanKamarRepositoryInterface
             // Hitung Total Harga
             $totalHarga = $model->total_price ?? $model->getTotalPrice();
 
-            // Tentukan Label Status
-            // Jika status 'Done', ubah jadi 'Selesai' agar lebih rapi di laporan
+            // [UPDATE] Tentukan Label Status dengan Badge HTML
             $statusLabel = $model->status;
             if ($model->status == 'Done') {
-                $statusLabel = 'Selesai';
+                $statusLabel = '<span class="badge bg-success">Selesai</span>';
             } elseif ($model->status == 'Paid') {
-                $statusLabel = 'Lunas';
+                $statusLabel = '<span class="badge bg-primary">Lunas</span>';
+            } else {
+                $statusLabel = '<span class="badge bg-secondary">'.$model->status.'</span>';
             }
+
+            // === [LOGIKA BARU] URL INVOICE & TOMBOL AKSI ===
+            // Format tanggal Y-m-d agar bersih di URL
+            $checkInRaw = Carbon::parse($model->check_in)->format('Y-m-d');
+            $checkOutRaw = Carbon::parse($model->check_out)->format('Y-m-d');
+
+            // Generate URL ke route previewInvoice
+            $invoiceUrl = route('transaction.reservation.previewInvoice', [
+                'customer' => $model->customer_id,
+                'room' => $model->room_id,
+                'from' => $checkInRaw,
+                'to' => $checkOutRaw
+            ]) . '?breakfast=' . $model->breakfast;
+
+            // Buat Tombol HTML
+            $btnAction = '
+                <a href="'.$invoiceUrl.'" target="_blank" class="btn btn-sm btn-info text-white shadow-sm" title="Lihat & Download Invoice">
+                    <i class="fas fa-file-invoice me-1"></i> Invoice
+                </a>
+            ';
 
             $data[] = [
                 'tamu' => $model->customer->name,
@@ -131,7 +153,8 @@ class LaporanKamarRepository implements LaporanKamarRepositoryInterface
                 // Kirim ANGKA MENTAH (float) untuk diformat oleh JS
                 'total_harga' => (float) $totalHarga, 
                 
-                'status' => $statusLabel, 
+                'status' => $statusLabel, // Mengirim HTML Badge
+                'aksi' => $btnAction // [BARU] Kolom Aksi
             ];
         }
 
@@ -139,7 +162,7 @@ class LaporanKamarRepository implements LaporanKamarRepositoryInterface
             'draw' => intval($request->input('draw')),
             'recordsTotal' => $totalData,
             'recordsFiltered' => $totalFiltered,
-            'data' => $data, // Gunakan 'data' sesuai standar DataTables terbaru (atau 'aaData' jika legacy)
+            'data' => $data, // Gunakan 'data' sesuai standar DataTables terbaru
         ];
     }
 }

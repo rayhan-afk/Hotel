@@ -136,6 +136,11 @@ Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Manager']], functi
         Route::get('/{customer}/chooseRoom', [TransactionRoomReservationController::class, 'chooseRoom'])->name('chooseRoom');
         Route::get('/{customer}/{room}/{from}/{to}/confirmation', [TransactionRoomReservationController::class, 'confirmation'])->name('confirmation');
         Route::post('/{customer}/{room}/payDownPayment', [TransactionRoomReservationController::class, 'payDownPayment'])->name('payDownPayment');
+
+        // Tambahkan route ini:
+        Route::get('/{customer}/{room}/{from}/{to}/preview-invoice', 
+            [TransactionRoomReservationController::class, 'previewInvoice']
+        )->name('previewInvoice');
     });
 
     // Resource Controllers

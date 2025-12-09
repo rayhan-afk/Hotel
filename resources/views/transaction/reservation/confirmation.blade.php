@@ -36,6 +36,66 @@
             border-radius: 20px;
             font-size: 0.8rem;
         }
+
+        .btn-download-invoice {
+            /* Gradasi: Sedikit lebih terang di awal, berakhir di #8FB8E1 */
+            background: linear-gradient(135deg, #A8C9E8 0%, #8FB8E1 100%) !important;
+            border: 1px solid #8FB8E1 !important;
+            border-radius: 0.75rem !important;
+            
+            /* Warna Teks Putih */
+            color: #50200C !important;
+            
+            /* Layout & Typography (Sama persis dengan tombol konfirmasi) */
+            padding: 0.75rem 1.2rem !important;
+            font-size: 1.125rem !important;
+            font-weight: 600 !important;
+            line-height: 1.5rem !important;
+            
+            box-sizing: border-box !important;
+            cursor: pointer !important;
+            flex: 0 0 auto !important;
+            text-align: center !important;
+            text-decoration: none !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            touch-action: manipulation !important;
+            width: auto !important;
+            
+            /* Shadow dengan nuansa #8FB8E1 (RGB: 143, 184, 225) */
+            box-shadow: 0 4px 12px rgba(143, 184, 225, 0.3) !important;
+            transition-duration: 0.3s !important;
+            transition-property: background-color, border-color, color, fill, stroke, box-shadow, transform !important;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        /* Efek Hover (Sedikit lebih gelap/tegas) */
+        .btn-download-invoice:hover {
+            background: linear-gradient(135deg, #8FB8E1 0%, #7DA3CC 100%) !important;
+            border-color: #7DA3CC !important;
+            box-shadow: 0 8px 20px rgba(143, 184, 225, 0.45) !important;
+            transform: translateY(-2px) !important;
+            color: #50200C !important;
+        }
+
+        /* Efek Klik */
+        .btn-download-invoice:active {
+            transform: translateY(0) !important;
+            box-shadow: 0 2px 8px rgba(143, 184, 225, 0.25) !important;
+        }
+
+        /* Efek Fokus */
+        .btn-download-invoice:focus {
+            box-shadow: 0 0 0 3px rgba(143, 184, 225, 0.5), 0 4px 12px rgba(143, 184, 225, 0.25) !important;
+            outline: 2px solid transparent !important;
+            outline-offset: 2px !important;
+        }
+
+        @media (min-width: 768px) {
+            #btn-download-invoice {
+                padding: 0.75rem 1.5rem !important;
+            }
+        }
     </style>
 @endsection
 @section('content')
@@ -157,16 +217,27 @@
 
                 {{-- Tombol Aksi (Sekarang DI LUAR Form) --}}
                 <div class="d-flex justify-content-between mt-4">
-                    {{-- Tombol Kembali: Tetap pakai class & ID asli karena Anda bilang ini bekerja di halaman lain --}}
+                    {{-- Tombol Kembali --}}
                     <a href="{{ route('transaction.reservation.chooseRoom', ['customer' => $customer->id]) }}?check_in={{$stayFrom}}&check_out={{$stayUntil}}&count_person={{$countPerson}}" 
                        class="btn btn-modal-close px-4 py-2" id="btn-modal-close">
                         <i class="fas fa-arrow-left me-2"></i>Kembali
                     </a>
 
-                    {{-- Tombol Submit: Ditambahkan atribut form="reservation-form" agar tetap nyambung ke form di atas --}}
-                    <button type="submit" form="reservation-form" class="btn btn-modal-save" id="btn-modal-save">
-                        Konfirmasi & Bayar Lunas <i class="fas fa-money-bill-wave ms-2"></i>
-                    </button>
+                    {{-- Group Tombol Kanan (Download + Konfirmasi) --}}
+                    <div class="d-flex gap-2">
+                        {{-- [UPDATE] Gunakan class 'btn-download-invoice' --}}
+                        <a href="{{ route('transaction.reservation.previewInvoice', ['customer' => $customer->id, 'room' => $room->id, 'from' => $stayFrom, 'to' => $stayUntil]) }}?breakfast=No" 
+                        target="_blank" 
+                        class="btn-download-invoice me-2" 
+                        id="btn-download-invoice">
+                            <i class="fas fa-file-download me-2"></i>Unduh Kwitansi
+                        </a>
+
+                        {{-- Tombol Submit --}}
+                        <button type="submit" form="reservation-form" class="btn btn-modal-save px-3 py-2" id="btn-modal-save">
+                            Konfirmasi & Bayar Lunas <i class="fas fa-money-bill-wave ms-2"></i>
+                        </button>
+                    </div>
                 </div>
                         
                     </div>
@@ -227,6 +298,13 @@
     const displayTax = document.getElementById('display_tax');
     const displayTotalPrice = document.getElementById('display_total_price');
     const inputTotalPrice = document.getElementById('input_total_price');
+    
+    // [BARU] Elemen Tombol Download
+    const btnDownloadInvoice = document.getElementById('btn-download-invoice');
+    
+    // [BARU] Base URL Invoice (tanpa query string breakfast)
+    // Pastikan route 'transaction.reservation.previewInvoice' SUDAH DIBUAT di web.php
+    const baseInvoiceUrl = "{{ route('transaction.reservation.previewInvoice', ['customer' => $customer->id, 'room' => $room->id, 'from' => $stayFrom, 'to' => $stayUntil]) }}";
 
     // Fungsi Format Rupiah
     const formatRupiah = (number) => {
@@ -243,6 +321,9 @@
         // Mulai hitung dari harga kamar
         let currentSubTotal = baseRoomTotal; 
         
+        // [BARU] Variabel untuk query string URL download
+        let breakfastParam = 'No';
+
         if (this.value === 'Yes') {
             // Jika pilih sarapan
             const breakfastTotal = breakfastPricePerDay * dayCount;
@@ -251,6 +332,9 @@
             // Tampilkan baris sarapan
             rowBreakfast.style.display = 'table-row';
             displayBreakfastTotal.innerText = formatRupiah(breakfastTotal);
+            
+            // Set parameter
+            breakfastParam = 'Yes';
         } else {
             // Jika tidak pilih sarapan
             rowBreakfast.style.display = 'none';
@@ -260,13 +344,19 @@
         const taxAmount = currentSubTotal * 0.10; // 10% dari Subtotal (Kamar + Sarapan)
         const finalTotal = currentSubTotal + taxAmount;
 
-        // Update Tampilan
+        // Update Tampilan Angka
         displayTax.innerText = formatRupiah(taxAmount);
         displayTotalPrice.innerText = formatRupiah(finalTotal);
         
         // Update Input Hidden (agar terkirim ke server)
         if(inputTotalPrice) {
             inputTotalPrice.value = finalTotal;
+        }
+
+        // [BARU] Update Link Download Invoice secara Real-time
+        // Mengubah href tombol download agar sesuai pilihan user
+        if (btnDownloadInvoice) {
+            btnDownloadInvoice.href = `${baseInvoiceUrl}?breakfast=${breakfastParam}`;
         }
     });
 </script>

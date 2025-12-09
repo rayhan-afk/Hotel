@@ -6,11 +6,18 @@ use App\Models\Room;
 use App\Models\Transaction;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
     public function index()
     {
+        // === [LOGIC BARU] CEGAH DAPUR MASUK DASHBOARD ===
+        // Jika yang login adalah orang Dapur, paksa pindah ke halaman Bahan Baku.
+        if (Auth::user()->role === 'Dapur') {
+            return redirect()->route('ingredient.index');
+        }
+
         // === STATS CARD ===
         
         // 1. Kamar Terpakai (Status: Check In)
@@ -32,18 +39,13 @@ class DashboardController extends Controller
         if ($availableRoomsCount < 0) $availableRoomsCount = 0;
 
         // === [PERBAIKAN UTAMA: TAMU BULANAN] ===
-        // Masalah sebelumnya: Hanya menghitung 'Check In'/'Reservation', jadi pas Checkout datanya hilang.
-        // Solusi: Hitung semua transaksi bulan ini yang statusnya BUKAN 'Cancel'.
-        // Ini otomatis mencakup: Reservation, Check In, DAN Payment Success (History Tamu).
-        
+        // Hitung semua transaksi bulan ini yang statusnya BUKAN 'Cancel'.
         $thisMonth = Transaction::whereMonth('check_in', Carbon::now()->month)
             ->whereYear('check_in', Carbon::now()->year)
-            ->where('status', '!=', 'Cancel') // <-- KUNCI: Jangan filter status aktif saja, tapi filter "Tidak Batal"
+            ->where('status', '!=', 'Cancel') 
             ->count();
 
-
         // === TABEL DASHBOARD (Tamu Hari Ini) ===
-        // Menampilkan daftar tamu yang sedang aktif (Check In) atau akan datang hari ini.
         $transactions = Transaction::with('user', 'room', 'customer')
             ->whereDate('check_in', '<=', Carbon::today())
             ->whereDate('check_out', '>=', Carbon::today())
@@ -61,7 +63,7 @@ class DashboardController extends Controller
             'occupiedRoomsCount',
             'cleaningRoomsCount',
             'todayReservationsCount',
-            'thisMonth', // <-- Jangan lupa kirim variabel ini ke View
+            'thisMonth',
             'transactions'
         ));
     }

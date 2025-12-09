@@ -1,3 +1,6 @@
+{{-- ============================================================= --}}
+{{-- MOBILE HEADER --}}
+{{-- ============================================================= --}}
 <header class="mobile-header">
     <div class="container-fluid">
         <!-- Hamburger Menu Button -->
@@ -13,68 +16,8 @@
             <span class="brand-text">Hotel Sawunggaling</span>
         </a>
 
-        <!-- Profile & Notifications -->
+        <!-- User Profile -->
         <div class="mobile-profile">
-            <!-- Notifications -->
-            <button class="notification-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="fas fa-bell"></i>
-                @if (auth()->user()->unreadNotifications->count() > 0)
-                    <span class="notification-badge">{{ auth()->user()->unreadNotifications->count() }}</span>
-                @endif
-            </button>
-
-            <!-- Notification Dropdown -->
-            <ul class="dropdown-menu dropdown-menu-end shadow-lg" style="width: 300px;">
-                <li class="dropdown-header d-flex justify-content-between align-items-center">
-                    <span class="fw-bold">Notifikasi</span>
-                    @if (auth()->user()->unreadNotifications->count() > 0)
-                        <span class="badge bg-primary">{{ auth()->user()->unreadNotifications->count() }} new</span>
-                    @endif
-                </li>
-                <li><hr class="dropdown-divider"></li>
-
-                <div style="max-height: 200px; overflow-y: auto;">
-                    @forelse (auth()->user()->unreadNotifications->take(3) as $notification)
-                        <li>
-                            <a href="{{ route('notification.routeTo', ['id' => $notification->id]) }}" class="dropdown-item">
-                                <div class="d-flex">
-                                    <div class="flex-shrink-0">
-                                        <div class="bg-primary rounded-circle p-2" style="width: 32px; height: 32px;">
-                                            <i class="fas fa-bell text-white" style="font-size: 0.75rem;"></i>
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1 ms-2">
-                                        <div class="fw-medium text-dark" style="font-size: 0.8rem;">
-                                            {{ Str::limit($notification->data['title'] ?? 'New Notification', 40) }}
-                                        </div>
-                                        <div class="text-muted small">
-                                            {{ $notification->created_at->diffForHumans() }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </a>
-                        </li>
-                    @empty
-                        <li>
-                            <div class="dropdown-item text-center text-muted py-3">
-                                <i class="fas fa-bell-slash mb-2"></i>
-                                <div>Tidak ada Notifikasi Baru</div>
-                            </div>
-                        </li>
-                    @endforelse
-                </div>
-
-                @if (auth()->user()->unreadNotifications->count() > 3)
-                    <li><hr class="dropdown-divider"></li>
-                    <li>
-                        <a class="dropdown-item text-center text-primary" href="#">
-                            <small>Lihat Semua Notifikasi</small>
-                        </a>
-                    </li>
-                @endif
-            </ul>
-
-            <!-- User Profile Dropdown -->
             <div class="dropdown">
                 <button class="profile-dropdown-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <div class="profile-avatar">
@@ -82,7 +25,7 @@
                     </div>
                     <div class="profile-info d-none d-sm-block">
                         <div class="profile-name">{{ auth()->user()->name }}</div>
-                        <div class="profile-role">{{ auth()->user()->role ?? 'Admin' }}</div>
+                        <div class="profile-role">{{ auth()->user()->role }}</div>
                     </div>
                     <i class="fas fa-chevron-down profile-arrow d-none d-sm-block"></i>
                 </button>
@@ -96,28 +39,21 @@
                             </div>
                             <div>
                                 <div class="fw-bold" style="font-size: 0.85rem;">{{ auth()->user()->name }}</div>
-                                <div class="text-muted" style="font-size: 0.75rem;">{{ auth()->user()->role ?? 'Admin' }}</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">{{ auth()->user()->role }}</div>
                             </div>
                         </div>
                     </li>
                     <li><hr class="dropdown-divider"></li>
-
                     <li>
                         <a class="dropdown-item" href="#">
                             <i class="fas fa-user me-2 text-primary"></i>
-                            Lihat Profil
+                            Profil
                         </a>
                     </li>
                     <li>
                         <a class="dropdown-item" href="#">
                             <i class="fas fa-cog me-2 text-secondary"></i>
-                            Pengaturan Akun
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" href="#">
-                            <i class="fas fa-bell me-2 text-info"></i>
-                            Pengaturan Notifikasi
+                            Pengaturan
                         </a>
                     </li>
                     <li><hr class="dropdown-divider"></li>
@@ -137,101 +73,63 @@
     </div>
 </header>
 
-<!-- Mobile Offcanvas Sidebar -->
-<div class="offcanvas offcanvas-start" tabindex="-1" id="mobileOffcanvas" aria-labelledby="mobileOffcanvasLabel">
-    <button type="button" class="btn-close offcanvas-close-btn" data-bs-dismiss="offcanvas" aria-label="Close">
+{{-- ============================================================= --}}
+{{-- MOBILE OFFCANVAS SIDEBAR --}}
+{{-- ============================================================= --}}
+<div class="offcanvas offcanvas-start mobile-offcanvas" tabindex="-1" id="mobileOffcanvas" aria-labelledby="mobileOffcanvasLabel">
+    <button type="button" class="btn-close offcanvas-close-btn" aria-label="Close">
         <i class="fas fa-times"></i>
     </button>
 
-    <!-- Reuse the existing sidebar content -->
-    <div class="lh-sidebar mobile-sidebar-content">
-        <div class="sidebar-content">
-            <!-- Brand Header -->
-            <div class="sidebar-brand">
-                <div class="brand-logo">
-                    <i class="fas fa-hotel"></i>
-                </div>
-                <div class="brand-text">
-                    <h4 class="mb-0">Hotel Sawunggaling</h4>
-                </div>
+    <div class="sidebar-content">
+        {{-- USER PROFILE SECTION --}}
+        <div class="sidebar-user">
+            <div class="user-avatar">
+                <img src="{{ auth()->user()->getAvatar() }}" alt="User Avatar" class="rounded-circle">
             </div>
-
-            <!-- User Profile Section -->
-            <div class="sidebar-user">
-                <div class="user-avatar">
-                    <img src="{{ auth()->user()->getAvatar() }}" alt="User Avatar" class="rounded-circle">
-                </div>
-                <div class="user-info">
-                    <div class="user-name">{{ auth()->user()->name }}</div>
-                    <div class="user-role">{{ auth()->user()->role }}</div>
-                </div>
-                <div class="user-actions">
-                    <div class="dropdown">
-                        <button class="btn btn-link dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-ellipsis-v"></i>
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profil</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Pengaturan</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item" href="{{ route('logout') }}"
-                                   onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                    <i class="fas fa-sign-out-alt me-2"></i>Keluar
-                                </a>
-                                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                                    @csrf
-                                </form>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+            <div class="user-info">
+                <div class="user-name">{{ auth()->user()->name }}</div>
+                <div class="user-role">{{ auth()->user()->role }}</div>
             </div>
-
-            <!-- Notifications Section -->
-            <div class="sidebar-notifications">
-                <div class="notifications-header">
-                    <div class="notifications-title">
-                        <i class="fas fa-bell me-2"></i>
-                        Notifikasi
-                        @if (auth()->user()->unreadNotifications->count() > 0)
-                            <span class="notification-badge">{{ auth()->user()->unreadNotifications->count() }}</span>
-                        @endif
-                    </div>
-                </div>
-                <div class="notifications-content">
-                    @forelse (auth()->user()->unreadNotifications->take(3) as $notification)
-                        <a href="{{ route('notification.routeTo', ['id' => $notification->id]) }}" class="notification-item">
-                            <div class="notification-icon">
-                                <i class="fas fa-bell"></i>
-                            </div>
-                            <div class="notification-text">
-                                <div class="notification-message">{{ Str::limit($notification->data['message'] ?? 'New notification', 40) }}</div>
-                                <div class="notification-time">{{ $notification->created_at->diffForHumans() }}</div>
-                            </div>
-                        </a>
-                    @empty
-                        <div class="notification-empty">
-                            <i class="fas fa-bell-slash"></i>
-                            <span>Tidak ada Notifikasi Baru</span>
-                        </div>
-                    @endforelse
-
-                    @if (auth()->user()->unreadNotifications->count() > 3)
-                        <div class="notifications-footer">
-                            <a href="{{ route('notification.index') }}" class="view-all-notifications">
-                                View all ({{ auth()->user()->unreadNotifications->count() }})
+            <div class="user-actions">
+                <div class="dropdown">
+                    <button class="btn btn-link dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profil</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Pengaturan</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="{{ route('logout') }}"
+                               onclick="event.preventDefault(); document.getElementById('mobile-sidebar-logout-form').submit();">
+                                <i class="fas fa-sign-out-alt me-2"></i>Keluar
                             </a>
-                        </div>
-                    @endif
+                            <form id="mobile-sidebar-logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                                @csrf
+                            </form>
+                        </li>
+                    </ul>
                 </div>
             </div>
+        </div>
 
-            <!-- Navigation Menu -->
-            <nav class="sidebar-nav">
-                <!-- Dashboard -->
+        {{-- NAVIGATION MENU --}}
+        <nav class="sidebar-nav">
+            
+            {{-- DEFINISI VARIABLE ROLE --}}
+            @php
+                $role = auth()->user()->role;
+                $isDapur = ($role == 'Dapur');
+                $isSuper = ($role == 'Super' || $role == 'Superadmin');
+                $isManager = ($role == 'Manager');
+                $isAdmin = ($role == 'Admin');
+            @endphp
+
+            {{-- 1. GAMBARAN UMUM (DASHBOARD) --}}
+            @if(!$isDapur)
                 <div class="nav-section">
-                    <div class="nav-section-title">Gambaran Umum/div>
+                    <div class="nav-section-title">Gambaran Umum</div>
                     <a href="{{ route('dashboard.index') }}"
                        class="nav-item {{ in_array(Route::currentRouteName(), ['dashboard.index', 'chart.dailyGuest']) ? 'active' : '' }}">
                         <div class="nav-icon">
@@ -243,124 +141,701 @@
                         </div>
                     </a>
                 </div>
+            @endif
 
-                @if (auth()->user()->role == 'Super' || auth()->user()->role == 'Admin')
-                    <!-- Operations -->
-                    <div class="nav-section">
-                        <div class="nav-section-title">Operatisi</div>
+            {{-- 2. PEMESANAN --}}
+            @if(!$isDapur)
+                <div class="nav-section-title">Pemesanan</div>
 
-                        <!-- Transactions -->
-                        <a href="{{ route('transaction.index') }}"
-                           class="nav-item {{ in_array(Route::currentRouteName(), ['payment.index', 'transaction.index', 'transaction.reservation.createIdentity', 'transaction.reservation.pickFromCustomer', 'transaction.reservation.usersearch', 'transaction.reservation.storeCustomer', 'transaction.reservation.viewCountPerson', 'transaction.reservation.chooseRoom', 'transaction.reservation.confirmation', 'transaction.reservation.payDownPayment']) ? 'active' : '' }}">
+                {{-- INFO KAMAR --}}
+                <div class="nav-item dropdown-nav {{ request()->routeIs(['room-info.*']) ? 'active' : '' }}">
+                    <div class="nav-toggle" data-bs-toggle="collapse" data-bs-target="#mobileRoomInfoSubmenu">
+                        <div class="nav-icon">
+                            <i class="fas fa-bed"></i> 
+                        </div>
+                        <div class="nav-content">
+                            <div class="nav-title">Info Kamar</div>
+                            <div class="nav-subtitle">Ketersediaan & Status</div>
+                        </div>
+                        <div class="nav-arrow">
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </div>
+                    <div class="collapse {{ request()->routeIs(['room-info.*']) ? 'show' : '' }} w-100" id="mobileRoomInfoSubmenu">
+                        <div class="nav-submenu">
+                            <a href="{{ route('room-info.available') }}" 
+                               class="nav-subitem {{ request()->routeIs('room-info.available*') ? 'active' : '' }}">
+                                <i class="fas fa-check-circle me-2"></i>Kamar Tersedia
+                            </a>
+                            <a href="{{ route('room-info.reservation') }}" 
+                               class="nav-subitem {{ request()->routeIs('room-info.reservation*') ? 'active' : '' }}">
+                                <i class="fas fa-clock me-2"></i>Reservasi Kamar
+                            </a>
+                            <a href="{{ route('room-info.cleaning') }}" 
+                               class="nav-subitem {{ request()->routeIs('room-info.cleaning*') ? 'active' : '' }}">
+                                <i class="fas fa-broom me-2"></i>Kamar Dibersihkan
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- TRANSAKSI (Check-in) --}}
+                <a href="{{ route('transaction.checkin.index') }}" 
+                   class="nav-item {{ request()->routeIs('transaction.checkin.*') ? 'active' : '' }}">
+                    <div class="nav-icon">
+                        <i class="fas fa-sign-in-alt"></i>
+                    </div>
+                    <div class="nav-content">
+                        <div class="nav-title">Pemesanan</div>
+                        <div class="nav-subtitle">Check-in/Check-out Tamu</div>
+                    </div>
+                </a>
+            @endif
+            
+            {{-- 3. OPERATIONS --}}
+            @if(!$isDapur)
+                <div class="nav-section">
+                    <div class="nav-section-title">Operations</div>
+                    
+                    {{-- APPROVAL MANAGEMENT (MANAGER) --}}
+                    @if($isManager)
+                        <a href="{{ route('approval.index') }}" 
+                           class="nav-item {{ request()->routeIs('approval.*') ? 'active' : '' }}">
                             <div class="nav-icon">
-                                <i class="fas fa-credit-card"></i>
+                                <i class="fas fa-clipboard-check"></i>
                             </div>
                             <div class="nav-content">
-                                <div class="nav-title">Transaksi</div>
-                                <div class="nav-subtitle">Pemesanan & Transaksi</div>
+                                <div class="nav-title">Approval Management</div>
+                                <div class="nav-subtitle">Edit Kamar & Rapat</div>
                             </div>
                         </a>
+                    @endif
 
-                        <!-- Room Management -->
-                        <div class="nav-item dropdown-nav {{ in_array(Route::currentRouteName(), ['room.index', 'room.show', 'room.create', 'room.edit', 'type.index', 'type.create', 'type.edit', 'roomstatus.index', 'roomstatus.create', 'roomstatus.edit', 'facility.index', 'facility.create', 'facility.edit']) ? 'active' : '' }}">
-                            <div class="nav-toggle" data-bs-toggle="collapse" data-bs-target="#mobileRoomSubmenu">
-                                <div class="nav-icon">
-                                    <i class="fas fa-bed"></i>
-                                </div>
-                                <div class="nav-content">
-                                    <div class="nav-title">Manajemen Kamar</div>
-                                    <div class="nav-subtitle">Kamar, Tipe & Status</div>
-                                </div>
-                                <div class="nav-arrow">
-                                    <i class="fas fa-chevron-down"></i>
-                                </div>
+                    {{-- USER MANAGEMENT --}}
+                    @if($isSuper || $isManager)
+                        <a href="{{ route('user.index') }}" 
+                           class="nav-item {{ request()->routeIs('user.*') ? 'active' : '' }}">
+                            <div class="nav-icon">
+                                <i class="fas fa-users-cog"></i>
                             </div>
-                            <div class="collapse {{ in_array(Route::currentRouteName(), ['room.index', 'room.show', 'room.create', 'room.edit', 'type.index', 'type.create', 'type.edit', 'roomstatus.index', 'roomstatus.create', 'roomstatus.edit', 'facility.index', 'facility.create', 'facility.edit']) ? 'show' : '' }} w-100" id="mobileRoomSubmenu">
-                                <div class="nav-submenu">
-                                    <a href="{{ route('room.index') }}" class="nav-subitem {{ in_array(Route::currentRouteName(), ['room.index', 'room.show', 'room.create', 'room.edit']) ? 'active' : '' }}">
-                                        <i class="fas fa-door-open me-2"></i>Kamar
-                                    </a>
-                                    <a href="{{ route('type.index') }}" class="nav-subitem {{ in_array(Route::currentRouteName(), ['type.index', 'type.create', 'type.edit']) ? 'active' : '' }}">
-                                        <i class="fas fa-list me-2"></i>Tipe Kamar
-                                    </a>
-                                    <a href="{{ route('roomstatus.index') }}" class="nav-subitem {{ in_array(Route::currentRouteName(), ['roomstatus.index', 'roomstatus.create', 'roomstatus.edit']) ? 'active' : '' }}">
-                                        <i class="fas fa-toggle-on me-2"></i>Status Kamar
-                                    </a>
-                                    <a href="{{ route('facility.index') }}" class="nav-subitem {{ in_array(Route::currentRouteName(), ['facility.index', 'facility.create', 'facility.edit']) ? 'active' : '' }}">
-                                        <i class="fas fa-concierge-bell me-2"></i>Fasilitas
-                                    </a>
-                                </div>
+                            <div class="nav-content">
+                                <div class="nav-title">Manajemen Staff</div>
+                                <div class="nav-subtitle">Akses dan Peran</div>
+                            </div>
+                        </a>
+                    @endif
+
+                    {{-- CUSTOMER MANAGEMENT --}}
+                    <div class="nav-item dropdown-nav {{ in_array(Route::currentRouteName(), ['customer.index', 'customer.create', 'customer.edit']) ? 'active' : '' }}">
+                        <div class="nav-toggle" data-bs-toggle="collapse" data-bs-target="#mobileCustomerSubmenu">
+                            <div class="nav-icon">
+                                <i class="fas fa-user-friends"></i>
+                            </div>
+                            <div class="nav-content">
+                                <div class="nav-title">Manajemen Tamu</div>
+                                <div class="nav-subtitle">Data Pelanggan</div>
+                            </div>
+                            <div class="nav-arrow">
+                                <i class="fas fa-chevron-down"></i>
                             </div>
                         </div>
-
-                        <!-- Customer & User Management -->
-                        <div class="nav-item dropdown-nav {{ in_array(Route::currentRouteName(), ['customer.index', 'customer.create', 'customer.edit', 'user.index', 'user.create', 'user.edit']) ? 'active' : '' }}">
-                            <div class="nav-toggle" data-bs-toggle="collapse" data-bs-target="#mobileUserSubmenu">
-                                <div class="nav-icon">
-                                    <i class="fas fa-users"></i>
-                                </div>
-                                <div class="nav-content">
-                                    <div class="nav-title">Manajemen User</div>
-                                    <div class="nav-subtitle">Pengguna & Staff</div>
-                                </div>
-                                <div class="nav-arrow">
-                                    <i class="fas fa-chevron-down"></i>
-                                </div>
+                        <div class="collapse {{ in_array(Route::currentRouteName(), ['customer.index', 'customer.create', 'customer.edit']) ? 'show' : '' }} w-100" id="mobileCustomerSubmenu">
+                            <div class="nav-submenu">
+                                <a href="{{ route('customer.index') }}" 
+                                   class="nav-subitem {{ in_array(Route::currentRouteName(), ['customer.index', 'customer.create', 'customer.edit']) ? 'active' : '' }}"                                   >
+                                    <i class="fas fa-user-friends me-2"></i>Daftar Tamu
+                                </a>
                             </div>
-                            <div class="collapse {{ in_array(Route::currentRouteName(), ['customer.index', 'customer.create', 'customer.edit', 'user.index', 'user.create', 'user.edit']) ? 'show' : '' }} w-100" id="mobileUserSubmenu">
-                                <div class="nav-submenu">
-                                    <a href="{{ route('customer.index') }}" class="nav-subitem {{ in_array(Route::currentRouteName(), ['customer.index', 'customer.create', 'customer.edit']) ? 'active' : '' }}">
-                                        <i class="fas fa-user-friends me-2"></i>Pengguna
-                                    </a>
-                                    @if (auth()->user()->role == 'Super')
-                                        <a href="{{ route('user.index') }}" class="nav-subitem {{ in_array(Route::currentRouteName(), ['user.index', 'user.create', 'user.edit']) ? 'active' : '' }}">
-                                            <i class="fas fa-user-cog me-2"></i>Pengguna Staff
-                                        </a>
-                                    @endif
-                                </div>
+                        </div>
+                    </div>
+                    
+                    {{-- MANAJEMEN KAMAR --}}
+                    <div class="nav-item dropdown-nav {{ in_array(Route::currentRouteName(), ['room.index', 'room.show', 'room.create', 'room.edit', 'type.index', 'type.create', 'type.edit', 'roomstatus.index', 'roomstatus.create', 'roomstatus.edit', 'facility.index', 'facility.create', 'facility.edit']) ? 'active' : '' }}">
+                        <div class="nav-toggle" data-bs-toggle="collapse" data-bs-target="#mobileRoomSubmenu">
+                            <div class="nav-icon">
+                                <i class="fas fa-bed"></i>
+                            </div>
+                            <div class="nav-content">
+                                <div class="nav-title">Manajemen Kamar</div>
+                                <div class="nav-subtitle">Kamar, Tipe & Status</div>
+                            </div>
+                            <div class="nav-arrow">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        <div class="collapse {{ in_array(Route::currentRouteName(), ['room.index', 'room.show', 'room.create', 'room.edit', 'type.index', 'type.create', 'type.edit', 'roomstatus.index', 'roomstatus.create', 'roomstatus.edit', 'facility.index', 'facility.create', 'facility.edit']) ? 'show' : '' }} w-100" id="mobileRoomSubmenu">
+                            <div class="nav-submenu">
+                                <a href="{{ route('room.index') }}" 
+                                   class="nav-subitem {{ in_array(Route::currentRouteName(), ['room.index', 'room.show', 'room.create', 'room.edit']) ? 'active' : '' }}">
+                                    <i class="fas fa-door-open me-2"></i>Kamar
+                                </a>
+                                <a href="{{ route('type.index') }}" 
+                                   class="nav-subitem {{ in_array(Route::currentRouteName(), ['type.index', 'type.create', 'type.edit']) ? 'active' : '' }}">
+                                    <i class="fas fa-list me-2"></i>Tipe Kamar
+                                </a>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Analytics -->
-                    <div class="nav-section">
-                        <div class="nav-section-title">Analisis</div>
+                    {{-- RUANG RAPAT --}}
+                    <a href="{{ route('ruangrapat.index') }}" 
+                       class="nav-item {{ in_array(Route::currentRouteName(), ['ruangrapat.index', 'ruangrapat.create', 'ruangrapat.edit', 'ruangrapat.show']) ? 'active' : '' }}">
+                        <div class="nav-icon">
+                            <i class="fas fa-briefcase"></i>
+                        </div>
+                        <div class="nav-content">
+                            <div class="nav-title">Ruang Rapat</div>
+                            <div class="nav-subtitle">Manajemen Paket</div>
+                        </div>
+                    </a>
+                </div>
+            @endif
 
-                        <a href="#" class="nav-item">
+            {{-- 4. PERSEDIAAN --}}
+            @if($isDapur || $isSuper || $isAdmin || $isManager)
+                <div class="nav-section-title">{{ $isDapur ? 'Dapur' : 'Persediaan' }}</div>
+                
+                {{-- TAMPILAN KHUSUS DAPUR --}}
+                @if($isDapur)
+                    <a href="{{ route('ingredient.index') }}" 
+                       class="nav-item {{ request()->routeIs('ingredient.*') ? 'active' : '' }}">
+                        <div class="nav-icon">
+                            <i class="fas fa-carrot"></i>
+                        </div>
+                        <div class="nav-content">
+                            <div class="nav-title">Bahan Baku</div>
+                            <div class="nav-subtitle">Stok Dapur</div>
+                        </div>
+                    </a>
+                
+                {{-- TAMPILAN ADMIN/MANAGER/SUPERADMIN --}}
+                @else
+                    <div class="nav-item dropdown-nav {{ request()->routeIs(['ingredient.*', 'amenity.*']) ? 'active' : '' }}">
+                        <div class="nav-toggle" data-bs-toggle="collapse" data-bs-target="#mobilePersediaanSubmenu">
+                            <div class="nav-icon">
+                                <i class="fas fa-boxes"></i>
+                            </div>
+                            <div class="nav-content">
+                                <div class="nav-title">Persediaan</div>
+                                <div class="nav-subtitle">Bahan Baku & Amenities</div>
+                            </div>
+                            <div class="nav-arrow">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="collapse {{ request()->routeIs(['ingredient.*', 'amenity.*']) ? 'show' : '' }} w-100" id="mobilePersediaanSubmenu">
+                            <div class="nav-submenu">
+                                @if($isSuper) 
+                                    <a href="{{ route('ingredient.index') }}" 
+                                       class="nav-subitem {{ request()->routeIs('ingredient.*') ? 'active' : '' }}">
+                                        <i class="fas fa-cube me-2"></i>Bahan Baku
+                                    </a>
+                                @endif
+                                
+                                <a href="{{ route('amenity.index') }}" 
+                                   class="nav-subitem {{ request()->routeIs('amenity.*') ? 'active' : '' }}">
+                                    <i class="fas fa-soap me-2"></i>Amenities
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            @endif
+
+            {{-- 5. ANALYTICS --}}
+            @if(!$isDapur)
+                <div class="nav-section">
+                    <div class="nav-section-title">Analytics</div>
+
+                    @php
+                        $laporanRoutes = ['laporan.kamar.index', 'laporan.rapat.index'];
+                        $isLaporanActive = in_array(Route::currentRouteName(), $laporanRoutes);
+                    @endphp
+                    
+                    <div class="nav-item dropdown-nav {{ $isLaporanActive ? 'active' : '' }}">
+                        <div class="nav-toggle" data-bs-toggle="collapse" data-bs-target="#mobileLaporanSubmenu">
                             <div class="nav-icon">
                                 <i class="fas fa-chart-bar"></i>
                             </div>
                             <div class="nav-content">
                                 <div class="nav-title">Laporan</div>
-                                <div class="nav-subtitle">Keuangan & Analisis</div>
+                                <div class="nav-subtitle">Keuangan & Analitik</div>
                             </div>
-                        </a>
+                            <div class="nav-arrow">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="collapse {{ $isLaporanActive ? 'show' : '' }} w-100" id="mobileLaporanSubmenu">
+                            <div class="nav-submenu">
+                                <a href="{{ route('laporan.kamar.index') }}" 
+                                   class="nav-subitem {{ Route::currentRouteName() == 'laporan.kamar.index' ? 'active' : '' }}">
+                                    <i class="fas fa-bed me-2"></i>Laporan Kamar
+                                </a>
+                                <a href="{{ route('laporan.rapat.index') }}" 
+                                   class="nav-subitem {{ Route::currentRouteName() == 'laporan.rapat.index' ? 'active' : '' }}">
+                                    <i class="fas fa-handshake me-2"></i>Laporan Rapat
+                                </a>
+                            </div>
+                        </div>
                     </div>
+                </div>
+            @endif
 
-                    <!-- Administration -->
-                    <div class="nav-section">
-                        <div class="nav-section-title">Administrasi</div>
+        </nav>
 
-                        <a href="#" class="nav-item">
-                            <div class="nav-icon">
-                                <i class="fas fa-cogs"></i>
-                            </div>
-                            <div class="nav-content">
-                                <div class="nav-title">Pengaturan</div>
-                                <div class="nav-subtitle">Sistem Konfigurasi</div>
-                            </div>
-                        </a>
-                    </div>
-                @endif
-            </nav>
-
-            <!-- Quick Actions -->
+        {{-- SIDEBAR FOOTER --}}
+        @if(!$isDapur)
             <div class="sidebar-footer">
-                <a href="{{ route('transaction.reservation.createIdentity') }}" class="btn btn-primary w-100 quick-action-btn">
+                <a href="{{ route('transaction.reservation.createIdentity') }}" 
+                   class="btn w-100 quick-action-btn" 
+                   style="background-color: #8FB8E1; border-color: #8FB8E1; color: #F7F3E4;">
                     <i class="fas fa-plus me-2"></i>
                     Reservasi Baru
                 </a>
             </div>
-        </div>
+        @endif
+        
     </div>
 </div>
+
+{{-- ============================================================= --}}
+{{-- STYLES --}}
+{{-- ============================================================= --}}
+<style>
+/* ===== MOBILE HEADER ===== */
+.mobile-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: #50200C;
+    z-index: 1050;
+    display: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.mobile-header .container-fluid {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding: 0 1rem;
+}
+
+.hamburger-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    padding: 0.5rem;
+    cursor: pointer;
+    margin-right: 1rem;
+}
+
+.mobile-brand {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    flex: 1;
+}
+
+.mobile-brand .brand-icon {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, #8FB8E1, #6A9BC3);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+    margin-right: 0.75rem;
+}
+
+.mobile-brand .brand-text {
+    color: white;
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.mobile-profile {
+    display: flex;
+    align-items: center;
+}
+
+.profile-dropdown-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 0.25rem 0.5rem;
+    color: white;
+    cursor: pointer;
+}
+
+.profile-avatar {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, #8FB8E1, #6A9BC3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 0.8rem;
+}
+
+.profile-info .profile-name {
+    font-weight: 600;
+    font-size: 0.85rem;
+    line-height: 1.2;
+}
+
+.profile-info .profile-role {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.profile-arrow {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* ===== MOBILE OFFCANVAS ===== */
+.mobile-offcanvas {
+    width: 280px !important;
+    background: #50200C;
+    border: none;
+}
+
+.offcanvas-close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    z-index: 10;
+    opacity: 1;
+}
+
+.offcanvas-close-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.mobile-offcanvas .sidebar-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 0;
+    padding-top: 3rem;
+}
+
+.mobile-offcanvas .sidebar-user {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.mobile-offcanvas .user-avatar img {
+    width: 40px;
+    height: 40px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.mobile-offcanvas .user-info {
+    margin-left: 0.75rem;
+    flex: 1;
+}
+
+.mobile-offcanvas .user-name {
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+    line-height: 1.2;
+}
+
+.mobile-offcanvas .user-role {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.75rem;
+}
+
+.mobile-offcanvas .user-actions .btn {
+    color: rgba(255, 255, 255, 0.6);
+    border: none;
+    padding: 0.25rem 0.5rem;
+}
+
+.mobile-offcanvas .user-actions .btn:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.mobile-offcanvas .sidebar-nav {
+    flex: 1;
+    padding: 0.5rem 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.mobile-offcanvas .sidebar-nav::-webkit-scrollbar {
+    width: 4px;
+}
+
+.mobile-offcanvas .sidebar-nav::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.mobile-offcanvas .sidebar-nav::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+}
+
+.mobile-offcanvas .nav-section {
+    margin-bottom: 1.5rem;
+}
+
+.mobile-offcanvas .nav-section-title {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0.5rem 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.mobile-offcanvas .nav-item {
+    display: flex;
+    align-items: center;
+    padding: 0.875rem 1.25rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border-left: 3px solid transparent;
+}
+
+.mobile-offcanvas .nav-item:not(.dropdown-nav):hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.08);
+    border-left-color: #3b82f6;
+}
+
+.mobile-offcanvas .nav-item:not(.dropdown-nav).active {
+    color: white;
+    background: rgba(59, 130, 246, 0.15);
+    border-left-color: #3b82f6;
+}
+
+.mobile-offcanvas .nav-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.875rem;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.mobile-offcanvas .nav-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.mobile-offcanvas .nav-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    line-height: 1.2;
+    margin-bottom: 0.125rem;
+}
+
+.mobile-offcanvas .nav-subtitle {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+    line-height: 1.2;
+}
+
+.mobile-offcanvas .dropdown-nav {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+}
+
+.mobile-offcanvas .dropdown-nav .nav-toggle {
+    display: flex;
+    align-items: center;
+    padding: 0.875rem 1.25rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    border-left: 3px solid transparent;
+    cursor: pointer;
+    width: 100%;
+    background: none;
+    border: none;
+    text-align: left;
+}
+
+.mobile-offcanvas .dropdown-nav .nav-toggle:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.08);
+    border-left-color: #8FB8E1;
+}
+
+.mobile-offcanvas .dropdown-nav.active .nav-toggle {
+    color: white;
+    background: rgba(143, 184, 225, 0.15);
+    border-left-color: #8FB8E1;
+}
+
+.mobile-offcanvas .nav-arrow {
+    width: 20px;
+    display: flex;
+    justify-content: center;
+    transition: transform 0.3s ease;
+}
+
+.mobile-offcanvas .nav-toggle[aria-expanded="true"] .nav-arrow {
+    transform: rotate(180deg);
+}
+
+.mobile-offcanvas .nav-submenu {
+    padding: 0.5rem 0;
+}
+
+.mobile-offcanvas .nav-subitem {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1.25rem 0.5rem 3.5rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+}
+
+.mobile-offcanvas .nav-subitem:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.mobile-offcanvas .nav-subitem.active {
+    color: #8FB8E1;
+    background: rgba(143, 184, 225, 0.1);
+}
+
+.mobile-offcanvas .sidebar-footer {
+    padding: 1.25rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mobile-offcanvas .quick-action-btn {
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.mobile-offcanvas .quick-action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(143, 184, 225, 0.4);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 991.98px) {
+    .mobile-header {
+        display: block;
+    }
+    
+    body {
+        padding-top: 60px;
+    }
+}
+
+@media (min-width: 992px) {
+    .mobile-header {
+        display: none !important;
+    }
+    
+    .mobile-offcanvas {
+        display: none !important;
+    }
+}
+</style>
+
+{{-- ============================================================= --}}
+{{-- JAVASCRIPT --}}
+{{-- ============================================================= --}}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle dropdown toggles in mobile sidebar
+    const mobileDropdownToggles = document.querySelectorAll('.mobile-offcanvas .nav-toggle[data-bs-toggle="collapse"]');
+    
+    mobileDropdownToggles.forEach(toggle => {
+        const targetId = toggle.getAttribute('data-bs-target');
+        const targetElement = document.querySelector(targetId);
+        const arrow = toggle.querySelector('.nav-arrow');
+        
+        // Set initial state
+        if (targetElement && targetElement.classList.contains('show')) {
+            toggle.setAttribute('aria-expanded', 'true');
+            if (arrow) arrow.style.transform = 'rotate(180deg)';
+        } else {
+            toggle.setAttribute('aria-expanded', 'false');
+            if (arrow) arrow.style.transform = 'rotate(0deg)';
+        }
+        
+        // Handle click
+        toggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            const collapse = bootstrap.Collapse.getOrCreateInstance(targetElement, { toggle: false });
+            collapse.toggle();
+        });
+        
+        // Update arrow on show
+        targetElement.addEventListener('shown.bs.collapse', function() {
+            toggle.setAttribute('aria-expanded', 'true');
+            if (arrow) arrow.style.transform = 'rotate(180deg)';
+        });
+        
+        // Update arrow on hide
+        targetElement.addEventListener('hidden.bs.collapse', function() {
+            toggle.setAttribute('aria-expanded', 'false');
+            if (arrow) arrow.style.transform = 'rotate(0deg)';
+        });
+    });
+    
+    // Auto-close offcanvas when clicking nav links (except dropdown toggles)
+    const mobileNavLinks = document.querySelectorAll('.mobile-offcanvas .nav-subitem');
+    const mobileOffcanvas = document.getElementById('mobileOffcanvas');
+    
+    if (mobileOffcanvas) {
+        const bsOffcanvas = bootstrap.Offcanvas.getOrCreateInstance(mobileOffcanvas);
+        
+        mobileNavLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                // Small delay to allow navigation to start
+                setTimeout(() => {
+                    bsOffcanvas.hide();
+                }, 100);
+            });
+        });
+    }
+});
+</script>

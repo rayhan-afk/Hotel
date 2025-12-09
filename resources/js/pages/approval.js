@@ -44,11 +44,11 @@ $(function () {
                 className: "align-middle",
                 render: function (data) {
                     if (data === "pending") {
-                        return '<span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>Pending</span>';
+                        return '<span class="badge badge-pending"><i class="fas fa-clock me-1"></i>Pending</span>';
                     } else if (data === "approved") {
-                        return '<span class="badge bg-success"><i class="fas fa-check me-1"></i>Approved</span>';
+                        return '<span class="badge badge-approved"><i class="fas fa-check me-1"></i>Approved</span>';
                     } else {
-                        return '<span class="badge bg-danger"><i class="fas fa-times me-1"></i>Rejected</span>';
+                        return '<span class="badge badge-rejected"><i class="fas fa-times me-1"></i>Rejected</span>';
                     }
                 },
             },

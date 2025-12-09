@@ -1,29 +1,29 @@
 {{-- PENTING: File ini TIDAK BOLEH ada @extends atau @section --}}
 {{-- Karena file ini hanya potongan HTML yang akan dimasukkan ke dalam Modal --}}
 
-<div class="p-2">
+<div class="p-2" style="background-color: #F7F3E4;">
     {{-- BAGIAN 1: INFO HEADER --}}
     <div class="card mb-4 border-left-primary shadow-sm h-100 py-2">
         <div class="card-body">
             <div class="row no-gutters align-items-center">
                 <div class="col mr-2">
-                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                    <div class="text-xs font-weight-bold mb-1" style="color: #50200C">
                         Diajukan Oleh
                     </div>
-                    <div class="h5 mb-0 font-weight-bold text-gray-800">
+                    <div class="h5 mb-0 font-weight-bold" style="color: #50200C">
                         {{ $approval->requester->name ?? 'User Tidak Dikenal' }}
                     </div>
-                    <div class="text-muted small mt-1">
+                    <div class="small mt-1" style="color: #50200C">
                         <i class="fas fa-calendar-alt me-1"></i> {{ $approval->created_at->isoFormat('D MMMM Y HH:mm') }}
                     </div>
                 </div>
                 <div class="col-auto">
                     @if($approval->status == 'pending')
-                        <span class="badge bg-warning text-dark px-3 py-2 fs-6"><i class="fas fa-clock"></i> Pending</span>
+                        <span class="badge badge-pending px-3 py-2 fs-6"><i class="fas fa-clock"></i> Pending</span>
                     @elseif($approval->status == 'approved')
-                        <span class="badge bg-success text-dark px-3 py-2 fs-6"><i class="fas fa-check"></i> Approved</span>
+                        <span class="badge badge-approved px-3 py-2 fs-6"><i class="fas fa-check"></i> Approved</span>
                     @else
-                        <span class="badge bg-danger text-dark px-3 py-2 fs-6"><i class="fas fa-times"></i> Rejected</span>
+                        <span class="badge badge-rejected px-3 py-2 fs-6"><i class="fas fa-times"></i> Rejected</span>
                     @endif
                 </div>
             </div>
@@ -31,23 +31,23 @@
     </div>
 
     {{-- BAGIAN 2: TABEL PERBANDINGAN --}}
-    <h5 class="mb-3 fw-bold text-dark border-bottom pb-2">
-        <i class="fas fa-exchange-alt me-2 text-primary" style="color: #8B4513;"></i>Detail Perubahan
+    <h5 class="mb-3 fw-bold border-bottom pb-2" style="color: #50200C">
+        <i class="fas fa-exchange-alt me-2" style="color: #50200C;"></i>Detail Perubahan
     </h5>
         
     <div class="table-responsive border rounded">
         <table class="table table-bordered table-striped mb-0 align-middle">
-            <thead class="bg-light">
-                <tr class="text-center small text-uppercase">
+            <thead class=" " style="background-color: #F7F3E4">
+                <tr class="text-center small" style="color: #50200C">
                     <th style="width: 25%;">Kolom</th>
                     
-                   {{-- [FIX WARNA] Background Merah Cerah (#ffcccc) + Teks Hitam --}}
-                    <th style="width: 37%; background-color: #ffcccc;" class="text-dark fw-bold">
+                   {{-- [FIX WARNA] Background Merah Cerah (#F2C2B8) + Teks #50200C --}}
+                    <th style="width: 37%; background-color: #F2C2B8; color: #50200C" class="fw-bold">
                         <i class="fas fa-history me-1"></i> Data Lama
                     </th>
                     
-                    {{-- [FIX WARNA] Background Hijau Cerah (#ccffcc) + Teks Hitam --}}
-                    <th style="width: 37%; background-color: #ccffcc;" class="text-dark fw-bold">
+                    {{-- [FIX WARNA] Background Hijau Cerah (#A8D5BA) + Teks #50200C --}}
+                    <th style="width: 37%; background-color: #A8D5BA;" class="fw-bold">
                         <i class="fas fa-file-import me-1"></i> Data Baru
                     </th>
                 </tr>
@@ -78,60 +78,81 @@
                 @endphp
 
                 @foreach($allKeys as $key)
-                    @if(in_array($key, $ignoredKeys)) @continue @endif
+                @if(in_array($key, $ignoredKeys)) @continue @endif
 
-                    @php
-                        $oldVal = $oldData[$key] ?? '-';
-                        $newVal = $newData[$key] ?? '-';
-                        
-                        // Cek perubahan (String comparison)
-                        $valOldStr = is_array($oldVal) ? json_encode($oldVal) : (string)$oldVal;
-                        $valNewStr = is_array($newVal) ? json_encode($newVal) : (string)$newVal;
-                        
-                        $isChanged = $valOldStr !== $valNewStr;
-                        if($isChanged) $hasChanges = true;
-                        
-                        // Format Rupiah (Lebih Aman)
-                        if(str_contains(strtolower($key), 'price') || str_contains(strtolower($key), 'harga')) {
-                            if(is_numeric($oldVal)) $oldVal = 'Rp ' . number_format($oldVal, 0, ',', '.');
-                            if(is_numeric($newVal)) $newVal = 'Rp ' . number_format($newVal, 0, ',', '.');
-                        }
-                    @endphp
+                @php
+                    $oldVal = $oldData[$key] ?? '-';
+                    $newVal = $newData[$key] ?? '-';
+                    
+                    // Cek perubahan (String comparison)
+                    $valOldStr = is_array($oldVal) ? json_encode($oldVal) : (string)$oldVal;
+                    $valNewStr = is_array($newVal) ? json_encode($newVal) : (string)$newVal;
+                    
+                    $isChanged = $valOldStr !== $valNewStr;
+                    if($isChanged) $hasChanges = true;
+                    
+                    // Format Rupiah (Lebih Aman)
+                    if(str_contains(strtolower($key), 'price') || str_contains(strtolower($key), 'harga')) {
+                        if(is_numeric($oldVal)) $oldVal = 'Rp ' . number_format($oldVal, 0, ',', '.');
+                        if(is_numeric($newVal)) $newVal = 'Rp ' . number_format($newVal, 0, ',', '.');
+                    }
 
-                    <tr>
-                        {{-- NAMA KOLOM --}}
-                        <td class="fw-bold bg-white text-capitalize">
-                            {{ str_replace(['_', '-'], ' ', $key) }}
-                        </td>
-                        
-                        {{-- DATA LAMA --}}
-                        <td class="{{ $isChanged ? 'text-dark' : 'text-muted' }}" 
-                            style="{{ $isChanged ? 'background-color: #f9b9b9ff;' : '' }}">
-                            @if($isChanged) 
-                                <del class="small opacity-75">
-                                    {{ is_array($oldVal) ? json_encode($oldVal, JSON_PRETTY_PRINT) : $oldVal }}
-                                </del>
-                            @else 
-                                {{ is_array($oldVal) ? json_encode($oldVal) : $oldVal }}
-                            @endif
-                        </td>
+                    // ========================================
+                    // ✅ TAMBAHKAN MAPPING NAMA KOLOM DISINI
+                    // ========================================
+                    $columnLabels = [
+                        'type_id' => 'Tipe Kamar',
+                        'number' => 'Nomor Kamar',
+                        'capacity' => 'Kapasitas',
+                        'price' => 'Harga',
+                        'name' => 'Nama Kamar',
+                        'status' => 'Status',
+                        'area_sqm' => 'Luas Area (m²)',
+                        'breakfast' => 'Sarapan',
+                        'room_facilities' => 'Fasilitas Kamar',
+                        'bathroom_facilities' => 'Fasilitas Kamar Mandi',
+                        // Tambahkan mapping lainnya sesuai kebutuhan
+                    ];
+                    
+                    // Ambil label atau fallback ke format default
+                    $columnLabel = $columnLabels[$key] ?? ucwords(str_replace(['_', '-'], ' ', $key));
+                @endphp
 
-                        {{-- DATA BARU --}}
-                        <td class="{{ $isChanged ? 'fw-bold text-dark' : '' }}" 
-                            style="{{ $isChanged ? 'background-color: #fff3cd; border-left: 4px solid #ffc107;' : '' }}">
-                            
-                            {{ is_array($newVal) ? json_encode($newVal, JSON_PRETTY_PRINT) : $newVal }}
-                            
-                            @if($isChanged)
-                                <i class="fas fa-check-circle text-success float-end mt-1"></i>
-                            @endif
-                        </td>
-                    </tr>
-                @endforeach
+                <tr>
+                    
+                    {{-- NAMA KOLOM - GUNAKAN MAPPING --}}
+                    <td class="fw-bold bg-white" style="color: #50200C;">
+                        {{ $columnLabel }}
+                    </td>
+                    
+                    {{-- DATA LAMA --}}
+                    <td class="{{ $isChanged ? 'text-dark' : 'text-muted' }}" 
+                        style="color:#50200C !important; {{ $isChanged ? 'background-color: #f9b9b9ff;' : '' }}">
+                        @if($isChanged) 
+                            <del class="small opacity-75">
+                                {{ is_array($oldVal) ? json_encode($oldVal, JSON_PRETTY_PRINT) : $oldVal }}
+                            </del>
+                        @else 
+                            {{ is_array($oldVal) ? json_encode($oldVal) : $oldVal }}
+                        @endif
+                    </td>
+
+                    {{-- DATA BARU --}}
+                    <td class="{{ $isChanged ? 'fw-bold text-dark' : '' }}" 
+                        style="color:#50200C !important; {{ $isChanged ? 'background-color: #fff3cd; border-left: 4px solid #ffc107;' : '' }}">
+                        
+                        {{ is_array($newVal) ? json_encode($newVal, JSON_PRETTY_PRINT) : $newVal }}
+                        
+                        @if($isChanged)
+                            <i class="fas fa-check-circle text-success float-end mt-1"></i>
+                        @endif
+                    </td>
+                </tr>
+            @endforeach
 
                 @if(empty($allKeys) || !$hasChanges)
                     <tr>
-                        <td colspan="3" class="text-center text-muted py-4">
+                        <td colspan="3" class="text-center py-4" style="color: #50200C">
                             <i class="fas fa-info-circle fa-2x mb-2"></i><br>
                             <em>Tidak ada perubahan data teks yang terdeteksi.<br>(Kemungkinan hanya perubahan gambar/file)</em>
                         </td>

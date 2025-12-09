@@ -62,11 +62,11 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h3><i class="fas fa-clipboard-check me-2"></i>Approval Management</h3>
-                    <p class="text-muted">Kelola persetujuan perubahan Tipe Kamar, Paket Rapat, dan Data Kamar</p>
+                    <h3 style="color: #50200C"><i class="fas fa-clipboard-check me-2" style="color: #50200C"></i>Approval Management</h3>
+                    <p class="" style="color: #50200C">Kelola persetujuan perubahan Tipe Kamar, Paket Rapat, dan Data Kamar</p>
                 </div>
                 <div>
-                    <span class="badge bg-warning fs-5 text-dark shadow-sm">
+                    <span class="badge fs-6 shadow-sm" style="background-color: #FAE8A4; color: #50200C">
                         <i class="fas fa-clock me-1"></i>{{ $pendingCount }} Pending
                     </span>
                 </div>
@@ -79,10 +79,10 @@
         <div class="table-header d-flex justify-content-between align-items-center filter-wrapper">
             <h4><i class="fas fa-list me-2"></i>Daftar Approval</h4>
             <div>
-                <label class="me-2 fw-bold text-muted">Filter Status:</label>
+                <label class="me-2 fw-bold" style="color: #50200C">Filter Status:</label>
                 <!-- Tambahkan z-index tinggi pada select -->
                 <select id="status_filter" class="form-select d-inline-block shadow-sm border-primary" 
-                        style="width: 220px; cursor: pointer; font-weight: 500; position: relative; z-index: 10000;">
+                        style="color: #50200C; width: 220px; cursor: pointer; font-weight: 500; position: relative; z-index: 10000;">
                     <!-- [FIX] Pastikan value sesuai database (huruf kecil) -->
                     <option value="all">📂 Semua Status</option>
                     <option value="pending" selected>🕒 Pending (Menunggu)</option>
@@ -114,11 +114,11 @@
 <div class="modal fade" id="detail-modal" tabindex="-1">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <div class="modal-header text-white" style="background-color: #50200C">
+            <div class="modal-header" style="background-color: #F7F3E4; color: #50200C;">
                 <h5 class="modal-title" ><i class="fas fa-eye me-2"></i>Detail Perubahan</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-brown" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" id="detail-body"></div>
+            <div class="modal-body" id="detail-body" style="background-color: #F7F3E4"></div>
         </div>
     </div>
 </div>
@@ -126,19 +126,19 @@
 {{-- MODAL APPROVE --}}
 <div class="modal fade" id="approve-modal" tabindex="-1">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title"><i class="fas fa-check-circle me-2"></i>Approve</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <div class="modal-content" style="background-color: #F7F3E4; color: #50200C">
+            <div class="modal-header" style="background-color: #F7F3E4; color: #50200C">
+                <h5 class="modal-title"><i class="fas fa-check-circle me-2"></i>Setuju</h5>
+                <button type="button" class="btn-close" style="color: #50200C" data-bs-dismiss="modal"></button>
             </div>
             <form id="form-approve">
                 <div class="modal-body">
                     <p>Yakin ingin <strong>menyetujui</strong> perubahan ini?</p>
-                    <textarea class="form-control" name="notes" rows="3" placeholder="Catatan (opsional)"></textarea>
+                    <textarea style="color: #50200C" class="form-control" name="notes" rows="3" placeholder="Catatan (opsional)"></textarea>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Approve</button>
+                    <button type="button" class="btn btn-modal-close" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-modal-save"><i class="fas fa-check"></i> Setuju</button>
                 </div>
             </form>
         </div>
@@ -148,19 +148,19 @@
 {{-- MODAL REJECT --}}
 <div class="modal fade" id="reject-modal" tabindex="-1">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title"><i class="fas fa-times-circle me-2"></i>Reject</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <div class="modal-content" style="background-color: #F7F3E4; color: #50200C">
+            <div class="modal-header" style="background-color: #F7F3E4; color: #50200C">
+                <h5 class="modal-title"><i class="fas fa-times-circle me-2"></i>Tolak</h5>
+                <button type="button" class="btn-close" style="color: #50200C" data-bs-dismiss="modal"></button>
             </div>
             <form id="form-reject">
                 <div class="modal-body">
                     <p>Yakin ingin <strong>menolak</strong> perubahan ini?</p>
-                    <textarea class="form-control" name="notes" rows="3" placeholder="Alasan penolakan" required></textarea>
+                    <textarea style="color: #50200C" class="form-control" name="notes" rows="3" placeholder="Alasan penolakan" required></textarea>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-danger"><i class="fas fa-times"></i> Reject</button>
+                    <button type="button" class="btn btn-modal-close" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-modal-save"><i class="fas fa-times"></i> Tolak</button>
                 </div>
             </form>
         </div>

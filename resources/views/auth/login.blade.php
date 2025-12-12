@@ -206,10 +206,21 @@
                             <label for="email"><i class="fas fa-envelope me-2"></i>Email Address</label>
                         </div>
 
-                        <div class="form-floating">
-                            <input type="password" id="password" name="password" class="form-control" placeholder="Password" required>
+                        {{-- [UBAH DISINI] Bagian Input Password dengan Fitur Toggle --}}
+                        <div class="form-floating position-relative">
+                            {{-- Tambahkan style padding-right agar teks tidak nabrak ikon mata --}}
+                            <input type="password" id="password" name="password" class="form-control" 
+                                   placeholder="Password" required style="padding-right: 45px;">
+                            
                             <label for="password"><i class="fas fa-lock me-2"></i>Password</label>
+                            
+                            {{-- Ikon Mata (Absolute Position) --}}
+                            <span id="togglePassword" class="position-absolute top-50 end-0 translate-middle-y me-3" 
+                                  style="cursor: pointer; z-index: 10; color: #64748b;">
+                                <i class="fas fa-eye"></i>
+                            </span>
                         </div>
+                        {{-- [BATAS UBAHAN] --}}
 
                         <div class="form-check mb-3"> 
                             <div class="form-group mb-3">
@@ -264,6 +275,27 @@
                 form.addEventListener('submit', function() {
                     btn.classList.add('loading');
                     btn.disabled = true;
+                });
+            }
+            // [UBAH DISINI] 2. Logic Show/Hide Password
+            const togglePassword = document.querySelector('#togglePassword');
+            const password = document.querySelector('#password');
+
+            if (togglePassword && password) {
+                togglePassword.addEventListener('click', function (e) {
+                    // Toggle tipe input
+                    const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+                    password.setAttribute('type', type);
+                    
+                    // Toggle icon mata
+                    const icon = this.querySelector('i');
+                    if (type === 'text') {
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash'); // Icon mata dicoret
+                    } else {
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye'); // Icon mata biasa
+                    }
                 });
             }
         });

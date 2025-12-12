@@ -47,20 +47,25 @@
 <script>
     function updateClock() {
         const now = new Date();
-        
-        // Format waktu hh:mm AM/PM
-        let hours = now.getHours();
-        const minutes = now.getMinutes().toString().padStart(2, '0');
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12;
-        hours = hours ? hours : 12;
-        document.getElementById('clock-time').textContent = hours + ':' + minutes + ' ' + ampm;
 
-        // Format tanggal
-        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        document.getElementById('clock-date').textContent = now.toLocaleDateString('en-US', options);
+        // 1. FORMAT TANGGAL (Bahasa Indonesia)
+        // Menggunakan 'id-ID' akan otomatis mengubah:
+        // Wednesday -> Rabu, December -> Desember
+        const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('clock-date').textContent = now.toLocaleDateString('id-ID', dateOptions);
+
+        // 2. FORMAT WAKTU (24 Jam dengan Detik)
+        // Kita ambil jam, menit, detik secara manual agar formatnya rapi (HH:MM:SS)
+        const hours = now.getHours().toString().padStart(2, '0');
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const seconds = now.getSeconds().toString().padStart(2, '0'); // Tambahan detik biar live
+
+        // Gabungkan string
+        // Hasil contoh: 14:30:05 WIB
+        document.getElementById('clock-time').textContent = `${hours}:${minutes}:${seconds} WIB`;
     }
 
     updateClock(); // pertama kali
     setInterval(updateClock, 1000); // update tiap detik
 </script>
+

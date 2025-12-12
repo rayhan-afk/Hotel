@@ -2,11 +2,11 @@
 
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\AmenityController;
-use App\Http\Controllers\ApprovalController; // Dari file 2
+use App\Http\Controllers\ApprovalController; 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChartController;
 use App\Http\Controllers\CheckinController;
-use App\Http\Controllers\CheckoutController; // Dari file 2
+use App\Http\Controllers\CheckoutController; 
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FacilityController;
@@ -15,7 +15,7 @@ use App\Http\Controllers\IngredientController;
 use App\Http\Controllers\KamarDibersihkanController;
 use App\Http\Controllers\KamarTersediaController;
 use App\Http\Controllers\LaporanController;
-use App\Http\Controllers\LaporanKamarController; // Dari file 1
+use App\Http\Controllers\LaporanKamarController; 
 use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ReservasiKamarController;
@@ -82,7 +82,7 @@ Route::group(['middleware' => 'guest'], function () {
 Route::group(['middleware' => ['auth', 'checkRole:Super,Manager']], function () {
     Route::resource('user', UserController::class)->except(['show']);
     
-    // Approval Management (Dari File 2)
+    // Approval Management
     Route::group(['prefix' => 'approval', 'as' => 'approval.'], function () {
         Route::get('/', [ApprovalController::class, 'index'])->name('index');
         Route::get('/data', [ApprovalController::class, 'data'])->name('data');
@@ -99,9 +99,6 @@ Route::group(['middleware' => ['auth', 'checkRole:Super,Manager']], function () 
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth'])->group(function () {
-    // Dipindahkan ke sini agar user.show tetap berfungsi walau di group Super/Manager diexcept
-    // Walaupun di file 2 ada di group SEMUA YANG LOGIN, lebih baik diletakkan di luar
-    // agar resource user.except(['show']) di atas tetap prioritas.
     Route::get('/user/{user}', [UserController::class, 'show'])->name('user.show');
 });
 
@@ -136,8 +133,8 @@ Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Manager']], functi
         Route::get('/{customer}/chooseRoom', [TransactionRoomReservationController::class, 'chooseRoom'])->name('chooseRoom');
         Route::get('/{customer}/{room}/{from}/{to}/confirmation', [TransactionRoomReservationController::class, 'confirmation'])->name('confirmation');
         Route::post('/{customer}/{room}/payDownPayment', [TransactionRoomReservationController::class, 'payDownPayment'])->name('payDownPayment');
-
-        // Tambahkan route ini:
+        
+        // Preview Invoice Kamar
         Route::get('/{customer}/{room}/{from}/{to}/preview-invoice', 
             [TransactionRoomReservationController::class, 'previewInvoice']
         )->name('previewInvoice');
@@ -158,14 +155,14 @@ Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Manager']], functi
     */
     Route::resource('ruangrapat', RuangRapatController::class);
 
-    Route::delete(
-        '/rapat/reservasi/{rapatTransaction}/cancel',
-        [RuangRapatController::class, 'cancelReservation']
-    )->name('rapat.transaction.cancel');
+    // [BARU] Route Hapus Data Reservasi (Modal Merah di Index)
+    Route::delete('/transaction/rapat/delete/{id}', [RuangRapatReservationController::class, 'destroy'])
+        ->name('rapat.transaction.destroy');
 
-    Route::get('/rapat/payments',
-        [RuangRapatController::class, 'paymentHistory'])->name('rapat.payment.index');
+    // History Pembayaran Rapat
+    Route::get('/rapat/payments', [RuangRapatController::class, 'paymentHistory'])->name('rapat.payment.index');
 
+    // Group Wizard Reservasi Rapat
     Route::group(['prefix' => 'rapat/reservasi', 'as' => 'rapat.reservation.'], function () {
         Route::get('/step-1', [RuangRapatReservationController::class, 'showStep1_CustomerInfo'])->name('showStep1');
         Route::post('/step-1', [RuangRapatReservationController::class, 'storeStep1_CustomerInfo'])->name('storeStep1');
@@ -175,8 +172,18 @@ Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Manager']], functi
         Route::post('/step-3', [RuangRapatReservationController::class, 'storeStep3_PaketInfo'])->name('storeStep3');
         Route::get('/step-4', [RuangRapatReservationController::class, 'showStep4_Confirmation'])->name('showStep4');
         Route::post('/bayar', [RuangRapatReservationController::class, 'processPayment'])->name('processPayment');
+        
+        // Cancel Wizard (Clear Session)
         Route::get('/cancel', [RuangRapatReservationController::class, 'cancelReservation'])->name('cancel');
     });
+
+    // Preview Invoice (Sebelum Bayar)
+    Route::get('/transaction/rapat/preview-invoice', [RuangRapatReservationController::class, 'previewInvoice'])
+        ->name('rapat.reservation.previewInvoice');
+    
+    // Print Invoice (Dari Laporan)
+    Route::get('/laporan/rapat/invoice/{id}', [RuangRapatReservationController::class, 'printInvoice'])
+        ->name('rapat.invoice.print');
 
     /*
     |--------------------------------------------------------------------------
@@ -186,15 +193,11 @@ Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Manager']], functi
     Route::prefix('laporan')->name('laporan.')->group(function () {
         // Laporan Ruang Rapat
         Route::get('/rapat', [LaporanController::class, 'laporanRuangRapat'])->name('rapat.index');
-        Route::get('/rapat/export', [LaporanController::class, 'exportExcel'])->name('rapat.export'); // Dari File 1
+        Route::get('/rapat/export', [LaporanController::class, 'exportExcel'])->name('rapat.export');
 
         // Laporan Kamar
-        // Menggunakan LaporanKamarController dari file 1
         Route::get('/kamar', [LaporanKamarController::class, 'index'])->name('kamar.index'); 
-        Route::get('/kamar/export', [LaporanKamarController::class, 'exportExcel'])->name('kamar.export'); // Dari File 1
-        
-        // Fungsionalitas Kamar Hotel yang ada di file 2 (jika berbeda)
-        // Route::get('/kamar', [LaporanController::class, 'laporanKamarHotel'])->name('kamar.index');
+        Route::get('/kamar/export', [LaporanKamarController::class, 'exportExcel'])->name('kamar.export');
     });
 
     /*
@@ -234,50 +237,27 @@ Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Customer,Manager,D
 
     // === INFO KAMAR (Monitoring Kamar) ===
     Route::prefix('room-info')->as('room-info.')->group(function () {
-        
-        // 1. Kamar Tersedia
         Route::get('/available', [KamarTersediaController::class, 'index'])->name('available');
-        
-        // 2. Reservasi (Daftar Tamu yang akan datang)
         Route::get('/reservation', [ReservasiKamarController::class, 'index'])->name('reservation');
-        
-        // Aksi Check In Manual (Dari File 1)
         Route::post('/reservation/{id}/check-in', [ReservasiKamarController::class, 'checkIn'])->name('reservation.checkIn');
-        
-        // Aksi Cancel Reservasi (Ada di kedua file)
         Route::post('/reservation/{id}/cancel', [ReservasiKamarController::class, 'cancel'])->name('reservation.cancel');
-
-        // 3. Kamar Dibersihkan (Housekeeping)
         Route::get('/cleaning', [KamarDibersihkanController::class, 'index'])->name('cleaning');
-        
-        // Aksi Selesai Membersihkan (Tombol Hijau) (Dari File 1)
         Route::post('/cleaning/{id}/finish', [KamarDibersihkanController::class, 'finishCleaning'])->name('cleaning.finish');
     });
 
     // === OPERASIONAL CHECK IN - CHECK OUT ===
     Route::prefix('transaction')->as('transaction.')->group(function () {
-
-        // CHECK-IN (Halaman Utama & CRUD)
         Route::get('/check-in', [CheckinController::class, 'index'])->name('checkin.index');
         Route::get('/check-in/{transaction}/edit', [CheckinController::class, 'edit'])->name('checkin.edit');
         Route::put('/check-in/{transaction}', [CheckinController::class, 'update'])->name('checkin.update');
         Route::delete('/check-in/{transaction}', [CheckinController::class, 'destroy'])->name('checkin.destroy');
-
-        // CHECK-OUT (Aksi Baru: Tombol di Halaman Check-in - Dari File 1)
         Route::post('/check-in/{transaction}/checkout', [CheckinController::class, 'checkout'])->name('checkin.checkout');
 
-        // Halaman CHECK-OUT Terpisah (Dari File 2)
         Route::get('/check-out', [CheckoutController::class, 'index'])->name('checkout.index');
         Route::post('/check-out/{transaction}', [CheckoutController::class, 'process'])->name('checkout.process');
         Route::post('/checkout/{id}', [CheckoutController::class, 'processCheckout'])->name('checkout.process2');
     });
 
-    /*
-    |--------------------------------------------------------------------------
-    | TRANSACTION RESOURCE (HARUS DI BAWAH CHECK-IN / CHECK-OUT)
-    |--------------------------------------------------------------------------
-    */
-    // Ditempatkan di sini agar rute spesifik check-in/out mendapat prioritas
     Route::resource('transaction', TransactionController::class);
 });
 

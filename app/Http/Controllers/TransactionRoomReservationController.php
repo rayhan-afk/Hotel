@@ -186,6 +186,7 @@ class TransactionRoomReservationController extends Controller
 
         $request->merge([
             'total_price' => $grandTotal,
+            'paid_amount' => $grandTotal,
             'status'      => 'Reservation' 
         ]);
 

@@ -44,10 +44,17 @@ class ReservasiKamarController extends Controller
     {
         $transaction = \App\Models\Transaction::findOrFail($id);
 
-        // Validasi: Hanya bisa Check In jika statusnya masih Reservation
         if($transaction->status == 'Reservation') {
+            
+            // [PERBAIKAN] Cek apakah paid_amount masih 0? Jika ya, anggap sudah lunas saat Check In
+            $paidAmount = $transaction->paid_amount;
+            if ($paidAmount == 0) {
+                $paidAmount = $transaction->total_price;
+            }
+
             $transaction->update([
-                'status' => 'Check In' // Ubah status jadi Check In
+                'status' => 'Check In',
+                'paid_amount' => $paidAmount // Update paid_amount
             ]);
             
             return response()->json(['message' => 'Berhasil Check In! Tamu kini berstatus aktif.']);

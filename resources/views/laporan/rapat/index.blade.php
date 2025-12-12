@@ -5,7 +5,7 @@
 <div class="container-fluid">
     
     <div class="row my-2 mt-4 ms-1">
-        <div class="col-lg-12">
+        <div class="col-lg-12" style="color: #50200C;">
             <h2><i class="fas fa-history me-2"></i>Laporan Ruang Rapat</h2>
         </div>
     </div>
@@ -17,19 +17,19 @@
                 {{-- FILTER SECTION --}}
                 <div class="table-header p-3" style="position: relative; z-index: 2;">
                     <form id="filter-form">
-                        <div class="row align-items-end">
+                        <div class="row align-items-end" style="color: #50200C;">
                             <div class="col-md-4 mb-3">
-                                <label for="tanggal_mulai" class="form-label text-dark fs-5 fw-bold">Periode Dari Tanggal</label>
-                                <input type="date" id="tanggal_mulai" class="form-control shadow-sm form-control-lg">
+                                <label for="tanggal_mulai" class="form-label fs-5 fw-bold">Periode Dari Tanggal</label>
+                                <input style="color: #50200C;" type="date" id="tanggal_mulai" class="form-control shadow-sm form-control-lg">
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label for="tanggal_selesai" class="form-label text-dark fs-5 fw-bold">Sampai Tanggal</label>
-                                <input type="date" id="tanggal_selesai" class="form-control shadow-sm form-control-lg">
+                                <label for="tanggal_selesai" class="form-label fs-5 fw-bold">Sampai Tanggal</label>
+                                <input style="color: #50200C;" type="date" id="tanggal_selesai" class="form-control shadow-sm form-control-lg">
                             </div>
                             <div class="col-md-4 mb-3">
                                 <div class="d-flex gap-2">
                                     <button type="button" id="btn-filter" class="btn w-100 btn-lg text-white shadow-sm btn-brown">
-                                        Search
+                                        Cari
                                     </button>
                                     <button type="button" id="btn-reset" class="btn btn-secondary btn-lg shadow-sm" title="Reset Filter">
                                         <i class="fas fa-sync-alt"></i>
@@ -49,22 +49,22 @@
                                 <th>Tanggal</th>
                                 <th>Waktu</th>
                                 <th>Paket</th>
-                                <th>Jml Peserta</th> {{-- Kolom Baru --}}
-                                <th>Total Bayar</th> {{-- Kolom Baru --}}
-                                <th>Status</th>
+                                <th>Jml Peserta</th> 
+                                <th>Total Bayar</th> 
+                                <th class="text-center">Status</th>
+                                {{-- [BARU] Header untuk Tombol Invoice --}}
+                                <th class="text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
                     </table>
                 </div>
                 
-                {{-- FOOTER: TOMBOL EXPORT ADA DISINI --}}
+                {{-- FOOTER: TOMBOL EXPORT --}}
                 <div class="table-footer d-flex justify-content-end align-items-center p-4">
-                   
-                   {{-- TOMBOL EXPORT COKLAT DI BAWAH --}}
-                   <button type="button" id="btn-export" class="btn btn-lg text-white shadow-sm btn-brown px-4">
-                       <i class="fas fa-file-excel me-2"></i> Export Excel
-                   </button>
+                    <button type="button" id="btn-export" class="btn btn-lg text-white shadow-sm btn-brown px-4">
+                        <i class="fas fa-file-excel me-2"></i> Export Excel
+                    </button>
                 </div>
 
             </div>

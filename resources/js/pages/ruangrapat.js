@@ -1,26 +1,26 @@
 $(function () {
-    // Cek apakah sedang berada di route yang benar
     const currentRoute = window.location.pathname;
-    if (!currentRoute.split("/").includes("ruangrapat")) return;
+    if (!currentRoute.includes("ruangrapat")) return;
 
-    // Inisialisasi DataTable
+    console.log("Ruang Rapat JS Loaded");
+
+    // =========================================================================
+    // BAGIAN 1: MANAJEMEN PAKET RUANG RAPAT (DATATABLES BAWAH)
+    // =========================================================================
+    
+    // Inisialisasi DataTable Paket
     const datatable = $("#ruangrapat-table").DataTable({
         processing: true,
         serverSide: true,
         ajax: {
-            url: `/ruangrapat`,
+            url: "/ruangrapat",
             type: "GET",
-            data: function (d) {
-                // Tambahkan parameter filter di sini jika nanti diperlukan
-                // d.filter_nama = $("#filter_nama").val();
-            },
             error: function (xhr, status, error) {
-                console.error("Error fetching data:", error);
+                console.error("Error fetching paket data:", error);
             },
         },
-       columns: [
+        columns: [
             {
-                // Kolom Nomor Urut
                 name: "id",
                 data: "id",
                 render: function (data, type, row, meta) {
@@ -29,86 +29,71 @@ $(function () {
                 orderable: false,
                 searchable: false
             },
+            { name: "name", data: "name" },
+            { name: "isi_paket", data: "isi_paket" },
+            { name: "fasilitas", data: "fasilitas" },
             {
-                name: "name",
-                data: "name",
+                name: "harga",
+                data: "harga",
+                render: function (harga) {
+                    if (!harga) return "Rp 0";
+                    const numericValue = harga.toString().replace(/[^0-9]/g, "");
+                    const formatted = parseInt(numericValue, 10) || 0;
+                    return `Rp ${new Intl.NumberFormat("id-ID").format(formatted)}`;
+                },
             },
             {
-                // -- DIPERBAIKI --
-                // Fungsi render dihapus agar teks tampil penuh
-                name: "isi_paket",
-                data: "isi_paket",
-            },
-            {
-                // -- DIPERBAIKI --
-                // Fungsi render dihapus agar teks tampil penuh
-                name: "fasilitas",
-                data: "fasilitas",
-            },
-            {
-    name: "harga",
-    data: "harga",
-    render: function (harga) {
-        if (!harga) return "Rp 0";
-
-        // Pastikan harga hanya berisi angka
-        const numericValue = harga.toString().replace(/[^0-9]/g, "");
-
-        // Ubah ke integer
-        const formatted = parseInt(numericValue, 10) || 0;
-
-        // Format ke rupiah
-        return `Rp ${new Intl.NumberFormat("id-ID").format(formatted)}`;
-    },
-},
-            {
-                // Kolom Aksi
                 name: "id",
                 data: "id",
                 orderable: false,
                 searchable: false,
                 render: function (id) {
                     return `
-                        <button class="btn btn-light btn-sm rounded shadow-sm border"
+                        <button class="btn btn-light btn-sm rounded shadow-sm border me-1"
                             data-action="edit-ruangrapat" data-id="${id}"
                             data-bs-toggle="tooltip" data-bs-placement="top" title="Edit Paket">
                             <i class="fas fa-edit"></i>
                         </button>
                         
-                        <form class="delete-ruangrapat" method="POST"
+                        <form class="delete-ruangrapat d-inline-block" method="POST"
                             id="delete-ruangrapat-form-${id}"
-                            action="/ruangrapat/${id}" style="display: inline-block; vertical-align: top;">
+                            action="/ruangrapat/${id}">
                             
                             <input type="hidden" name="_token" value="${$('meta[name="csrf-token"]').attr('content')}">
                             <input type="hidden" name="_method" value="DELETE">
                             
-                            <a class="btn btn-light btn-sm rounded shadow-sm border delete"
-                                href="#" data-id="${id}" data-bs-toggle="tooltip"
+                            <button type="button" class="btn btn-light btn-sm rounded shadow-sm border delete-paket"
+                                data-id="${id}" data-bs-toggle="tooltip"
                                 data-bs-placement="top" title="Hapus Paket">
                                 <i class="fas fa-trash-alt"></i>
-                            </a>
+                            </button>
                         </form>
                     `;
                 },
             },
         ],
-        order: [[1, 'asc']] // Default sort berdasarkan kolom Nama Paket
+        order: [[1, 'asc']],
+        language: {
+            emptyTable: "Tidak ada paket ruang rapat yang tersedia saat ini.",
+            processing: "Memuat data...",
+            zeroRecords: "Data tidak ditemukan"
+        }
     });
 
-    // Inisialisasi Modal Bootstrap
     const modal = new bootstrap.Modal($("#main-modal"), {
-        backdrop: true,
-        keyboard: true,
-        focus: true,
+        backdrop: true, keyboard: true, focus: true,
     });
 
-    // Event Listener Global
+    // =========================================================================
+    // BAGIAN 2: EVENT LISTENER GLOBAL
+    // =========================================================================
+
     $(document)
-        // --- Tombol Hapus (Tampilkan Konfirmasi SweetAlert) ---
-        .on("click", ".delete", function (e) {
+        // --- 2.1. Tombol Hapus Paket (Tabel Bawah) ---
+        .on("click", ".delete-paket", function (e) {
             e.preventDefault();
             var id = $(this).data("id");
-            Swal.fire({
+           Swal.fire({
                 title: "Yakin ingin menghapus?",
                 text: "Data tidak bisa dikembalikan!",
                 icon: "warning",
@@ -127,17 +112,42 @@ $(function () {
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
-                    $(`#delete-amenity-form-${id}`).trigger('submit');
+                    $(`#delete-ruangrapat-form-${id}`).trigger('submit');
                 }
             });
         })
-        // --- Tombol Tambah Data (Buka Modal) ---
-        .on("click", "#add-button", async function () {
+
+        // --- 2.2. Submit Form Hapus Paket ---
+        .on("submit", ".delete-ruangrapat", async function (e) {
+            e.preventDefault();
+            try {
+                const response = await $.ajax({
+                    url: $(this).attr("action"),
+                    data: $(this).serialize(),
+                    method: "POST",
+                });
+                Swal.fire({
+                    position: "center",
+                    icon: "success",
+                    title: response.message || "Data berhasil dihapus!",
+                    showConfirmButton: false,
+                    timer: 1500,
+                    iconColor: "#50200C",
+                    customClass: {
+                        title: "swal-title-brown"
+                    }
+                });
+                datatable.ajax.reload();
+            } catch (e) {
+                Swal.fire("Gagal", e.responseJSON?.message || "Tidak dapat menghapus.", "error");
+            }
+        })
+
+        // --- 2.3. Tambah Paket (Buka Modal) ---
+        .on("click", "#add-button", async function (e) {
+            e.preventDefault();
             modal.show();
             $("#btn-modal-save").text("Simpan").attr("disabled", true);
-            $('button[data-bs-dismiss="modal"]:not(.btn-close)').text("Batal");
-            $('.btn-close[data-bs-dismiss="modal"]').text('');
-
             $("#main-modal .modal-title").text("Tambah Paket Ruang Rapat");
             $("#main-modal .modal-body").html(`<div class="text-center my-5"><span class="spinner-border text-primary"></span><br>Loading...</div>`);
 
@@ -145,122 +155,96 @@ $(function () {
                 const response = await $.get(`/ruangrapat/create`);
                 if (response && response.view) {
                     $("#main-modal .modal-body").html(response.view);
-                    // Inisialisasi komponen tambahan jika ada (misal: Select2, Summernote)
-                    // $('.select2').select2();
                 } else {
-                     $("#main-modal .modal-body").html(`<div class="alert alert-danger">Gagal memuat form.</div>`);
+                    $("#main-modal .modal-body").html(`<div class="alert alert-danger">Gagal memuat form.</div>`);
                 }
                 $("#btn-modal-save").text("Simpan").attr("disabled", false);
-                $('button[data-bs-dismiss="modal"]:not(.btn-close)').text("Batal");
-                $('.btn-close[data-bs-dismiss="modal"]').text('');
             } catch (error) {
-                console.error(error);
                 $("#main-modal .modal-body").html(`<div class="alert alert-danger">Terjadi kesalahan jaringan.</div>`);
             }
         })
-        // --- Tombol Simpan di Modal ---
+
+        // --- 2.4. Edit Paket (Buka Modal) ---
+        .on("click", '[data-action="edit-ruangrapat"]', async function () {
+            modal.show();
+            const id = $(this).data("id");
+            $("#btn-modal-save").text("Simpan").attr("disabled", true);
+            $("#main-modal .modal-title").text("Edit Paket Ruang Rapat");
+            $("#main-modal .modal-body").html(`<div class="text-center my-5"><span class="spinner-border text-primary"></span><br>Loading data...</div>`);
+
+            try {
+                const response = await $.get(`/ruangrapat/${id}/edit`);
+                if (response && response.view) {
+                    $("#main-modal .modal-body").html(response.view);
+                } else {
+                    $("#main-modal .modal-body").html(`<div class="alert alert-danger">Gagal memuat data.</div>`);
+                }
+                $("#btn-modal-save").text("Simpan").attr("disabled", false);
+            } catch (error) {
+                $("#main-modal .modal-body").html(`<div class="alert alert-danger">Terjadi kesalahan.</div>`);
+            }
+        })
+
+        // --- 2.5. Simpan Data Paket ---
         .on("click", "#btn-modal-save", function () {
-            // Submit form yang ada di dalam modal
             $("#form-save-ruangrapat").submit();
         })
-        // --- Proses Submit Form Simpan/Update ---
         .on("submit", "#form-save-ruangrapat", async function (e) {
             e.preventDefault();
             if (typeof CustomHelper !== 'undefined') CustomHelper.clearError();
-            $("#btn-modal-save").attr("disabled", true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Menyimpan...');
+            
+            $("#btn-modal-save").attr("disabled", true).html('<span class="spinner-border spinner-border-sm"></span> Menyimpan...');
 
             try {
                 const response = await $.ajax({
                     url: $(this).attr("action"),
                     data: $(this).serialize(),
                     method: $(this).attr("method"),
-                    headers: {
-                        "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
-                    },
+                    headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content") },
                 });
 
                 Swal.fire({
-                    position: "top-end",
+                    position: "center",
                     icon: "success",
                     title: response.message || "Berhasil disimpan!",
                     showConfirmButton: false,
                     timer: 1500,
+                    iconColor: "#50200C",
+                    customClass: {
+                        title: "swal-title-brown"
+                    }
                 });
 
                 modal.hide();
-                datatable.ajax.reload(); // Reload tabel
+                datatable.ajax.reload();
             } catch (e) {
                 if (e.status === 422) {
-                    // Error validasi Laravel
                     if (typeof CustomHelper !== 'undefined') {
                         CustomHelper.errorHandlerForm(e);
                     } else {
-                        // Fallback jika CustomHelper tidak ada
-                        alert("Terjadi kesalahan validasi. Periksa kembali inputan Anda.");
+                        alert("Validasi gagal. Cek inputan Anda.");
                     }
                 } else {
-                    Swal.fire({
-                        icon: "error",
-                        title: "Oops...",
-                        text: e.responseJSON?.message || "Terjadi kesalahan pada server.",
-                    });
+                    Swal.fire("Error", e.responseJSON?.message || "Terjadi kesalahan server.", "error");
                 }
             } finally {
                 $("#btn-modal-save").attr("disabled", false).text('Simpan');
             }
         })
-        // --- Tombol Edit (Buka Modal Edit) ---
-        .on("click", '[data-action="edit-ruangrapat"]', async function () {
-            modal.show();
-            $("#btn-modal-save").text("Simpan").attr("disabled", true);
-            $('button[data-bs-dismiss="modal"]:not(.btn-close)').text("Batal");
-            $('.btn-close[data-bs-dismiss="modal"]').text('');
 
-            $("#main-modal .modal-title").text("Edit Paket Ruang Rapat");
-            $("#main-modal .modal-body").html(`<div class="text-center my-5"><span class="spinner-border text-primary"></span><br>Loading data...</div>`);
+        // =========================================================================
+        // BAGIAN 3: MANAJEMEN RESERVASI (TABEL ATAS)
+        // =========================================================================
 
-            const id = $(this).data("id");
-
-            try {
-                const response = await $.get(`/ruangrapat/${id}/edit`);
-                if (response && response.view) {
-                    $("#main-modal .modal-body").html(response.view);
-                     // Re-inisialisasi komponen jika diperlukan
-                } else {
-                     $("#main-modal .modal-body").html(`<div class="alert alert-danger">Gagal memuat data.</div>`);
-                }
-                $("#btn-modal-save").text("Simpan").attr("disabled", false);
-                $('button[data-bs-dismiss="modal"]:not(.btn-close)').text("Batal");
-                $('.btn-close[data-bs-dismiss="modal"]').text('');
-            } catch (error) {
-                $("#main-modal .modal-body").html(`<div class="alert alert-danger">Terjadi kesalahan saat mengambil data.</div>`);
-            }
-        })
-        // --- Proses Submit Penghapusan ---
-        .on("submit", ".delete-ruangrapat", async function (e) {
-            e.preventDefault();
-            try {
-                const response = await $.ajax({
-                    url: $(this).attr("action"),
-                    data: $(this).serialize(), // Akan menyertakan _method=DELETE dan _token
-                    method: "POST",
-                });
-
-                Swal.fire({
-                    position: "top-end",
-                    icon: "success",
-                    title: response.message || "Data berhasil dihapus!",
-                    showConfirmButton: false,
-                    timer: 1500,
-                });
-
-                datatable.ajax.reload();
-            } catch (e) {
-                Swal.fire({
-                    icon: "error",
-                    title: "Gagal",
-                    text: e.responseJSON?.message || "Tidak dapat menghapus data saat ini.",
-                });
-            }
+        // --- 3.2. Tombol Hapus Reservasi (Modal Merah) ---
+        .on('click', '.delete-btn', function() {
+            var name = $(this).data('name');
+            var route = $(this).data('route');
+            
+            $('#deleteItemName').text(name);
+            $('#deleteForm').attr('action', route);
+            
+            var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            deleteModal.show();
         });
 });

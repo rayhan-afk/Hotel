@@ -12,24 +12,24 @@
                     <div class="card-body">
                         <div class="card-text">
                             <div class="row">
-                                <div class="col-lg-12">
+                                <div class="col-lg-12" style="color: #50200C;">
                                     <h5 class="mt-0">{{ $customer->name }}</h5>
                                     <div class="table-responsive">
                                         <table class="table table-sm table-borderless">
                                             <tr>
-                                                <td width="10%"><i class="fas fa-envelope text-secondary"></i></td>
+                                                <td width="10%"><i class="fas fa-envelope" style="color: #50200C;"></i></td>
                                                 <td>{{ $customer->user->email }}</td>
                                             </tr>
                                             <tr>
-                                                <td><i class="fas fa-user-md text-secondary"></i></td>
+                                                <td><i class="fas fa-user-md" style="color: #50200C;"></i></td>
                                                 <td>{{ $customer->job }}</td>
                                             </tr>
                                             <tr>
-                                                <td><i class="fas fa-map-marker-alt text-secondary"></i></td>
+                                                <td><i class="fas fa-map-marker-alt" style="color: #50200C;"></i></td>
                                                 <td>{{ $customer->address }}</td>
                                             </tr>
                                             <tr>
-                                                <td><i class="fas fa-birthday-cake text-secondary"></i></td>
+                                                <td><i class="fas fa-birthday-cake" style="color: #50200C;"></i></td>
                                                 <td>{{ $customer->birthdate }}</td>
                                             </tr>
                                         </table>
@@ -41,8 +41,8 @@
                 </div>
             @else
                 <div class="card shadow-sm">
-                    <div class="card-body text-center py-5">
-                        <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
+                    <div class="card-body text-center py-5" style="color: #50200C;">
+                        <i class="fas fa-user-slash fa-3x mb-3"></i>
                         <h4>Kamar Kosong</h4>
                         <p class="text-muted">Tidak ada tamu yang sedang menginap.</p>
                     </div>
@@ -53,20 +53,21 @@
         {{-- KOLOM TENGAH: Detail Kamar --}}
         <div class="col-md-5 mb-3">
             <div class="card shadow-sm h-100">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #F7F3E4; color: #50200C;">
                     <div>
                         <h3 class="mb-0">Kamar {{ $room->number }}</h3>
                         <small class="text-muted">{{ $room->name }}</small>
                     </div>
                     {{-- Tombol Edit Cepat --}}
-                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#imageModal">
-                        <i class="fas fa-camera me-1"></i> Ganti Gambar
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#imageModal"
+                    style="color: #50200C; border-color: #50200C !important;">
+                        <i class="fas fa-camera me-1" style="color: #50200C;"></i> Ganti Gambar
                     </button>
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
                         {{-- Status Dinamis --}}
-                        <div class="col-12">
+                        <div class="col-12" style="color: #50200C;">
                             @php
                                 $status = $room->dynamic_status; 
                                 $badgeClass = match($status) {
@@ -77,44 +78,45 @@
                                     default => 'bg-secondary'
                                 };
                             @endphp
-                            <div class="p-2 border rounded bg-light d-flex justify-content-between align-items-center">
+                            <div class="p-2 border rounded d-flex justify-content-between align-items-center">
                                 <strong>Status Saat Ini:</strong>
-                                <span class="badge {{ $badgeClass }} fs-6">{{ $status }}</span>
+                                <span class="badge {{ $badgeClass }} fs-6"
+                                style="background-color: #FAE8A4 !important; color: #50200C !important;">{{ $status }}</span>
                             </div>
                         </div>
 
                         {{-- Info Dasar --}}
-                        <div class="col-6">
-                            <small class="text-muted d-block">Tipe Kamar</small>
+                        <div class="col-6" style="color: #50200C;">
+                            <small class="d-block">Tipe Kamar</small>
                             <h6>{{ $room->type->name }}</h6>
                         </div>
-                        <div class="col-6">
-                            <small class="text-muted d-block">Harga per Malam</small>
-                            <h6 class="text-primary">Rp {{ number_format($room->price, 0, ',', '.') }}</h6>
+                        <div class="col-6" style="color: #50200C;">
+                            <small class="d-block">Harga per Malam</small>
+                            <h6 class=" ">Rp {{ number_format($room->price, 0, ',', '.') }}</h6>
                         </div>
-                        <div class="col-6">
-                            <small class="text-muted d-block">Kapasitas</small>
+                        <div class="col-6" style="color: #50200C;">
+                            <small class="d-block">Kapasitas</small>
                             <h6>{{ $room->capacity }} Orang</h6>
                         </div>
-                        <div class="col-6">
-                            <small class="text-muted d-block">Luas Area</small>
+                        <div class="col-6" style="color: #50200C;">
+                            <small class="d-block">Luas Area</small>
                             <h6>{{ $room->area_sqm ?? '-' }} m²</h6>
                         </div>
 
                         <div class="col-12"><hr class="my-1"></div>
 
                         {{-- Fasilitas Kamar --}}
-                        <div class="col-12">
-                            <strong class="d-block mb-1"><i class="fas fa-tv me-1 text-secondary"></i> Fasilitas Kamar</strong>
-                            <p class="text-muted small mb-0">
+                        <div class="col-12" style="color: #50200C;">
+                            <strong class="d-block mb-1"><i class="fas fa-tv me-1"></i> Fasilitas Kamar</strong>
+                            <p class="small mb-0">
                                 {{ $room->room_facilities ?? 'Tidak ada data fasilitas.' }}
                             </p>
                         </div>
 
                         {{-- Fasilitas Kamar Mandi --}}
-                        <div class="col-12">
-                            <strong class="d-block mb-1"><i class="fas fa-bath me-1 text-secondary"></i> Fasilitas Kamar Mandi</strong>
-                            <p class="text-muted small mb-0">
+                        <div class="col-12" style="color: #50200C;">
+                            <strong class="d-block mb-1"><i class="fas fa-bath me-1"></i> Fasilitas Kamar Mandi</strong>
+                            <p class="small mb-0">
                                 {{ $room->bathroom_facilities ?? 'Tidak ada data fasilitas.' }}
                             </p>
                         </div>
@@ -125,7 +127,7 @@
 
         {{-- KOLOM KANAN: Gambar Kamar (UPDATED) --}}
         <div class="col-md-4">
-            <div class="card shadow-sm border-0">
+            <div class="card shadow-sm border-0" style="color: #50200C;">
                 <div class="card-header bg-transparent border-0 pb-0">
                     <h5 class="card-title">Gambar Utama</h5>
                 </div>
@@ -147,7 +149,7 @@
     <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header">
+                <div class="modal-header" style="color: #50200C;">
                     <h5 class="modal-title">Update Gambar Kamar</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -163,9 +165,9 @@
                         <input type="hidden" name="price" value="{{ $room->price }}">
                         
                         <div class="mb-3">
-                            <label for="image" class="form-label">Pilih Gambar Baru</label>
+                            <label for="image" class="form-label" style="color: #50200C;">Pilih Gambar Baru</label>
                             <input type="file" class="form-control" name="image" id="image" accept="image/*" required>
-                            <small class="text-muted">Format: JPG, PNG. Maks: 2MB.</small>
+                            <small class=" " style="color: #50200C;">Format: JPG, PNG. Maks: 2MB.</small>
                         </div>
                     </div>
                     <div class="modal-footer">

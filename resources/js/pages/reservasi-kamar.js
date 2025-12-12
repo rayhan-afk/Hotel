@@ -38,8 +38,8 @@ $(function () {
                     render: function(data) {
                         return `
                             <div class="d-flex flex-column">
-                                <span class="fw-bold text-dark">${data.number}</span>
-                                <span class="text-muted small">${data.type}</span>
+                                <span class="fw-bold">${data.number}</span>
+                                <span class="small">${data.type}</span>
                             </div>
                         `;
                     }

@@ -12,6 +12,20 @@
             <div class="col-md-8 mt-2">
                 <div class="card shadow-sm border">
                     <div class="card-body p-4">
+                        
+                        {{-- [BARU] ALERT PESAN ERROR (Jika jadwal bentrok) --}}
+                        @if(session('error'))
+                            <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-exclamation-triangle fs-4 me-3"></i>
+                                    <div>
+                                        <strong>Gagal!</strong> {{ session('error') }}
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        @endif
+
                         <form method="POST" action="{{ route('rapat.reservation.storeStep2') }}">
                             @csrf
                             
@@ -50,7 +64,7 @@
                                     @enderror
                                 </div>
 
-                                {{-- INPUT BARU: Durasi (Jam) untuk Perhitungan Biaya --}}
+                                {{-- Durasi (Jam) untuk Perhitungan Biaya --}}
                                 <div class="col-md-4 mb-3">
                                     <label for="durasi_jam" class="form-label fw-bold" style="color:#50200C">Durasi Bayar (Jam)</label>
                                     <div class="input-group">

@@ -162,7 +162,7 @@ class RoomController extends Controller
         }
     }
 
-    public function destroy(Room $room)
+   public function destroy(Room $room)
     {
         // Cek permission manual (Opsional)
         if (!in_array(Auth::user()->role, ['Super', 'Manager'])) {
@@ -186,8 +186,24 @@ class RoomController extends Controller
                 'message' => 'Kamar berhasil dihapus!',
             ]);
         } catch (\Exception $e) {
+          // === PENANGANAN ERROR DATABASE ===
+            
+            // Kode Error 23000 biasanya adalah Integrity Constraint Violation (Foreign Key)
+            if ($e->getCode() == "23000") {
+                return response()->json([
+                    'message' => 'Data tidak dapat dihapus karena kamar ini memiliki riwayat transaksi/reservasi. Menghapus data ini akan merusak laporan keuangan.'
+                ], 409); // 409 Conflict
+            }
+
+            // Error database lain
             return response()->json([
-                'message' => 'Gagal menghapus kamar: ' . $e->getMessage()
+                'message' => 'Terjadi kesalahan database: ' . $e->getMessage()
+            ], 500);
+
+        } catch (\Exception $e) {
+            // Error umum lainnya
+            return response()->json([
+                'message' => 'Gagal menghapus kamar. Terjadi kesalahan sistem.'
             ], 500);
         }
     }

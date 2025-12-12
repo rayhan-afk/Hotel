@@ -17,18 +17,12 @@ class LaporanRepository implements LaporanRepositoryInterface
         $endDate = $request->input('tanggal_selesai');
         
         // --- PERBAIKAN PENTING UNTUK MENCEGAH ARRAY TO STRING CONVERSION ---
-        // 1. Prioritaskan pengambilan nilai dari 'search.value' (untuk DataTables)
         $searchDatatableValue = $request->input('search.value');
-        
-        // 2. Jika bukan dari DataTables (misalnya dari URL Export), gunakan 'search'
         $searchUrlValue = $request->input('search');
         
-        // Pilih nilai search yang paling relevan (string), jika ada
         $search = $searchDatatableValue ?: $searchUrlValue;
         
         if (is_array($search)) {
-            // Jika masih array (misal, struktur DataTables yang lebih kompleks),
-            // paksa ambil 'value' atau jadikan null
             $search = $search['value'] ?? null;
         }
         // --------------------------------------------------------------------
@@ -81,6 +75,7 @@ class LaporanRepository implements LaporanRepositoryInterface
             4 => 'rapat_transactions.jumlah_peserta',
             5 => 'rapat_transactions.total_pembayaran', 
             6 => 'rapat_transactions.status_pembayaran',
+            // Kolom 7 (aksi) tidak perlu di-mapping sorting
         ];
 
         $totalData = RapatTransaction::count();
@@ -109,6 +104,19 @@ class LaporanRepository implements LaporanRepositoryInterface
             // Pastikan Helper::dateFormat ada dan berfungsi
             $tanggal = \App\Helpers\Helper::dateFormat($model->tanggal_pemakaian);
             
+            // [BARU] Generate URL Invoice
+            // Pastikan route 'rapat.invoice.print' sudah ada di web.php
+            $invoiceUrl = route('rapat.invoice.print', ['id' => $model->id]);
+
+            // [BARU] HTML Tombol Invoice (Biru Standard)
+            $btnAction = '
+                <a href="'.$invoiceUrl.'" target="_blank" 
+                   class="btn btn-sm btn-info text-white shadow-sm" 
+                   title="Lihat Invoice">
+                    <i class="fas fa-file-invoice me-1"></i> Invoice
+                </a>
+            ';
+
             $data[] = [
                 'instansi' => $model->rapatCustomer->instansi ?? '-',
                 'tanggal' => $tanggal,
@@ -117,6 +125,7 @@ class LaporanRepository implements LaporanRepositoryInterface
                 'jumlah_peserta' => $model->jumlah_peserta . ' Orang',
                 'total_pembayaran' => $model->total_pembayaran ?? 0, 
                 'status' => $model->status_pembayaran,
+                'aksi' => $btnAction // <--- Ini yang akan dibaca oleh DataTables sebagai tombol
             ];
         }
 

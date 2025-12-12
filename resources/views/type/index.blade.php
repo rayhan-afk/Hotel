@@ -47,7 +47,7 @@
 
             <!-- Table Footer -->
             <div class="table-footer">
-                <h3><i class="fas fa-home me-2"></i>Tipe Kamar</h3>
+                
             </div>
         </div>
     </div>

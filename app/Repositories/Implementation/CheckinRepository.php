@@ -40,6 +40,20 @@ class CheckinRepository implements CheckinRepositoryInterface
 
         $formattedData = [];
         foreach ($data as $trx) {
+            
+            // === LOGIKA SISA BAYAR (REMAINING PAYMENT) ===
+            // Ambil data paid_amount (default 0 jika belum diset)
+            $paid = $trx->paid_amount ?? 0;
+            
+            // Hitung selisih: Total Tagihan - Uang Masuk
+            $remaining = $trx->total_price - $paid;
+            
+            // Pastikan tidak negatif (jika ada kelebihan bayar/kembalian, anggap sisa hutang 0)
+            if ($remaining < 0) {
+                $remaining = 0;
+            }
+            // =============================================
+
             $formattedData[] = [
                 'id' => $trx->id,
                 'customer_name' => $trx->customer->name,
@@ -50,9 +64,14 @@ class CheckinRepository implements CheckinRepositoryInterface
                 'check_in' => Helper::dateFormat($trx->check_in),
                 'check_out' => Helper::dateFormat($trx->check_out),
                 'breakfast' => $trx->breakfast ? $trx->breakfast : 'No',
+                
                 'total_price' => (float) $trx->total_price,
+                
+                // [BARU] Kirim data sisa bayar ke JavaScript
+                'remaining_payment' => (float) $remaining, 
+
                 'status' => 'Check In',
-                'action' => $trx->id // ID dikirim untuk tombol aksi (Edit/Checkout)
+                'action' => $trx->id 
             ];
         }
 
@@ -72,7 +91,11 @@ class CheckinRepository implements CheckinRepositoryInterface
     public function update($request, $id) 
     { 
         $t = Transaction::findOrFail($id);
+        
+        // Update data transaksi (Biasanya Extend Tanggal & Total Harga baru)
+        // paid_amount TIDAK diupdate di sini, sehingga selisih harga akan muncul sebagai sisa bayar
         $t->update($request->all());
+        
         return $t;
     }
 
@@ -87,21 +110,22 @@ class CheckinRepository implements CheckinRepositoryInterface
     }
 
     /**
-     * Method BARU: Menangani proses Check Out tamu.
-     * Mengubah status transaksi jadi 'Done' dan set waktu checkout actual.
+     * Method Menangani proses Check Out tamu.
      */
     public function checkoutGuest($id)
     {
         $transaction = Transaction::findOrFail($id);
         
         // 1. Ubah Status Transaksi jadi Done (Selesai)
+        // 2. Set waktu checkout actual
+        // 3. [PENTING] Set paid_amount = total_price (Anggap pelunasan terjadi saat checkout)
         $transaction->update([
             'status' => 'Done',
-            'check_out' => Carbon::now() 
+            'check_out' => Carbon::now(),
+            'paid_amount' => $transaction->total_price 
         ]);
         
-        // 2. TAMBAHAN: Ubah Status Kamar jadi 'Cleaning' (Sedang Dibersihkan)
-        // Pastikan relasi 'room' ada di model Transaction
+        // 4. Ubah Status Kamar jadi 'Cleaning' (Sedang Dibersihkan)
         $transaction->room->update([
             'status' => 'Cleaning'
         ]);

@@ -127,11 +127,15 @@ $(function() {
             if (!response) return
 
             Swal.fire({
-                position: 'top-end',
+                position: 'center',
                 icon: 'success',
                 title: response.message,
                 showConfirmButton: false,
-                timer: 1500
+                timer: 1500,
+                iconColor: "#50200C",
+                customClass: {
+                    title: "swal-title-brown"
+                }
             })
 
             modal.hide()
@@ -185,7 +189,7 @@ $(function() {
             if (!response) return
 
             Swal.fire({
-                position: 'top-end',
+                position: 'center',
                 icon: 'success',
                 title: response.message,
                 showConfirmButton: false,
@@ -200,11 +204,15 @@ $(function() {
         } catch (e) {
             if(e && e.responseJSON && e.responseJSON.message) {
                 Swal.fire({
-                    position: 'top-end',
+                    position: 'center',
                     icon: 'error',
                     title: e.responseJSON.message,
                     showConfirmButton: false,
-                    timer: 1500
+                    timer: 1500,
+                    iconColor: "#50200C",
+                    customClass: {
+                        title: "swal-title-brown"
+                    }
                 })
             }
         }

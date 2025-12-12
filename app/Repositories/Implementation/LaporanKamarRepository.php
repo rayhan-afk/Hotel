@@ -138,7 +138,10 @@ class LaporanKamarRepository implements LaporanKamarRepositoryInterface
 
             // Buat Tombol HTML
             $btnAction = '
-                <a href="'.$invoiceUrl.'" target="_blank" class="btn btn-sm btn-info text-white shadow-sm" title="Lihat & Download Invoice">
+                <a href="'.$invoiceUrl.'" target="_blank" 
+                   class="btn btn-sm btn-light border shadow-sm" 
+                   style="color: #50200C; font-weight: 600; background-color: #8FB8E1;" 
+                   title="Lihat & Download Invoice">
                     <i class="fas fa-file-invoice me-1"></i> Invoice
                 </a>
             ';

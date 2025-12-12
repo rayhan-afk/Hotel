@@ -39,6 +39,7 @@
                                 <th scope="col" style="width: 10%;"><i class="fas fa-calendar-times me-1"></i>Check-Out</th>
                                 <th scope="col" style="width: 5%;" class="text-center"><i class="fas fa-utensils me-1"></i>Sarapan</th> {{-- Disingkat biar hemat tempat --}}
                                 <th scope="col" style="width: 13%;" class="text-end"><i class="fas fa-dollar-sign me-1"></i>Total</th>
+                                <th scope="col" style="width: 13%;" class="text-end text-danger"><i class="fas fa-hand-holding-usd me-1"></i>Sisa Bayar</th>
                                 <th scope="col" style="width: 10%;" class="text-center"><i class="fas fa-info-circle me-1"></i>Status</th>
                                 
                                 {{-- BAGIAN INI DIPERBESAR (15%) --}}

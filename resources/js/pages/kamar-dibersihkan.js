@@ -31,7 +31,7 @@ $(function () {
                     name: 'number',
                     className: "align-middle",
                     render: function(data) {
-                        return `<span class="fw-bold text-dark fs-5" style="color: #50200C;">${data}</span>`;
+                        return `<span class="fw-bold fs-5" style="color: #50200C;">${data}</span>`;
                     }
                 },
                 { 

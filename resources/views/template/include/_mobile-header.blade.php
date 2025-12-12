@@ -410,7 +410,7 @@
     top: 0;
     left: 0;
     right: 0;
-    height: 60px;
+    height: 120px;
     background: #50200C;
     z-index: 1050;
     display: none;

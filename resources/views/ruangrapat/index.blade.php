@@ -6,7 +6,7 @@
 
     <div class="row mt-2 mb-2">
         <div class="col-lg-6 mb-2">
-            </div>
+        </div>
         <div class="col-lg-6 mb-2">
         </div>
     </div>
@@ -14,10 +14,13 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="d-flex flex-wrap gap-2"> 
-                <button id="add-button" type="button" class="add-room-btn">
+                {{-- Tombol Tambah Paket --}}
+                <a href="{{ route('ruangrapat.create') }}" id="add-button" class="add-room-btn">
                     <i class="fas fa-plus"></i>
                     Tambah Paket Ruang Rapat
-                </button>
+                </a>
+                
+                {{-- Tombol Buat Reservasi --}}
                 <a href="{{ route('rapat.reservation.showStep1') }}" class="btn btn-hotel-primary add-room-btn" style="height: auto; line-height: 1.5;"> 
                     <i class="fas fa-calendar-plus me-1"></i>
                     Buat Reservasi Ruang Rapat
@@ -28,6 +31,9 @@
 
     <div class="row">
         
+        {{-- ======================================================= --}}
+        {{-- JADWAL RESERVASI (Akan Datang) --}}
+        {{-- ======================================================= --}}
         <div class="col-lg-6">
             <div class="row my-2 mt-4 ms-1">
                 <div class="col-lg-12">
@@ -64,14 +70,15 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <form action="{{ route('rapat.transaction.cancel', $transaction->id) }}" method="POST" onsubmit="return confirm('Anda yakin ingin membatalkan reservasi ini?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-danger btn-sm rounded shadow-sm border m-0"
-                                                        data-bs-toggle="tooltip" data-bs-placement="top" title="Cancel Reservasi">
-                                                    Batal
-                                                </button>
-                                            </form>
+                                            {{-- TOMBOL CANCEL (TEKS) --}}
+                                            {{-- Class 'px-3' ditambahkan agar tombol agak lebar --}}
+                                            <button type="button" class="btn btn-danger btn-sm rounded shadow-sm border m-0 delete-btn px-3"
+                                                data-id="{{ $transaction->id }}" 
+                                                data-name="{{ $transaction->rapatCustomer->nama ?? 'Reservasi' }}"
+                                                data-route="{{ route('rapat.transaction.destroy', $transaction->id) }}"
+                                                data-bs-toggle="tooltip" data-bs-placement="top" title="Batalkan & Hapus Data">
+                                                Cancel
+                                            </button>
                                         </td>
                                     </tr>
                                 @empty
@@ -79,7 +86,8 @@
                                         <td colspan="6" class="text-center" style="color:#50200C;"> Tidak ada jadwal reservasi.
                                         </td>
                                     </tr>
-                                @endforelse </tbody>
+                                @endforelse 
+                            </tbody>
                         </table>
                         {{ $rapatTransactionsJadwal->appends([
                             'berlangsung_page' => $rapatTransactionsBerlangsung->currentPage(),
@@ -91,6 +99,9 @@
             </div>
         </div>
 
+        {{-- ======================================================= --}}
+        {{-- RESERVASI BERLANGSUNG (Sedang Berjalan) --}}
+        {{-- ======================================================= --}}
         <div class="col-lg-6">
             <div class="row my-2 mt-4 ms-1">
                 <div class="col-lg-12">
@@ -148,6 +159,9 @@
 
     <hr class="my-2"> 
 
+    {{-- ======================================================= --}}
+    {{-- MANAJEMEN PAKET RUANG RAPAT --}}
+    {{-- ======================================================= --}}
     <div class="row">
         <div class="col-12">
     <div class="professional-table-container">
@@ -168,7 +182,8 @@
                     </tr>
                 </thead>
                 <tbody>
-                    </tbody>
+                    {{-- DataTables akan memuat data di sini --}}
+                </tbody>
             </table>
         </div>
         <div class="table-footer">
@@ -177,19 +192,100 @@
 </div>
 @endsection
 
+{{-- Modal Konfirmasi Hapus --}}
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Konfirmasi Hapus Data</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Apakah Anda yakin ingin menghapus reservasi **<span id="deleteItemName"></span>** ini secara permanen?
+                <br>
+                <small class="text-danger">Aksi ini tidak dapat dibatalkan.</small>
+            </div>
+            <div class="modal-footer">
+                <form id="deleteForm" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-danger">Hapus Permanen</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section('footer')
 <script>
+    // Inisialisasi DataTable untuk Manajemen Paket Ruang Rapat
+    $(document).ready(function() {
+        $('#ruangrapat-table').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: "{{ route('ruangrapat.index') }}", // Sesuaikan dengan route data
+            columns: [
+                { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                { data: 'name', name: 'name' },
+                { data: 'isi_paket', name: 'isi_paket' },
+                { data: 'fasilitas', name: 'fasilitas' },
+                { 
+                    data: 'harga', 
+                    name: 'harga', 
+                    render: function(data, type, row) {
+                        return new Intl.NumberFormat('id-ID', {
+                            style: 'currency',
+                            currency: 'IDR',
+                            minimumFractionDigits: 0
+                        }).format(data);
+                    }
+                },
+                { data: 'action', name: 'action', orderable: false, searchable: false },
+            ],
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.10.25/i18n/Indonesian.json'
+            }
+        });
+        
+        // --- Modal Delete Ruang Rapat & Paket (Tabel Bawah) ---
+        $(document).on('click', '.delete-btn-paket', function() {
+            var id = $(this).data('id');
+            var name = $(this).data('name');
+            var route = $(this).data('route');
+            
+            $('#deleteItemName').text(name);
+            $('#deleteForm').attr('action', route);
+            
+            var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            deleteModal.show();
+        });
+        
+        // --- Modal Delete Reservasi (Tabel Atas) ---
+        $(document).on('click', '.delete-btn', function() {
+            var id = $(this).data('id');
+            var name = $(this).data('name');
+            var route = $(this).data('route');
+            
+            $('#deleteItemName').text("Reservasi milik " + name);
+            $('#deleteForm').attr('action', route);
+            
+            var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            deleteModal.show();
+        });
+    });
+
+    // Pengecekan status waktu otomatis (Jadwal -> Berlangsung -> Expired)
     function checkReservationStatusChanges() {
         const now = new Date();
         let shouldReload = false;
 
-        // Helper function to check and mark for reload
         const checkTimeAndHide = (bodyId, timeAttr) => {
             const tableBody = document.getElementById(bodyId);
             if (!tableBody) return;
 
             tableBody.querySelectorAll(`tr[${timeAttr}-str]`).forEach(row => {
-                // HANYA proses baris yang saat ini terlihat (tidak disembunyikan)
+                // HANYA proses baris yang saat ini terlihat
                 if (row.style.display !== 'none') {
                     const timeStr = row.getAttribute(`${timeAttr}-str`);
                     // Ganti spasi dengan T untuk parsing ISO 8601 yang andal
@@ -204,23 +300,19 @@
         };
 
         // --- 1. Cek Tabel JADWAL RESERVASI (Pindah ke Berlangsung) ---
-        // timeAttr: 'data-start-time'
         checkTimeAndHide('reservasi-jadwal-body', 'data-start-time');
 
         // --- 2. Cek Tabel RESERVASI BERLANGSUNG (Pindah ke Selesai) ---
-        // timeAttr: 'data-end-time'
         checkTimeAndHide('reservasi-berlangsung-body', 'data-end-time');
 
         // --- 3. Trigger Reload jika ada Perubahan (Item baru saja disembunyikan) ---
         if (shouldReload) {
-            // Beri jeda 0.5 detik, lalu reload
             setTimeout(() => {
                 window.location.reload();
             }, 500); 
         }
     }
 
-    // Jalankan pengecekan setiap detik (1000ms)
     setInterval(checkReservationStatusChanges, 1000);
 </script>
 @endsection

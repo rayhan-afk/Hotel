@@ -39,7 +39,7 @@ body {
 }
 
 body.sidebar-layout {
-    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    background:  #F7F3E4;
     min-height: 100vh;
     padding-top: 65px; // Mobile header space
 }
@@ -3087,5 +3087,10 @@ tr.total-text {
 
 .badge-rejected {
     background-color: #F2C2B8 !important;
+    color: #50200C !important;
+}
+
+.badge-reserved {
+    background-color: #8FB8E1 !important;
     color: #50200C !important;
 }

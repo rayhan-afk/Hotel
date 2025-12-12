@@ -177,12 +177,16 @@ $(function () {
             });
 
             if (response) {
-                Swal.fire({
-                    position: "top-end",
+              Swal.fire({
+                    position: "center",
                     icon: "success",
                     title: response.message || "Success",
                     showConfirmButton: false,
                     timer: 1500,
+                    iconColor: "#50200C",
+                    customClass: {
+                        title: "swal-title-brown"
+                    }
                 });
 
                 const modal = getModal();
@@ -211,7 +215,15 @@ $(function () {
                 Swal.fire({ icon: "error", title: "Validation Error", text: "Check inputs." });
             } else {
                 console.error(e);
-                Swal.fire({ icon: "error", title: "Error", text: e.responseJSON?.message || "Failed." });
+                Swal.fire({ 
+                    icon: "error", 
+                    title: "Error", 
+                    text: e.responseJSON?.message || "Failed.",
+                    iconColor: '#50200C', // ✅ Warna icon success
+                    customClass: {
+                        title: 'swal-title-brown' // ✅ Custom warna title
+                    }
+                });
             }
         } finally {
             submitBtn.attr("disabled", false).text(originalText);
@@ -254,7 +266,7 @@ $(function () {
             });
             
             Swal.fire({
-                position: "top-end",
+                position: "center",
                 icon: "success",
                 title: response.message || "Berhasil dihapus",
                 showConfirmButton: false,
@@ -264,7 +276,6 @@ $(function () {
                     title: 'swal-title-brown' // ✅ Custom warna title
                 }
             });
-
             // Jika di halaman index, reload tabel
             if(datatable) datatable.ajax.reload();
             // Jika di halaman detail, redirect ke index setelah hapus

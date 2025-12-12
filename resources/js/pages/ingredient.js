@@ -364,6 +364,10 @@ $(function () {
                 text: response.message,
                 timer: 1500,
                 showConfirmButton: false,
+                iconColor: '#50200C', // ✅ Warna icon success
+                customClass: {
+                    title: 'swal-title-brown' // ✅ Custom warna title
+                }
             });
             hasPlayedWarningSound = false;
             datatable.ajax.reload();
@@ -375,7 +379,15 @@ $(function () {
                     $(`[name="${field}"]`).addClass("is-invalid");
                 }
             } else {
-                Swal.fire("Error", "Terjadi kesalahan sistem.", "error");
+               Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "Terjadi kesalahan!",
+                    iconColor: '#50200C', // ✅ Warna icon success
+                    customClass: {
+                        title: 'swal-title-brown' // ✅ Custom warna title
+                    }
+                });
             }
         } finally {
             btnSave.attr("disabled", false).text(originalText);
@@ -405,11 +417,27 @@ $(function () {
                         method: "POST",
                         data: $(`#delete-form-${id}`).serialize(),
                     });
-                    Swal.fire("Terhapus!", "Data berhasil dihapus.", "success");
+                   Swal.fire({
+                        title: "Terhapus!",
+                        text: "Data bahan baku berhasil dihapus.",
+                        icon: "success",
+                        iconColor: '#50200C', // Warna icon
+                        customClass: {
+                            title: 'swal-title-brown' // Custom warna title
+                        }
+                    });
                     hasPlayedWarningSound = false;
                     datatable.ajax.reload();
                 } catch (e) {
-                    Swal.fire("Gagal", "Gagal menghapus data.", "error");
+                   Swal.fire({
+                        title: "Gagal",
+                        text: "Gagal menghapus data.",
+                        icon: "error",
+                        iconColor: '#50200C', // Warna icon
+                        customClass: {
+                            title: 'swal-title-brown' // Custom warna title
+                        }
+                    });
                 }
             }
         });

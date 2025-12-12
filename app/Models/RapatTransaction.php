@@ -9,14 +9,8 @@ class RapatTransaction extends Model
 {
     use HasFactory;
 
-    /**
-     * Tentukan nama tabel yang digunakan oleh model ini.
-     */
     protected $table = 'rapat_transactions';
 
-    /**
-     * Kolom yang boleh diisi secara massal (mass assignable).
-     */
     protected $fillable = [
         'rapat_customer_id',
         'ruang_rapat_paket_id',
@@ -30,20 +24,42 @@ class RapatTransaction extends Model
         'status_pembayaran',
     ];
 
-    /**
-     * Mendefinisikan relasi: Satu Transaksi Rapat DIMILIKI OLEH SATU Customer Rapat.
-     */
+    // =================================================================
+    // 1. RELASI UTAMA (NAMA LENGKAP)
+    // =================================================================
+    
+    // Relasi ke Customer (Gunakan FK eksplisit agar tidak salah tebak)
     public function rapatCustomer()
     {
-        return $this->belongsTo(RapatCustomer::class);
+        return $this->belongsTo(RapatCustomer::class, 'rapat_customer_id');
+    }
+
+    // Relasi ke Paket
+    public function ruangRapatPaket()
+    {
+        return $this->belongsTo(RuangRapatPaket::class, 'ruang_rapat_paket_id');
+    }
+
+    // =================================================================
+    // 2. ALIAS (SOLUSI ERROR "UNDEFINED RELATIONSHIP")
+    // =================================================================
+    
+    /**
+     * Ini ALIAS PENTING.
+     * Jika Controller memanggil ->with('customer') atau View memanggil $data->customer->nama,
+     * fungsi ini yang akan bekerja.
+     */
+    public function customer()
+    {
+        return $this->belongsTo(RapatCustomer::class, 'rapat_customer_id');
     }
 
     /**
-     * Mendefinisikan relasi: Satu Transaksi Rapat MEMILIKI SATU Paket Ruang Rapat.
-     * Kita juga mengambil model RuangRapatPaket yang sudah ada.
+     * Ini juga ALIAS.
+     * Supaya bisa dipanggil $data->paket->name
      */
-    public function ruangRapatPaket()
+    public function paket()
     {
-        return $this->belongsTo(RuangRapatPaket::class);
+        return $this->belongsTo(RuangRapatPaket::class, 'ruang_rapat_paket_id');
     }
 }

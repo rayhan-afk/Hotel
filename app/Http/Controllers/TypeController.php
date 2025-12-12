@@ -107,9 +107,14 @@ class TypeController extends Controller
                 'message' => 'Type '.$type->name.' deleted!',
             ]);
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Type '.$type->name.' cannot be deleted! Error Code:'.$e->errorInfo[1],
-            ], 500);
+           if ($e->getCode() == "23000") {
+                return response()->json([
+                    'message' => 'Tipe kamar ini tidak bisa dihapus karena masih digunakan oleh beberapa Kamar atau memiliki riwayat Transaksi.'
+                ], 409);
+            }
+            return response()->json(['message' => 'Database Error'], 500);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Server Error'], 500);
         }
     }
 }

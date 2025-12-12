@@ -68,14 +68,34 @@ $(function () {
                     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(data);
                 }
             },
-            // 6. Status
+            // 6. Status (INI SAJA YANG DIUBAH)
             { 
                 data: "status", 
                 name: "transactions.status", 
-                className: "text-center align-middle"
-                // [UPDATE] Render dihapus agar menggunakan HTML badge dinamis dari Controller/Repository
+                className: "text-center align-middle",
+                render: function(data) {
+                    // Style Hijau (Sama dengan Sarapan 'Ya')
+                    const styleGreen = 'background-color: #A8D5BA; color: #50200C; font-size: 10px; padding: 6px 12px; font-weight: 700;';
+                    // Style Merah (Sama dengan Sarapan 'Tidak')
+                    const styleRed = 'background-color: #F2C2B8; color: #50200C; font-size: 10px; padding: 6px 12px; font-weight: 700;';
+
+                    // Bersihkan HTML tag dari data mentah jika ada
+                    let text = data ? data.replace(/<[^>]*>?/gm, '') : ''; 
+
+                    if (text === 'Selesai' || text === 'Lunas' || text === 'Done' || text === 'Paid') {
+                        return `<span class="badge rounded-pill" style="${styleGreen}">
+                                    ${text}
+                                </span>`;
+                    }
+                    
+                    // Default / Cancelled
+                    return `<span class="badge rounded-pill" style="${styleRed}">
+                                ${text}
+                            </span>`;
+                }
             },
-            // 7. [BARU] Aksi (Tombol Invoice)
+            // 7. Aksi (TIDAK DISENTUH SAMA SEKALI)
+            // Render default DataTables akan menampilkan HTML button yang dikirim dari server
             { 
                 data: "aksi", 
                 name: "aksi", 

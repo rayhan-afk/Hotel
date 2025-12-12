@@ -291,7 +291,7 @@ $(function () {
                 $(row)
                     .find("td:eq(1)")
                     .prepend(
-                        '<i class="fas fa-exclamation-triangle me-2 low-stock-icon"></i>'
+                       '<i class="fas fa-exclamation-triangle me-2 low-stock-icon" style="background-color: red !important;"></i>'
                     );
                 $(row).attr(
                     "title",
@@ -356,12 +356,28 @@ $(function () {
                     
                     // === PERBAIKAN DISINI: HAPUS CONFIG LAMA, GANTI YG SIMPLE ===
                     // Ini akan memunculkan tombol OK, dan tidak hilang otomatis
-                    Swal.fire("Terhapus!", "Data amenities berhasil dihapus.", "success");
+                    Swal.fire({
+                        title: "Terhapus!",
+                        text: "Data amenities berhasil dihapus.",
+                        icon: "success",
+                        iconColor: '#50200C', // Warna icon
+                        customClass: {
+                            title: 'swal-title-brown' // Custom warna title
+                        }
+                    });
 
                     hasPlayedWarningSound = false;
                     datatable.ajax.reload();
                 } catch (e) {
-                    Swal.fire("Gagal", "Gagal menghapus data.", "error");
+                    Swal.fire({
+                        title: "Gagal",
+                        text: "Gagal menghapus data.",
+                        icon: "error",
+                        iconColor: '#50200C', // Warna icon
+                        customClass: {
+                            title: 'swal-title-brown' // Custom warna title
+                        }
+                    });
                 }
             }
         });
@@ -429,6 +445,10 @@ $(function () {
                     title: response.message,
                     showConfirmButton: false,
                     timer: 1500,
+                    iconColor: '#50200C', // ✅ Warna icon success
+                    customClass: {
+                        title: 'swal-title-brown' // ✅ Custom warna title
+                    }
                 });
                 modal.hide();
                 hasPlayedWarningSound = false;
@@ -437,10 +457,14 @@ $(function () {
                 if (e.status === 422 && typeof CustomHelper !== "undefined") {
                     CustomHelper.errorHandlerForm(e);
                 } else {
-                    Swal.fire({
+                   Swal.fire({
                         icon: "error",
                         title: "Error",
-                        text: "Something went wrong!",
+                        text: "Terjadi kesalahan!",
+                        iconColor: '#50200C', // ✅ Warna icon success
+                        customClass: {
+                            title: 'swal-title-brown' // ✅ Custom warna title
+                        }
                     });
                 }
             } finally {

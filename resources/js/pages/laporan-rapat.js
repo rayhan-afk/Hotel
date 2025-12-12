@@ -15,16 +15,42 @@ $(function () {
                 d.tanggal_selesai = $("#tanggal_selesai").val();
             },
             error: function (xhr, error, thrown) {
-                console.error("DataTables Error:", xhr.responseText); // Cek respon server di console
-                // Jangan alert error agar user tidak terganggu, cukup log di console
+                console.error("DataTables Error:", xhr.responseText);
             }
         },
         columns: [
-            { data: "instansi", name: "rapat_customers.instansi", className: "fw-bold text-dark align-middle" },
-            { data: "tanggal", name: "rapat_transactions.tanggal_pemakaian", className: "align-middle" },
-            { data: "waktu", name: "rapat_transactions.waktu_mulai", orderable: false, className: "align-middle" },
-            { data: "paket", name: "ruang_rapat_pakets.name", className: "align-middle" },
-            { data: "jumlah_peserta", name: "rapat_transactions.jumlah_peserta", className: "text-center align-middle" },
+            // 0. Instansi
+            { 
+                data: "instansi", 
+                name: "rapat_customers.instansi", 
+                className: "fw-bold text-dark align-middle" 
+            },
+            // 1. Tanggal
+            { 
+                data: "tanggal", 
+                name: "rapat_transactions.tanggal_pemakaian", 
+                className: "align-middle" 
+            },
+            // 2. Waktu
+            { 
+                data: "waktu", 
+                name: "rapat_transactions.waktu_mulai", 
+                orderable: false, 
+                className: "align-middle" 
+            },
+            // 3. Paket
+            { 
+                data: "paket", 
+                name: "ruang_rapat_pakets.name", 
+                className: "align-middle" 
+            },
+            // 4. Jumlah Peserta
+            { 
+                data: "jumlah_peserta", 
+                name: "rapat_transactions.jumlah_peserta", 
+                className: "text-center align-middle" 
+            },
+            // 5. Total Pembayaran
             { 
                 data: "total_pembayaran", 
                 name: "rapat_transactions.total_pembayaran", 
@@ -33,16 +59,30 @@ $(function () {
                     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(data);
                 }
             },
+            // 6. Status (Style Pastel)
             { 
                 data: "status", 
                 name: "rapat_transactions.status_pembayaran",
                 className: "text-center align-middle",
                 render: function(data) {
-                    if (data === 'Paid') return `<span class="badge rounded-pill" style="background-color: #A8D5BA; color: #50200C;
-                            font-size: 10px; padding: 6px 12px; font-weight: 700;">Lunas</span>`;
-                    return `<span class="badge rounded-pill" style="background-color: #F2C2B8; color: #50200C;
-                            font-size: 10px; padding: 6px 12px; font-weight: 700;">${data}</span>`;
+                    // Style Hijau
+                    const styleGreen = 'background-color: #A8D5BA; color: #50200C; font-size: 10px; padding: 6px 12px; font-weight: 700;';
+                    // Style Merah
+                    const styleRed = 'background-color: #F2C2B8; color: #50200C; font-size: 10px; padding: 6px 12px; font-weight: 700;';
+
+                    if (data === 'Paid' || data === 'Lunas') {
+                        return `<span class="badge rounded-pill" style="${styleGreen}">Lunas</span>`;
+                    }
+                    return `<span class="badge rounded-pill" style="${styleRed}">${data}</span>`;
                 }
+            },
+            // 7. [BARU] Aksi (Invoice)
+            { 
+                data: "aksi", 
+                name: "aksi", 
+                orderable: false, 
+                searchable: false, 
+                className: "text-center align-middle",
             }
         ],
         order: [[1, 'desc']], 

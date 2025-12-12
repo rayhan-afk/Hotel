@@ -12,18 +12,7 @@
         .invoice-title { float: right; color: #555; }
         .table th { background-color: #f8f9fa; }
 
-        .btn-soft-blue {
-            background-color: #76A9FA; /* Warna Biru Soft */
-            border: none;
-            color: white !important; /* Pastikan teks putih */
-            transition: all 0.3s ease;
-        }
-
-        .btn-soft-blue:hover {
-            background-color: #5a8dee; /* Warna sedikit lebih gelap saat di-hover */
-            box-shadow: 0 4px 8px rgba(118, 169, 250, 0.3); /* Efek bayangan halus */
-            transform: translateY(-1px); /* Efek naik sedikit */
-        }
+        
         /* Watermark dihapus */
     </style>
 </head>

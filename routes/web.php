@@ -76,6 +76,20 @@ Route::group(['middleware' => 'guest'], function () {
 
 /*
 |--------------------------------------------------------------------------
+| ROLE: HOUSEKEEPING (Amenities Only) 🆕
+|--------------------------------------------------------------------------
+*/
+Route::group(['middleware' => ['auth', 'checkRole:Super,Manager,Admin,Housekeeping']], function () {
+    // Resource Amenities
+    Route::resource('amenity', AmenityController::class);
+    
+    // Logout untuk Housekeeping
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout.housekeeping');
+});
+
+
+/*
+|--------------------------------------------------------------------------
 | ROLE: SUPER + MANAGER (User Management & Approval)
 |--------------------------------------------------------------------------
 */
@@ -109,7 +123,7 @@ Route::middleware(['auth'])->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::resource('ingredient', IngredientController::class)
-    ->middleware(['auth', 'checkRole:Super,Dapur'])
+    ->middleware(['auth', 'checkRole:Super,Manager,Dapur'])
     ->names('ingredient');
 
 
@@ -146,7 +160,7 @@ Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Manager']], functi
     Route::resource('room', RoomController::class);
     Route::resource('roomstatus', RoomStatusController::class);
     Route::resource('facility', FacilityController::class);
-    Route::resource('amenity', AmenityController::class);
+    // CATATAN: Route amenity sudah dipindah ke group Housekeeping di atas ✅
 
     /*
     |--------------------------------------------------------------------------
@@ -218,6 +232,7 @@ Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Manager']], functi
 /*
 |--------------------------------------------------------------------------
 | ROLE: SEMUA YANG LOGIN (Akses Umum & Monitoring)
+| CATATAN: Housekeeping & Dapur TIDAK termasuk di sini karena punya group sendiri
 |--------------------------------------------------------------------------
 */
 Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Customer,Manager,Dapur']], function () {

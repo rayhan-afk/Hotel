@@ -20,35 +20,50 @@ class CheckRole
         // ===================================
         // 👑 1. LOGIKA KHUSUS SUPERADMIN (GOD MODE)
         // ===================================
-        // Tambahkan ini agar Superadmin SELALU lolos di semua route
-        // tanpa perlu mendaftarkannya satu per satu di web.php
         if ($user->role === 'Super' || $user->role === 'Superadmin') {
             return $next($request);
         }
 
         // ===================================
-        // 2. Logika Utama (Pengecekan Role Sesuai Parameter)
+        // 2. LOGIKA KHUSUS HOUSEKEEPING (Amenities Only)
         // ===================================
-        // Cek apakah role user ada di daftar yang diizinkan route
+        if ($user->role === 'Housekeeping') {
+            $routeName = Route::currentRouteName();
+            
+            // Izinkan HANYA amenity dan logout
+            if (str_contains($routeName, 'amenity') || $routeName === 'logout' || $routeName === 'logout.housekeeping') {
+                return $next($request);
+            }
+            
+            // Jika coba akses halaman lain, redirect ke amenities
+            return redirect()->route('amenity.index')
+                ->with('error', 'Anda hanya memiliki akses ke halaman Amenities.');
+        }
+
+        // ===================================
+        // 3. LOGIKA KHUSUS DAPUR (Ingredients Only)
+        // ===================================
+        if ($user->isDapur()) {
+            $routeName = Route::currentRouteName();
+            
+            // Izinkan HANYA ingredient dan logout
+            if (str_contains($routeName, 'ingredient') || $routeName === 'logout') {
+                return $next($request);
+            }
+            
+            // Jika coba akses halaman lain, redirect ke ingredients
+            return redirect()->route('ingredient.index')
+                ->with('error', 'Anda hanya memiliki akses ke halaman Bahan Baku.');
+        }
+
+        // ===================================
+        // 4. Logika Utama (Pengecekan Role Sesuai Parameter)
+        // ===================================
         if (in_array($user->role, $roles)) {
             return $next($request);
         }
 
-        // ===================================
-        // 3. LOGIKA KHUSUS DAPUR
-        // ===================================
-        // Dapur hanya boleh mengakses rute yang mengandung kata 'ingredient'
-        if ($user->isDapur()) {
-            $routeName = Route::currentRouteName();
-            
-            if (str_contains($routeName, 'ingredient')) {
-                return $next($request);
-            }
-            
-            return abort(403, 'Anda tidak memiliki akses ke halaman ini. Dapur hanya dapat mengakses Bahan Baku.');
-        }
-
-        // 4. Penanganan Akses Ditolak
+        // 5. Penanganan Akses Ditolak
         return abort(403, 'Anda tidak memiliki akses ke halaman ini.'); 
     }
 }

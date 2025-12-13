@@ -49,6 +49,7 @@
                                     <option value="Admin" @if ($user->role == 'Admin') selected @endif>Admin</option>
                                     <option value="Manager" @if (old('role') == 'Manager') selected @endif>Manager</option>
                                     <option value="Dapur" @if (old('role') == 'Dapur') selected @endif>Dapur</option>
+                                    <option value="Housekeeping" {{ old('role') == 'Housekeeping' ? 'selected' : '' }}>Housekeeping</option>
                                 @endif
                                 @if ($user->role == 'Customer')
                                     <option value="Customer" @if ($user->role == 'Customer') selected @endif>Pengguna</option>

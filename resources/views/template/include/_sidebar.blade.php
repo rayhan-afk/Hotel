@@ -85,11 +85,13 @@
                 $isSuper = ($role == 'Super' || $role == 'Superadmin');
                 $isManager = ($role == 'Manager');
                 $isAdmin = ($role == 'Admin');
+                $isHousekeeping = ($role == 'Housekeeping');
+
             @endphp
 
             {{-- 1. GAMBARAN UMUM (DASHBOARD) --}}
             {{-- Logic: Semua KECUALI Dapur --}}
-            @if(!$isDapur)
+            @if(!$isDapur && !$isHousekeeping)
                 <div class="nav-section">
                     <div class="nav-section-title">Gambaran Umum</div>
                     <a href="{{ route('dashboard.index') }}"
@@ -107,7 +109,7 @@
 
             {{-- 2. PEMESANAN (INFO KAMAR & TRANSAKSI) --}}
             {{-- Logic: Semua KECUALI Dapur --}}
-            @if(!$isDapur)
+            @if(!$isDapur && !$isHousekeeping)
                 
                 <div class="nav-section-title">Pemesanan</div>
 
@@ -155,12 +157,12 @@
             
             {{-- 3. OPERATIONS (Manajemen User, Kamar, Ruang Rapat) --}}
             {{-- Logic: Header Operations tampil untuk Superadmin, Admin, Manager --}}
-            @if(!$isDapur)
+            @if(!$isDapur && !$isHousekeeping)
                 <div class="nav-section">
                     <div class="nav-section-title">Operations</div>
                     
                     <!-- {{-- Approval Management (FITUR KHUSUS MANAGER) --}}
-                    @if($isManager)
+                    @if($isManager|| $isSuper)
                         <a href="{{ route('approval.index') }}" class="nav-item {{ request()->routeIs('approval.*') ? 'active' : '' }}">
                             <div class="nav-icon">
                                 <i class="fas fa-clipboard-check"></i>
@@ -172,7 +174,7 @@
                         </a>
                     @endif -->
                     {{-- Approval Management (FITUR KHUSUS MANAGER) --}}
-                    @if($isManager)
+                    @if($isManager|| $isSuper)
                         <a href="{{ route('approval.index') }}" class="nav-item {{ request()->routeIs('approval.*') ? 'active' : '' }}">
                             <div class="nav-icon">
                                 <i class="fas fa-clipboard-check"></i>
@@ -263,9 +265,9 @@
 
             {{-- 4. PERSEDIAAN (BAHAN BAKU & AMENITIES) --}}
             {{-- Logic: Tampil untuk SEMUA user, tapi konten beda --}}
-            @if($isDapur || $isSuper || $isAdmin || $isManager)
+            @if($isDapur || $isSuper || $isAdmin || $isManager || $isHousekeeping)
                 
-                <div class="nav-section-title">{{ $isDapur ? 'Dapur' : 'Persediaan' }}</div>
+                <div class="nav-section-title">{{ ($isDapur || $isHousekeeping) ? 'Dapur' : 'Persediaan' }}</div>
                 
                 {{-- A. TAMPILAN KHUSUS DAPUR (Hanya Link Bahan Baku) --}}
                 @if($isDapur)
@@ -276,6 +278,18 @@
                         <div class="nav-content">
                             <div class="nav-title">Bahan Baku</div>
                             <div class="nav-subtitle">Stok Dapur</div>
+                        </div>
+                    </a>
+                {{-- B. TAMPILAN KHUSUS HOUSEKEEPING (Direct Link - BARU) --}}
+                {{-- 👇 INI YANG KITA UBAH AGAR LEBIH BAGUS --}}
+                @elseif($isHousekeeping)
+                    <a href="{{ route('amenity.index') }}" class="nav-item {{ request()->routeIs('amenity.*') ? 'active' : '' }}">
+                        <div class="nav-icon">
+                            <i class="fas fa-soap"></i>
+                        </div>
+                        <div class="nav-content">
+                            <div class="nav-title">Amenities</div>
+                            <div class="nav-subtitle">Stok Kamar</div>
                         </div>
                     </a>
                 
@@ -319,7 +333,7 @@
 
             {{-- 5. ANALYTICS & ADMINISTRASI --}}
             {{-- Logic: Semua KECUALI Dapur --}}
-            @if(!$isDapur)
+            @if(!$isDapur && !$isHousekeeping)
                 <div class="nav-section">
                     <div class="nav-section-title">Analytics</div>
 
@@ -373,7 +387,7 @@
 
         {{-- 6. SIDEBAR FOOTER --}}
         {{-- Logic: Semua KECUALI Dapur --}}
-        @if(!$isDapur)
+        @if(!$isDapur && !$isHousekeeping)
             <div class="sidebar-footer">
                 <a href="{{ route('transaction.reservation.createIdentity') }}" class="btn w-100 quick-action-btn" 
                 style="background-color: #8FB8E1; border-color: #8FB8E1; color: #F7F3E4;">

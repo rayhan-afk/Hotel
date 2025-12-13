@@ -5,25 +5,15 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use Illuminate\Http\Request; // <--- Wajib di-import agar tidak error
 
 class LoginController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | Login Controller
-    |--------------------------------------------------------------------------
-    |
-    | This controller handles authenticating users for the application and
-    | redirecting them to your home screen. The controller uses a trait
-    | to conveniently provide its functionality to your applications.
-    |
-    */
-
     use AuthenticatesUsers;
 
     /**
      * Where to redirect users after login.
-     *
+     * (Variabel ini akan diabaikan karena kita pakai function authenticated di bawah)
      * @var string
      */
     protected $redirectTo = RouteServiceProvider::HOME;
@@ -37,14 +27,29 @@ class LoginController extends Controller
     {
         $this->middleware('guest')->except('logout');
     }
-    public function redirectTo()
+
+    /**
+     * The user has been authenticated.
+     * Method ini akan memaksa redirect sesuai Role, mengabaikan 'intended url'.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  mixed  $user
+     * @return mixed
+     */
+    protected function authenticated(Request $request, $user)
     {
-        // Jika user adalah Dapur, arahkan langsung ke halaman Bahan Baku
-        if (auth()->user()->isDapur()) {
-            return route('ingredient.index'); // Pastikan nama route ini benar di web.php
+        // 1. Cek Role Housekeeping
+        // Pastikan di model User ada method isHousekeeping(), atau gunakan $user->role == 'Housekeeping'
+        if ($user->role === 'Housekeeping' || (method_exists($user, 'isHousekeeping') && $user->isHousekeeping())) {
+            return redirect()->route('amenity.index');
         }
 
-        // Jika bukan Dapur (Super, Admin, Manager), arahkan ke Dashboard
-        return route('dashboard.index');
+        // 2. Cek Role Dapur
+        if ($user->role === 'Dapur' || (method_exists($user, 'isDapur') && $user->isDapur())) {
+            return redirect()->route('ingredient.index');
+        }
+
+        // 3. Sisanya (Super, Admin, Manager) ke Dashboard
+        return redirect()->route('dashboard.index');
     }
 }

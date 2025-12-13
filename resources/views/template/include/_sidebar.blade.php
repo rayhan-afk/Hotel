@@ -172,7 +172,7 @@
                         </a>
                     @endif -->
                     {{-- Approval Management (FITUR KHUSUS MANAGER) --}}
-                    @if($isManager)
+                    @if($isManager|| $isSuper)
                         <a href="{{ route('approval.index') }}" class="nav-item {{ request()->routeIs('approval.*') ? 'active' : '' }}">
                             <div class="nav-icon">
                                 <i class="fas fa-clipboard-check"></i>

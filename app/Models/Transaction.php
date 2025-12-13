@@ -20,6 +20,7 @@ class Transaction extends Model
         'status',
         'total_price',
         'breakfast',
+        'paid_amount',
     ];
 
     public function user()

@@ -20,8 +20,21 @@ class Customer extends Model
         'gender',
     ];
 
+    /**
+     * Relasi ke model User (1 Customer dimiliki oleh 1 User/Akun)
+     */
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * [BARU] Relasi ke model Transaction (Riwayat Reservasi)
+     * 1 Customer bisa memiliki banyak Transaksi
+     */
+    public function transactions()
+    {
+        // Pastikan model 'Transaction' ada di App\Models\Transaction
+        return $this->hasMany(Transaction::class);
     }
 }

@@ -1,198 +1,65 @@
 @extends('template.master')
-@section('title', 'Customer')
+@section('title', 'Daftar Customer')
+
 @section('content')
-    <style>
-        .mybg {
-            background-image: linear-gradient(#1975d1, #1975d1);
-        }
-
-        .numbering {
-            width: 50px;
-            height: 50px;
-            align-items: center;
-            justify-content: center;
-            padding-top: 12px;
-            text-align: center;
-            border-bottom-right-radius: 30px;
-            border-top-left-radius: 5px;
-        }
-
-        .icon {
-            font-size: 1.5rem;
-            margin-right: -10px;
-            color: #212529
-        }
-
-    </style>
-
-    <div class="row">
-        <div class="col-lg-12" style="background-color: #F7F3E4;">
-            <div class="row mt-2 mb-2">
-                <div class="col-lg-6 mb-2">
-                    <a href="{{ route('customer.create') }}" class="btn btn-search-custom shadow-sm myBtn border rounded">
-                        <svg width="25" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                    </a>
-                </div>
-                <div class="col-lg-6 mb-2">
-                    <form class="d-flex" method="GET" action="{{ route('customer.index') }}">
-                        <input class="form-control me-2" type="search" placeholder="Cari Customer" aria-label="Search" id="search"
-                            name="search" value="{{ request()->input('search') }}">
-                        <button class="btn btn-search-custom" type="submit">Cari</button>
-                    </form>
-                </div>
-            </div>
-            <div class="row">
-                @forelse ($customers as $customer)
-                    <div class="col-lg-2 col-md-4 col-sm-6 my-1">
-                        <div class="card shadow-sm justify-content-start p-0 rounded" style="min-height:350px; ">
-                            <div class="row w-100" style="position:absolute;">
-                                <div class="d-flex">
-                                    <h5 class="card-title text-white numbering bg-dark ">
-                                        {{ ($customers->currentpage() - 1) * $customers->perpage() + $loop->index + 1 }}
-                                    </h5>
-                                    <div class="dropdown ms-auto mt-2" style="">
-                                        <a class="" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown"
-                                            aria-expanded="false">
-                                            <i class="fa fa-ellipsis-v icon"></i>
-                                        </a>
-
-                                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                                            <li><a class="dropdown-item"
-                                                    href="{{ route('customer.show', ['customer' => $customer->id]) }}">Detail</a>
-                                            </li>
-                                            <li><a class="dropdown-item"
-                                                    href="{{ route('customer.edit', ['customer' => $customer->id]) }}">Edit</a>
-                                            </li>
-                                            <li>
-                                                <form method="POST" id="delete-customer-form-{{ $customer->id }}"
-                                                    action="{{ route('customer.destroy', ['customer' => $customer->id]) }}">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <a class="dropdown-item delete" href="#" customer-id="{{ $customer->id }}"
-                                                        customer-role="Customer" customer-name="{{ $customer->name }}">
-                                                        Delete
-                                                    </a>
-                                                </form>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                            <img src="{{ $customer->user->getAvatar() }}"
-                                style="object-fit: cover; height:350px; border-top-right-radius: 0.5rem; border-top-left-radius: 0.5rem;">
-                            <div class="card-body">
-                                <div class="card-text">
-                                    <div class="row">
-                                        <div class="col-lg-12">
-                                            <div class="row">
-                                                <div class="col-sm-12">
-                                                    <h5 class="mt-0">{{ $customer->name }}
-                                                    </h5>
-                                                    <div class="table-responsive">
-                                                        <table>
-                                                            <tr>
-                                                                <td><i class="fas fa-envelope"></i></td>
-                                                                <td>
-                                                                    <span>
-                                                                        {{ $customer->user->email }}
-                                                                    </span>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td><i class="fas fa-user-md"></i></td>
-                                                                <td>
-                                                                    <span>
-                                                                        {{ $customer->job }}
-                                                                    </span>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td><i class="fas fa-map-marker-alt"></i></td>
-                                                                <td style="white-space:nowrap" class="overflow-hidden">
-                                                                    <span>
-                                                                        {{ $customer->address }}
-                                                                    </span>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td><i class="fas fa-phone"></i></td>
-                                                                <td>
-                                                                    <span>
-                                                                        +6281233808395
-                                                                    </span>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td><i class="fas fa-birthday-cake"></i></td>
-                                                                <td>
-                                                                    <span>
-                                                                        {{ $customer->birthdate }}
-                                                                    </span>
-                                                                </td>
-                                                            </tr>
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                @empty
-                    <p class="text-center">There's no customer found on database</p>
-                @endforelse
-            </div>
-            <div class="row justify-content-md-center mt-3">
-                <div class="col-sm-10 d-flex justify-content-md-center">
-                    {{ $customers->onEachSide(2)->links('template.paginationlinks') }}
+<div class="container-fluid">
+    {{-- HEADER & SEARCH --}}
+    <div class="row mt-4 mb-3 align-items-center">
+        <div class="col-md-6">
+            <h3 class="fw-bold text-dark"><i class="fas fa-users me-2"></i>Daftar Tamu</h3>
+            <p class="text-muted mb-0">Kelola data tamu, kontak, dan riwayat kunjungan.</p>
+        </div>
+        <div class="col-md-6">
+            <div class="d-flex justify-content-md-end gap-2 mt-3 mt-md-0">
+                {{-- Search Form (ID "searchInput" ditambahkan agar terdeteksi JS) --}}
+                <div class="input-group" style="max-width: 300px;">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text" class="form-control border-start-0 ps-0" 
+                           id="searchInput" 
+                           placeholder="Cari Nama / No. HP..." 
+                           name="q" 
+                           value="{{ request()->input('q') }}">
                 </div>
             </div>
         </div>
     </div>
 
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        {{-- TABEL UTAMA (Di-handle oleh customer.js) --}}
+                        <table id="customer-table" class="table table-hover align-middle mb-0 w-100">
+                            <thead class="bg-light text-secondary">
+                                <tr>
+                                    <th class="px-4 py-3 text-center" width="5%">#</th>
+                                    <th class="py-3 text-center" width="10%">Avatar</th>
+                                    <th class="py-3">Nama Lengkap</th>
+                                    <th class="py-3">Kontak (HP & Email)</th>
+                                    <th class="py-3">Pekerjaan</th>
+                                    <th class="py-3" width="25%">Alamat</th>
+                                    <th class="px-4 py-3 text-center" width="15%">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{-- Isi tabel akan dimuat otomatis oleh Datatable (AJAX) --}}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                {{-- Pagination sudah otomatis dihandle Datatable, footer opsional --}}
+                <div class="card-footer bg-white py-3 border-0"></div>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('footer')
-<script>
-    $('.delete').click(function() {
-        var customer_id = $(this).attr('customer-id');
-        var customer_name = $(this).attr('customer-name');
-        var customer_url = $(this).attr('customer-url');
-        const swalWithBootstrapButtons = Swal.mixin({
-            customClass: {
-                confirmButton: 'btn btn-success',
-                cancelButton: 'btn btn-danger'
-            },
-            buttonsStyling: false
-        })
-
-        Swal.fire({
-                title: "Yakin ingin menghapus?",
-                text: "Data tidak bisa dikembalikan!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#F2C2B8",
-                cancelButtonColor: "#8FB8E1",
-                confirmButtonText: "Ya, Hapus!",
-                cancelButtonText: "Batal",
-                customClass: {
-                    confirmButton: "text-50200C",
-                    cancelButton: "text-50200C",
-                },
-        }).then((result) => {
-            if (result.isConfirmed) {
-                id = "#delete-customer-form-" + customer_id
-                console.log(id)
-                $(id).submit();
-            }
-        })
-    });
-
-</script>
+    {{-- Panggil script customer.js --}}
+    <script src="{{ asset('js/pages/customer.js') }}"></script>
 @endsection

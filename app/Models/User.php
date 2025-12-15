@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
@@ -43,14 +44,40 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-    public function getAvatar()
+    /**
+     * [BARU] Tambahkan atribut virtual ini agar muncul di JSON Datatable
+     */
+    protected $appends = ['avatar_url'];
+
+    /**
+     * [BARU] Accessor untuk membuat URL Avatar yang Benar & Konsisten
+     * Format Folder: {id}-{slug_nama} (Contoh: 1-budi-santoso)
+     * Ini dipanggil di JS via: row.user.avatar_url
+     */
+    public function getAvatarUrlAttribute()
     {
         if (! $this->avatar) {
             return asset('img/default/default-user.jpg');
         }
 
-        return asset('img/user/'.$this->name.'-'.$this->id.'/'.$this->avatar);
+        // PENTING: Gunakan Str::slug agar sesuai dengan nama folder yang dibuat Repository
+        $folderName = $this->id . '-' . Str::slug($this->name);
+
+        return asset('img/user/' . $folderName . '/' . $this->avatar);
     }
+
+    /**
+     * [UPDATE] Helper untuk Blade View
+     * Sekarang cukup panggil accessor di atas agar logic-nya satu pintu.
+     */
+    public function getAvatar()
+    {
+        return $this->avatar_url;
+    }
+
+    // ===================================
+    // RELASI & ROLE CHECK
+    // ===================================
 
     public function customer()
     {
@@ -59,13 +86,9 @@ class User extends Authenticatable
 
     public function isCustomer()
     {
-        // Pastikan penulisan 'Customer' sesuai dengan apa yang ada di Database (Besar/Kecil hurufnya)
         return $this->role === 'Customer'; 
     }
-    // ===================================
-    // 💡 LETAK PERUBAHAN UTAMA: PENAMBAHAN HELPER ROLE
-    // ===================================
-    
+
     public function isSuper()
     {
         return $this->role === 'Super';
@@ -85,28 +108,16 @@ class User extends Authenticatable
     {
         return $this->role === 'Dapur';
     }
-    
-    // ===================================
-    // 💡 AKHIR PERUBAHAN
-    // ===================================
 
     /**
-     * TAMBAHAN PENTING:
      * Fungsi ini untuk mengecek apakah user memiliki salah satu dari role yang diizinkan.
-     * Bisa menerima input berupa String (satu role) atau Array (banyak role).
      */
     public function hasRole($roles)
     {
-        // Jika input cuma 1 string (misal: "admin"), ubah jadi array dulu
         if (is_string($roles)) {
             $roles = [$roles];
         }
 
-        // Cek apakah role user saat ini ada di dalam daftar role yang diperbolehkan
-        // Contoh: Role user 'manager'. Apakah 'manager' ada di ['super', 'manager']? -> TRUE
         return in_array($this->role, $roles);
-
-        
     }
-    
 }

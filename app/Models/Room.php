@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str; // [PENTING] Tambahkan ini untuk Slug
 use Carbon\Carbon;
 
 class Room extends Model
@@ -14,7 +15,7 @@ class Room extends Model
         'type_id',
         'number',
         'name',
-        'status', // Pastikan kolom ini ada di fillable
+        'status',
         'capacity',
         'price',
         'area_sqm',
@@ -23,20 +24,77 @@ class Room extends Model
         'main_image_path',
     ];
 
+    /**
+     * [BARU] Tambahkan atribut virtual agar otomatis muncul di JSON/Array
+     * Ini berguna saat data dipanggil via AJAX/Datatable
+     */
+    protected $appends = ['image_url'];
+
     public function type()
     {
         return $this->belongsTo(Type::class);
     }
 
-    // === RELASI UTAMA ===
     public function transactions()
     {
         return $this->hasMany(Transaction::class);
     }
+
+    // === ATTRIBUTE IMAGE URL (LOGIC PERBAIKAN UTAMA) ===
     
-    // === RELASI STATUS ===
-    
-    // 1. Cek Tamu Sedang Menginap (Status: Check In)
+    /**
+     * Accessor ini mengecek gambar di berbagai lokasi folder.
+     * Dipanggil via: $room->image_url
+     */
+    public function getImageUrlAttribute()
+    {
+        // 1. Jika path di DB kosong, return default
+        if (empty($this->main_image_path)) {
+            return asset('img/default/default-room.png');
+        }
+
+        // 2. Jika path adalah URL lengkap (https://...), return langsung
+        if (filter_var($this->main_image_path, FILTER_VALIDATE_URL)) {
+            return $this->main_image_path;
+        }
+
+        // 3. [PRIORITAS UTAMA] Cek Folder Terstruktur: img/room/{id}-{slug}/{filename}
+        // Ini agar konsisten dengan cara penyimpanan di Repository (jika pakai folder per room)
+        $folderName = $this->id . '-' . Str::slug($this->name);
+        $structuredPath = 'img/room/' . $folderName . '/' . $this->main_image_path;
+
+        if (file_exists(public_path($structuredPath))) {
+            return asset($structuredPath);
+        }
+
+        // 4. [FALLBACK 1] Cek path langsung di folder Public (misal DB simpan: "img/room/foto.jpg")
+        // Kita bersihkan kata "storage/" jika ada, karena asset() sudah mengarah ke public
+        $cleanPath = str_replace('storage/', '', $this->main_image_path);
+        
+        if (file_exists(public_path($cleanPath))) {
+            return asset($cleanPath);
+        }
+
+        // 5. [FALLBACK 2] Cek di folder Storage Link (public/storage/...)
+        if (file_exists(public_path('storage/' . $cleanPath))) {
+            return asset('storage/' . $cleanPath);
+        }
+
+        // 6. Jika semua gagal (file fisik hilang), return default daripada error/broken image
+        return asset('img/default/default-room.png');
+    }
+
+    /**
+     * Helper untuk View lama agar tidak error.
+     * Kita arahkan langsung ke logic baru di atas.
+     */
+    public function firstImage()
+    {
+        return $this->image_url;
+    }
+
+    // === LOGIC STATUS ===
+
     public function currentTransaction()
     {
         return $this->hasOne(Transaction::class, 'room_id')
@@ -45,7 +103,6 @@ class Room extends Model
                     ->whereDate('check_out', '>=', Carbon::today());
     }
 
-    // 2. Cek Reservasi Mendatang (Status: Reservation)
     public function futureReservation()
     {
         return $this->hasOne(Transaction::class, 'room_id')
@@ -54,72 +111,24 @@ class Room extends Model
                     ->orderBy('check_in', 'ASC');
     }
 
-    // === ATTRIBUTE STATUS DINAMIS (LOGIC DIPERBAIKI) ===
-    
     public function getDynamicStatusAttribute()
     {
-        // PRIORITAS 1: Cek Status Fisik Kamar di Database (Cleaning)
-        // Kita cek kolom 'status' di tabel 'rooms' terlebih dahulu.
-        // Jika sedang dibersihkan, maka statusnya 'Cleaning' apapun kondisi transaksinya.
+        // Prioritas 1: Sedang dibersihkan
         if ($this->status === 'Cleaning') {
             return 'Cleaning';
         }
 
-        // PRIORITAS 2: Cek Tamu Sedang Menginap
+        // Prioritas 2: Ada tamu check-in sekarang
         if ($this->currentTransaction) {
             return 'Occupied';
         }
         
-        // PRIORITAS 3: Cek Reservasi Mendatang
+        // Prioritas 3: Sudah di-booking untuk masa depan
         if ($this->futureReservation) {
             return 'Reserved';
         }
 
-        // Default: Kosong & Bersih
+        // Default
         return 'Available';
-    }
-
-    public function firstImage()
-    {
-        if (!empty($this->main_image_path)) {
-            return asset($this->main_image_path);
-        }
-        return asset('img/default/default-room.png');
-    }
-
-    // Tambahkan ini di App/Models/Room.php
-
-    public function getImage()
-    {
-        // 1. Jika gambar kosong, kembalikan gambar default
-        if (empty($this->image) && empty($this->main_image_path)) {
-            return asset('img/default/default-room.png');
-        }
-
-        // Ambil nilai dari kolom (bisa 'image' atau 'main_image_path' tergantung DB Anda)
-        $path = $this->image ?? $this->main_image_path;
-
-        // 2. Jika path adalah URL lengkap (misal dari lorempixel/internet), langsung kembalikan
-        if (filter_var($path, FILTER_VALIDATE_URL)) {
-            return $path;
-        }
-
-        // 3. PEMBERSIHAN PATH (KUNCI PERBAIKAN)
-        // Hapus kata 'storage/' di depan jika sudah ada, biar tidak dobel nanti.
-        // Jadi "storage/img/rooms/..." menjadi "img/rooms/..."
-        $cleanPath = str_replace('storage/', '', $path);
-
-        // 4. Cek apakah file fisik BENAR-BENAR ADA di storage?
-        if (file_exists(storage_path('app/public/' . $cleanPath))) {
-            return asset('storage/' . $cleanPath);
-        }
-
-        // 5. Cek apakah file ada di folder public biasa (untuk data seeder lama)
-        if (file_exists(public_path($path))) {
-            return asset($path);
-        }
-
-        // 6. Jika semua gagal, kembalikan default daripada error/broken image
-        return asset('img/default/default-room.png');
     }
 }

@@ -176,8 +176,8 @@
                                         
                                         {{-- Bagian Gambar Kamar --}}
                                         <div class="col-md-4 d-none d-md-block position-relative">
-                                            {{-- Mengambil gambar utama --}}
-                                            <img src="{{ $room->firstImage() }}" 
+                                            {{-- Mengambil gambar utama (FIX: Pakai image_url) --}}
+                                            <img src="{{ $room->image_url }}" 
                                                  class="img-fluid w-100 h-100" 
                                                  style="object-fit: cover; min-height: 280px;" 
                                                  alt="Gambar Kamar {{ $room->number }}">
@@ -213,9 +213,8 @@
                         
                         <hr class="my-4">
 
-                        {{-- Tombol Kembali (DIBAWAH & COKLAT -> DIGANTI JADI PINK BTN-MODAL-CLOSE) --}}
+                        {{-- Tombol Kembali --}}
                         <div class="d-flex justify-content-between align-items-center">
-                            {{-- Hapus 'btn-secondary', ganti dengan 'btn-modal-close' --}}
                             <a href="{{ route('transaction.reservation.viewCountPerson', ['customer' => $customer->id]) }}" 
                             class="btn btn-modal-close me-3" 
                             id="btn-modal-close">
@@ -231,7 +230,8 @@
             <div class="col-lg-4">
                 <div class="card shadow-sm border-0 sticky-top" style="top: 20px; z-index: 1; background-color: #F7F3E4">
                     <div class="card-header border-0 pt-4 pb-0 text-center">
-                        <img src="{{ $customer->user->getAvatar() }}"
+                        {{-- FIX: Pakai avatar_url --}}
+                        <img src="{{ $customer->user->avatar_url }}"
                             class="rounded-circle shadow-sm border mb-3" 
                             style="width: 100px; height: 100px; object-fit: cover;">
                         <h5 class="fw-bold mb-0" style="color:#50200C">{{ $customer->name }}</h5>

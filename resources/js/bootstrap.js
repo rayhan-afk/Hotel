@@ -94,5 +94,6 @@ import axios from "axios";
         import("./pages/kamar-tersedia"),
         import("./pages/kamar-dibersihkan"),
         import("./pages/approval"),
+        import("./pages/customer"),
     ]);
 })();

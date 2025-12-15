@@ -30,8 +30,8 @@
                     </div>
                     <div class="modal-footer border-0 bg-light">
                         <button id="btn-modal-close" type="button" class="btn-modal-close"
-                            data-bs-dismiss="modal">Close</button>
-                        <button id="btn-modal-save" type="button" class="btn-modal-save">Save</button>
+                            data-bs-dismiss="modal">Batal</button>
+                        <button id="btn-modal-save" type="button" class="btn-modal-save">Simpan</button>
                     </div>
                 </div>
             </div>

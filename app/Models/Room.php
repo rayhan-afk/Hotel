@@ -93,6 +93,10 @@ class Room extends Model
         return $this->image_url;
     }
 
+    public function getImage()
+    {
+        return $this->image_url;
+    }
     // === LOGIC STATUS ===
 
     public function currentTransaction()

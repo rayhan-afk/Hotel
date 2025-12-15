@@ -46,5 +46,13 @@ class UserSeeder extends Seeder
             'role' => 'Dapur',
             'random_key' => Str::random(60),
         ]);
+
+        User::create([
+            'name' => 'Housekeeping',
+            'email' => 'housekeeping@gmail.com',
+            'password' => Hash::make('password'),
+            'role' => 'Housekeeping',
+            'random_key' => Str::random(60),
+        ]);
     }
 }

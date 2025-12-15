@@ -25,19 +25,23 @@ class CheckRole
         }
 
         // ===================================
-        // 2. LOGIKA KHUSUS HOUSEKEEPING (Amenities Only)
+        // 2. LOGIKA KHUSUS HOUSEKEEPING (Amenities & Kamar Dibersihkan)
         // ===================================
         if ($user->role === 'Housekeeping') {
             $routeName = Route::currentRouteName();
             
-            // Izinkan HANYA amenity dan logout
-            if (str_contains($routeName, 'amenity') || $routeName === 'logout' || $routeName === 'logout.housekeeping') {
+            // Izinkan HANYA amenity, room-info.cleaning, dan logout
+            if (str_contains($routeName, 'amenity') || 
+                $routeName === 'room-info.cleaning' || 
+                $routeName === 'room-info.cleaning.finish' ||
+                $routeName === 'logout' || 
+                $routeName === 'logout.housekeeping') {
                 return $next($request);
             }
             
             // Jika coba akses halaman lain, redirect ke amenities
             return redirect()->route('amenity.index')
-                ->with('error', 'Anda hanya memiliki akses ke halaman Amenities.');
+                ->with('error', 'Anda hanya memiliki akses ke halaman Amenities dan Kamar Dibersihkan.');
         }
 
         // ===================================

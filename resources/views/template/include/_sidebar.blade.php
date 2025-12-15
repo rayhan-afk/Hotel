@@ -34,45 +34,6 @@
             </div>
         </div>
 
-        {{-- NOTIFICATION SECTION --}}
-        <!-- <div class="sidebar-notifications">
-            <div class="notifications-header">
-                <div class="notifications-title">
-                    <i class="fas fa-bell me-2"></i>
-                    Notifikasi
-                    @if (auth()->user()->unreadNotifications()->count() > 0)
-                        <span class="notification-badge">{{ auth()->user()->unreadNotifications()->count() }}</span>
-                    @endif
-                </div>
-            </div>
-            <div class="notifications-content">
-                @forelse (auth()->user()->unreadNotifications()->latest()->limit(3)->get() as $notification)
-                    <a href="{{ route('notification.routeTo', ['id' => $notification->id]) }}" class="notification-item">
-                        <div class="notification-icon">
-                            <i class="fas fa-bell"></i>
-                        </div>
-                        <div class="notification-text">
-                            <div class="notification-message">{{ Str::limit($notification->data['message'] ?? 'New notification', 40) }}</div>
-                            <div class="notification-time">{{ $notification->created_at->diffForHumans() }}</div>
-                        </div>
-                    </a>
-                @empty
-                    <div class="notification-empty">
-                        <i class="fas fa-bell-slash"></i>
-                        <span>Tidak ada notifikasi</span>
-                    </div>
-                @endforelse
-
-                @if (auth()->user()->unreadNotifications()->count() > 3)
-                    <div class="notifications-footer">
-                        <a href="{{ route('notification.index') }}" class="view-all-notifications">
-                            Lihat Semua ({{ auth()->user()->unreadNotifications()->count() }})
-                        </a>
-                    </div>
-                @endif
-            </div>
-        </div> -->
-
         {{-- ============================================================= --}}
         {{-- START NAVIGATION MENU --}}
         {{-- ============================================================= --}}
@@ -86,11 +47,10 @@
                 $isManager = ($role == 'Manager');
                 $isAdmin = ($role == 'Admin');
                 $isHousekeeping = ($role == 'Housekeeping');
-
             @endphp
 
             {{-- 1. GAMBARAN UMUM (DASHBOARD) --}}
-            {{-- Logic: Semua KECUALI Dapur --}}
+            {{-- Logic: Semua KECUALI Dapur & Housekeeping --}}
             @if(!$isDapur && !$isHousekeeping)
                 <div class="nav-section">
                     <div class="nav-section-title">Gambaran Umum</div>
@@ -108,9 +68,21 @@
             @endif
 
             {{-- 2. PEMESANAN (INFO KAMAR & TRANSAKSI) --}}
-            {{-- Logic: Semua KECUALI Dapur --}}
-            @if(!$isDapur && !$isHousekeeping)
-                
+            
+            {{-- MENU: INFO KAMAR - Khusus untuk Housekeeping (Direct Link) --}}
+            @if($isHousekeeping)
+                <div class="nav-section-title">Info Kamar</div>
+                <a href="{{ route('room-info.cleaning') }}" class="nav-item {{ request()->routeIs('room-info.cleaning*') ? 'active' : '' }}">
+                    <div class="nav-icon">
+                        <i class="fas fa-broom"></i>
+                    </div>
+                    <div class="nav-content">
+                        <div class="nav-title">Kamar Dibersihkan</div>
+                        <div class="nav-subtitle">Status Pembersihan</div>
+                    </div>
+                </a>
+            @elseif(!$isDapur)
+                {{-- MENU: INFO KAMAR - Untuk role lain (Dropdown lengkap) --}}
                 <div class="nav-section-title">Pemesanan</div>
 
                 {{-- MENU: INFO KAMAR --}}
@@ -135,14 +107,14 @@
                             <a href="{{ route('room-info.reservation') }}" class="nav-subitem {{ request()->routeIs('room-info.reservation*') ? 'active' : '' }} ">
                                 <i class="fas fa-clock me-2"></i>Reservasi Kamar
                             </a>
-                            <a href="{{ route('room-info.cleaning') }}" class="nav-subitem {{ request()->routeIs('room-info.cleaning*') ? 'active' : '' }} ">
+                            <a href="{{ route('room-info.cleaning') }}" class="nav-subitem {{ request()->routeIs('room-info.cleaning*') ? 'active' : '' }}">
                                 <i class="fas fa-broom me-2"></i>Kamar Dibersihkan
                             </a>
                         </div>
                     </div>
                 </div>
 
-               {{-- MENU: TRANSAKSI (Check-in) --}}
+                {{-- MENU: TRANSAKSI (Check-in) --}}
                 <a href="{{ route('transaction.checkin.index') }}" 
                 class="nav-item {{ request()->routeIs('transaction.checkin.*') ? 'active' : '' }}">
                     <div class="nav-icon">
@@ -161,18 +133,6 @@
                 <div class="nav-section">
                     <div class="nav-section-title">Operations</div>
                     
-                    <!-- {{-- Approval Management (FITUR KHUSUS MANAGER) --}}
-                    @if($isManager|| $isSuper)
-                        <a href="{{ route('approval.index') }}" class="nav-item {{ request()->routeIs('approval.*') ? 'active' : '' }}">
-                            <div class="nav-icon">
-                                <i class="fas fa-clipboard-check"></i>
-                            </div>
-                            <div class="nav-content">
-                                <div class="nav-title">Approval Management</div>
-                                <div class="nav-subtitle">Edit Kamar & Rapat</div>
-                            </div>
-                        </a>
-                    @endif -->
                     {{-- Approval Management (FITUR KHUSUS MANAGER) --}}
                     @if($isManager|| $isSuper)
                         <a href="{{ route('approval.index') }}" class="nav-item {{ request()->routeIs('approval.*') ? 'active' : '' }}">
@@ -267,7 +227,7 @@
             {{-- Logic: Tampil untuk SEMUA user, tapi konten beda --}}
             @if($isDapur || $isSuper || $isAdmin || $isManager || $isHousekeeping)
                 
-                <div class="nav-section-title">{{ ($isDapur || $isHousekeeping) ? 'Dapur' : 'Persediaan' }}</div>
+                <div class="nav-section-title">{{ ($isDapur || $isHousekeeping) ? 'Persediaan' : 'Persediaan' }}</div>
                 
                 {{-- A. TAMPILAN KHUSUS DAPUR (Hanya Link Bahan Baku) --}}
                 @if($isDapur)
@@ -280,8 +240,7 @@
                             <div class="nav-subtitle">Stok Dapur</div>
                         </div>
                     </a>
-                {{-- B. TAMPILAN KHUSUS HOUSEKEEPING (Direct Link - BARU) --}}
-                {{-- 👇 INI YANG KITA UBAH AGAR LEBIH BAGUS --}}
+                {{-- B. TAMPILAN KHUSUS HOUSEKEEPING (Direct Link) --}}
                 @elseif($isHousekeeping)
                     <a href="{{ route('amenity.index') }}" class="nav-item {{ request()->routeIs('amenity.*') ? 'active' : '' }}">
                         <div class="nav-icon">
@@ -293,7 +252,7 @@
                         </div>
                     </a>
                 
-                {{-- B. TAMPILAN UNTUK ADMIN/MANAGER/SUPERADMIN (Dropdown) --}}
+                {{-- C. TAMPILAN UNTUK ADMIN/MANAGER/SUPERADMIN (Dropdown) --}}
                 @else
                     <div class="nav-item dropdown-nav {{ request()->routeIs(['ingredient.*', 'amenity.*']) ? 'active' : '' }} ">
                         <div class="nav-toggle" data-bs-toggle="collapse" data-bs-target="#persediaanSubmenu">
@@ -332,7 +291,7 @@
 
 
             {{-- 5. ANALYTICS & ADMINISTRASI --}}
-            {{-- Logic: Semua KECUALI Dapur --}}
+            {{-- Logic: Semua KECUALI Dapur & Housekeeping --}}
             @if(!$isDapur && !$isHousekeeping)
                 <div class="nav-section">
                     <div class="nav-section-title">Analytics</div>
@@ -368,25 +327,12 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- <div class="nav-section">
-                    <div class="nav-section-title">Administrasi</div>
-                    <a href="#" class="nav-item">
-                        <div class="nav-icon">
-                            <i class="fas fa-cogs"></i>
-                        </div>
-                        <div class="nav-content">
-                            <div class="nav-title">Pengaturan</div>
-                            <div class="nav-subtitle">Konfigurasi Sistem</div>
-                        </div>
-                    </a>
-                </div> -->
             @endif
 
         </nav>
 
         {{-- 6. SIDEBAR FOOTER --}}
-        {{-- Logic: Semua KECUALI Dapur --}}
+        {{-- Logic: Semua KECUALI Dapur & Housekeeping --}}
         @if(!$isDapur && !$isHousekeeping)
             <div class="sidebar-footer">
                 <a href="{{ route('transaction.reservation.createIdentity') }}" class="btn w-100 quick-action-btn" 
@@ -420,27 +366,6 @@
 .user-role { color: rgba(255, 255, 255, 0.6); font-size: 0.75rem; }
 .user-actions .btn { color: rgba(255, 255, 255, 0.6); border: none; padding: 0.25rem 0.5rem; }
 .user-actions .btn:hover { color: white; background: rgba(255, 255, 255, 0.1); }
-.sidebar-notifications { border-bottom: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.02); }
-.notifications-header { padding: 1rem 1.25rem 0.5rem; }
-.notifications-title { color: rgba(255, 255, 255, 0.9); font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; }
-.notification-badge { background: #ef4444; color: white; font-size: 0.7rem; font-weight: 700; padding: 0.125rem 0.375rem; border-radius: 10px; margin-left: auto; }
-.notifications-content { max-height: 200px; overflow-y: auto; }
-.notification-item { display: flex; align-items: flex-start; padding: 0.75rem 1.25rem; color: rgba(255, 255, 255, 0.8); text-decoration: none; transition: all 0.3s ease; border-left: 3px solid transparent; }
-.notification-item:hover { background: rgba(255, 255, 255, 0.05); border-left-color: #3b82f6; color: white; text-decoration: none; }
-.notification-icon { width: 24px; height: 24px; background: rgba(59, 130, 246, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 0.75rem; flex-shrink: 0; color: #60a5fa; font-size: 0.7rem; }
-.notification-text { flex: 1; min-width: 0; }
-.notification-message { font-size: 0.8rem; line-height: 1.3; margin-bottom: 0.25rem; color: rgba(255, 255, 255, 0.9); }
-.notification-time { font-size: 0.7rem; color: rgba(255, 255, 255, 0.5); }
-.notification-empty { display: flex; flex-direction: column; align-items: center; padding: 1.5rem 1.25rem; color: rgba(255, 255, 255, 0.5); text-align: center; }
-.notification-empty i { font-size: 1.5rem; margin-bottom: 0.5rem; opacity: 0.7; }
-.notification-empty span { font-size: 0.8rem; }
-.notifications-footer { padding: 0.5rem 1.25rem 1rem; text-align: center; }
-.view-all-notifications { color: #60a5fa; font-size: 0.8rem; font-weight: 500; text-decoration: none; transition: color 0.3s ease; }
-.view-all-notifications:hover { color: #3b82f6; text-decoration: none; }
-.notifications-content::-webkit-scrollbar { width: 3px; }
-.notifications-content::-webkit-scrollbar-track { background: transparent; }
-.notifications-content::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 2px; }
-.notifications-content::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
 .sidebar-nav { flex: 1; padding: 0.5rem 0; overflow-y: auto; overflow-x: hidden; }
 .sidebar-nav::-webkit-scrollbar { width: 4px; }
 .sidebar-nav::-webkit-scrollbar-track { background: transparent; }

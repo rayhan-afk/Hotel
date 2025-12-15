@@ -77,9 +77,10 @@ Route::group(['middleware' => 'guest'], function () {
 /*
 |--------------------------------------------------------------------------
 | ROLE: HOUSEKEEPING (Amenities Only) 🆕
+| Hanya Super dan Housekeeping yang bisa akses amenities
 |--------------------------------------------------------------------------
 */
-Route::group(['middleware' => ['auth', 'checkRole:Super,Manager,Admin,Housekeeping']], function () {
+Route::group(['middleware' => ['auth', 'checkRole:Super,Housekeeping']], function () {
     // Resource Amenities
     Route::resource('amenity', AmenityController::class);
     
@@ -123,7 +124,7 @@ Route::middleware(['auth'])->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::resource('ingredient', IngredientController::class)
-    ->middleware(['auth', 'checkRole:Super,Manager,Dapur'])
+    ->middleware(['auth', 'checkRole:Super,Dapur'])
     ->names('ingredient');
 
 
@@ -232,10 +233,10 @@ Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Manager']], functi
 /*
 |--------------------------------------------------------------------------
 | ROLE: SEMUA YANG LOGIN (Akses Umum & Monitoring)
-| CATATAN: Housekeeping & Dapur TIDAK termasuk di sini karena punya group sendiri
+| CATATAN: Housekeeping khusus untuk room-info.cleaning saja
 |--------------------------------------------------------------------------
 */
-Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Customer,Manager,Dapur']], function () {
+Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Customer,Manager,Dapur,Housekeeping']], function () {
 
     // Dashboard & Auth
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');

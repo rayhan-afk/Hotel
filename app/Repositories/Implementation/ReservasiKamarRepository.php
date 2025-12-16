@@ -36,15 +36,17 @@ class ReservasiKamarRepository implements ReservasiKamarRepositoryInterface
             ->join('rooms', 'transactions.room_id', '=', 'rooms.id')
             ->join('types', 'rooms.type_id', '=', 'types.id')
             
-            // === [FILTER 1: WAKTU] ===
-            // Tampilkan reservasi mulai dari HARI INI ke masa depan
-            ->whereDate('transactions.check_in', '>=', Carbon::today())
+            // === [FILTER WAKTU (YANG SUDAH DIPERBAIKI)] ===
+            // Ganti logika: Jangan filter berdasarkan check_in >= hari ini.
+            // Tapi filter berdasarkan check_out >= hari ini.
+            // Artinya: Selama belum waktunya pulang (check-out), data ini akan TETAP MUNCUL.
+            // Contoh: Check In tgl 15, sekarang tgl 16, Check Out tgl 17. 
+            // Karena 17 >= 16 (TRUE), data akan muncul.
+            ->whereDate('transactions.check_out', '>=', Carbon::today())
             
-            // === [FILTER 2: STATUS (PERBAIKAN)] ===
-            // HANYA tampilkan yang statusnya 'Reservation'. 
-            // Data 'Check In', 'Done', atau 'Cancel' TIDAK BOLEH MUNCUL DISINI.
+            // === [FILTER STATUS] ===
+            // Hanya tampilkan yang statusnya masih 'Reservation'
             ->where('transactions.status', 'Reservation'); 
-            // ===================================
 
         // SEARCHING
         if ($search = $request->input('search.value')) {
@@ -106,10 +108,13 @@ class ReservasiKamarRepository implements ReservasiKamarRepositoryInterface
 
         return [
             'draw'            => intval($request->input('draw')),
-            // Fix Count juga agar paginasinya benar
+            
+            // === [FIX JUGA TOTAL RECORD DISINI] ===
+            // Pastikan hitungan total paginasi juga menggunakan logika yang sama (check_out)
             'recordsTotal'    => Transaction::where('status', 'Reservation')
-                                            ->whereDate('check_in', '>=', Carbon::today())
+                                            ->whereDate('check_out', '>=', Carbon::today())
                                             ->count(),
+                                            
             'recordsFiltered' => $totalFiltered,
             'data'            => $data,
         ];

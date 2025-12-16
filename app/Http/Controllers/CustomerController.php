@@ -8,7 +8,6 @@ use App\Models\Customer;
 use App\Models\User;
 use App\Repositories\Interface\CustomerRepositoryInterface;
 use App\Repositories\Interface\ImageRepositoryInterface;
-use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 
 class CustomerController extends Controller
@@ -77,8 +76,8 @@ class CustomerController extends Controller
             // Ambil user terkait sebelum customer dihapus
             $user = User::find($customer->user_id);
             
-            // Path folder gambar: img/user/slug(name)-id
-            $folderName = Str::slug($user->name) . '-' . $user->id;
+            // Path folder gambar: img/user/Name-ID
+            $folderName = $user->name . '-' . $user->id;
             $avatar_path = public_path('img/user/' . $folderName);
 
             // Hapus data

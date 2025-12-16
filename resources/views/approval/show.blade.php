@@ -40,13 +40,9 @@
             <thead class=" " style="background-color: #F7F3E4">
                 <tr class="text-center small" style="color: #50200C">
                     <th style="width: 25%;">Kolom</th>
-                    
-                   {{-- [FIX WARNA] Background Merah Cerah (#F2C2B8) + Teks #50200C --}}
                     <th style="width: 37%; background-color: #F2C2B8; color: #50200C" class="fw-bold">
                         <i class="fas fa-history me-1"></i> Data Lama
                     </th>
-                    
-                    {{-- [FIX WARNA] Background Hijau Cerah (#A8D5BA) + Teks #50200C --}}
                     <th style="width: 37%; background-color: #A8D5BA;" class="fw-bold">
                         <i class="fas fa-file-import me-1"></i> Data Baru
                     </th>
@@ -67,12 +63,11 @@
                     // Gabung semua key, hapus duplikat
                     $allKeys = array_unique(array_merge(array_keys($oldData), array_keys($newData)));
                     
-                    // ✅ PERUBAHAN 1: Daftar kolom yang TIDAK perlu ditampilkan (Blacklist)
-                    // PASTIKAN 'image_url' TIDAK ada di sini
+                    // ✅ PERBAIKAN 1: Hapus 'main_image_path' dari daftar ignore
                     $ignoredKeys = [
                         'id', 'created_at', 'updated_at', 'deleted_at', 
-                        'image',  // Ignore kolom 'image' (binary/base64)
-                        'main_image_path', 
+                        'image', // Ignore 'image' karena ini objek file upload, kita pakai 'main_image_path'
+                        // 'main_image_path', <--- INI DIHAPUS AGAR MUNCUL DI TABEL
                         'remember_token', 
                         'password',
                         'email_verified_at', 
@@ -97,13 +92,13 @@
                     $isChanged = $valOldStr !== $valNewStr;
                     if($isChanged) $hasChanges = true;
                     
-                    // Format Rupiah (Lebih Aman)
+                    // Format Rupiah
                     if(str_contains(strtolower($key), 'price') || str_contains(strtolower($key), 'harga')) {
                         if(is_numeric($oldVal)) $oldVal = 'Rp ' . number_format($oldVal, 0, ',', '.');
                         if(is_numeric($newVal)) $newVal = 'Rp ' . number_format($newVal, 0, ',', '.');
                     }
 
-                    // ✅ PERUBAHAN 2: TAMBAHKAN MAPPING NAMA KOLOM
+                    // Mapping Nama Kolom
                     $columnLabels = [
                         'type_id' => 'Tipe Kamar',
                         'number' => 'Nomor Kamar',
@@ -115,96 +110,98 @@
                         'breakfast' => 'Sarapan',
                         'room_facilities' => 'Fasilitas Kamar',
                         'bathroom_facilities' => 'Fasilitas Kamar Mandi',
-                        'main_image_path' => 'Gambar Kamar', // ✅ MAPPING UNTUK IMAGE
+                        'main_image_path' => 'Gambar Kamar', // Label
                     ];
                     
-                    // Ambil label atau fallback ke format default
                     $columnLabel = $columnLabels[$key] ?? ucwords(str_replace(['_', '-'], ' ', $key));
+
+                    // ✅ HELPER PATH GAMBAR: Logic ini menyesuaikan folder repository Anda
+                    // public/img/room/{ID}-{SLUG}/{FILENAME}
+                    $getImageUrl = function($filename) use ($approval, $oldData) {
+                        if ($approval->type === 'room') {
+                            // Ambil nama dari data lama untuk memastikan slug folder benar (karena folder belum direname)
+                            $slug = \Illuminate\Support\Str::slug($oldData['name'] ?? 'room');
+                            return asset("img/room/{$approval->reference_id}-{$slug}/{$filename}");
+                        }
+                        // Fallback jika bukan room
+                        return asset('storage/' . $filename);
+                    };
                 @endphp
 
                 <tr>
-                    {{-- NAMA KOLOM - GUNAKAN MAPPING --}}
                     <td class="fw-bold bg-white" style="color: #50200C;">
                         {{ $columnLabel }}
                     </td>
                     
-                    {{-- ✅ PERUBAHAN 3: KONDISI KHUSUS UNTUK IMAGE_URL --}}
-                    @if($key === 'image_url')
+                    {{-- ✅ PERBAIKAN 2: CEK KOLOM main_image_path --}}
+                    @if($key === 'main_image_path')
                         {{-- DATA LAMA - IMAGE --}}
                         <td class="{{ $isChanged ? 'text-dark' : 'text-muted' }}" 
                             style="color:#50200C !important; {{ $isChanged ? 'background-color: #f9b9b9ff;' : '' }}">
-                            @if($oldVal !== '-')
+                            @if($oldVal !== '-' && $oldVal !== null)
                                 <div class="d-flex flex-column">
-                                    @if($isChanged)
-                                        <del class="small opacity-75 mb-2">
-                                            {{ basename($oldVal) }}
-                                        </del>
-                                    @else
-                                        <span class="small mb-2">{{ basename($oldVal) }}</span>
-                                    @endif
+                                    <span class="small mb-2 text-break">{{ basename($oldVal) }}</span>
                                     
-                                    <div class="border {{ $isChanged ? 'border-danger' : 'border-secondary' }} rounded p-2" style="max-width: 120px;">
-                                        <img src="{{ $oldVal }}" 
+                                    <div class="border {{ $isChanged ? 'border-danger' : 'border-secondary' }} rounded p-2" style="max-width: 150px;">
+                                        {{-- Panggil Helper URL --}}
+                                        <img src="{{ $getImageUrl($oldVal) }}" 
                                              alt="Gambar Lama" 
                                              class="img-fluid rounded"
-                                             style="cursor: pointer; max-height: 100px; object-fit: cover;"
-                                             onclick="window.open('{{ $oldVal }}', '_blank')"
-                                             onerror="this.src='{{ asset('img/default/no-image.png') }}'">
+                                             style="cursor: pointer; max-height: 120px; object-fit: cover;"
+                                             onclick="window.open(this.src, '_blank')"
+                                             onerror="this.src='{{ asset('img/default/default-room.png') }}'">
                                     </div>
-                                    <small class="text-muted mt-1"><i class="fas fa-search-plus me-1"></i>Klik untuk perbesar</small>
+                                    <small class="text-muted mt-1"><i class="fas fa-search-plus me-1"></i>Klik zoom</small>
                                 </div>
                             @else
-                                @if($isChanged)
-                                    <del class="small opacity-75">Tidak ada gambar</del>
-                                @else
-                                    <span class="text-muted">Tidak ada gambar</span>
-                                @endif
+                                <span class="text-muted small">Tidak ada gambar</span>
                             @endif
                         </td>
 
                         {{-- DATA BARU - IMAGE --}}
                         <td class="{{ $isChanged ? 'fw-bold text-dark' : '' }}" 
                             style="color:#50200C !important; {{ $isChanged ? 'background-color: #fff3cd; border-left: 4px solid #ffc107;' : '' }}; position: relative;">
-                            @if($newVal !== '-')
+                            @if($newVal !== '-' && $newVal !== null)
                                 <div class="d-flex flex-column">
-                                    <strong class="mb-2">
+                                    <strong class="mb-2 text-break text-success">
                                         {{ basename($newVal) }}
                                     </strong>
-                                    <div class="border border-success rounded p-2" style="max-width: 120px;">
-                                        <img src="{{ $newVal }}" 
+                                    <div class="border border-success rounded p-2" style="max-width: 150px;">
+                                        {{-- Panggil Helper URL --}}
+                                        <img src="{{ $getImageUrl($newVal) }}" 
                                              alt="Gambar Baru" 
                                              class="img-fluid rounded"
-                                             style="cursor: pointer; max-height: 100px; object-fit: cover;"
-                                             onclick="window.open('{{ $newVal }}', '_blank')"
-                                             onerror="this.src='{{ asset('img/default/no-image.png') }}'">
+                                             style="cursor: pointer; max-height: 120px; object-fit: cover;"
+                                             onclick="window.open(this.src, '_blank')"
+                                             onerror="this.src='{{ asset('img/default/default-room.png') }}'">
                                     </div>
-                                    <small class="text-muted mt-1"><i class="fas fa-search-plus me-1"></i>Klik untuk perbesar</small>
+                                    <small class="text-muted mt-1"><i class="fas fa-search-plus me-1"></i>Klik zoom</small>
                                 </div>
                                 @if($isChanged)
                                     <i class="fas fa-check-circle text-success position-absolute top-0 end-0 m-2"></i>
                                 @endif
                             @else
-                                -
+                                <span class="text-muted small">-</span>
                             @endif
                         </td>
                     @else
-                        {{-- DATA LAMA - TEXT (UNTUK FIELD LAIN) --}}
+                        {{-- DATA LAMA - TEXT BIASA --}}
                         <td class="{{ $isChanged ? 'text-dark' : 'text-muted' }}" 
                             style="color:#50200C !important; {{ $isChanged ? 'background-color: #f9b9b9ff;' : '' }}">
                             @if($isChanged) 
                                 <del class="small opacity-75">
-                                    {{ is_array($oldVal) ? json_encode($oldVal, JSON_PRETTY_PRINT) : $oldVal }}
+                                    {{ is_array($oldVal) ? json_encode($oldVal) : $oldVal }}
                                 </del>
                             @else 
                                 {{ is_array($oldVal) ? json_encode($oldVal) : $oldVal }}
                             @endif
                         </td>
 
-                        {{-- DATA BARU - TEXT (UNTUK FIELD LAIN) --}}
+                        {{-- DATA BARU - TEXT BIASA --}}
                         <td class="{{ $isChanged ? 'fw-bold text-dark' : '' }}" 
                             style="color:#50200C !important; {{ $isChanged ? 'background-color: #fff3cd; border-left: 4px solid #ffc107;' : '' }}">
                             
-                            {{ is_array($newVal) ? json_encode($newVal, JSON_PRETTY_PRINT) : $newVal }}
+                            {{ is_array($newVal) ? json_encode($newVal) : $newVal }}
                             
                             @if($isChanged)
                                 <i class="fas fa-check-circle text-success float-end mt-1"></i>
@@ -218,7 +215,7 @@
                     <tr>
                         <td colspan="3" class="text-center py-4" style="color: #50200C">
                             <i class="fas fa-info-circle fa-2x mb-2"></i><br>
-                            <em>Tidak ada perubahan data teks yang terdeteksi.<br>(Kemungkinan hanya perubahan gambar/file)</em>
+                            <em>Tidak ada perubahan data yang terdeteksi.</em>
                         </td>
                     </tr>
                 @endif

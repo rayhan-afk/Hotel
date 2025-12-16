@@ -23,4 +23,6 @@ interface RoomRepositoryInterface
 
     // Menghapus kamar
     public function delete($room);
+
+    public function uploadImage($file, $room);
 }

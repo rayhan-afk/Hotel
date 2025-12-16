@@ -140,25 +140,43 @@ $(function () {
 
     // 2. Klik Tombol Simpan (Di Modal Index)
     $(document).on("click", "#btn-modal-save", function () {
+        // JANGAN submit di sini, biarkan handler form yang handle
+        // Handler form submit di bawah sudah ada logic loading-nya
         $("#form-save-room").submit();
     });
 
     // 3. SUBMIT FORM (Ini yang penting untuk Redirect/Reload)
     // Selector diperluas untuk menangkap form di modal index (#form-save-room) DAN form upload gambar di detail page
+    // 3. SUBMIT FORM (CORE LOGIC)
+    // 3. SUBMIT FORM (CORE LOGIC)
     $(document).on("submit", "form[enctype='multipart/form-data'], #form-save-room", async function (e) {
-        // Hanya tangkap form yang memang ingin kita handle via AJAX manual
-        // Cek apakah form ini punya ID form-save-room atau ada di dalam modal imageModal
+        
+        // Cek target form
         if ($(this).attr('id') !== 'form-save-room' && $(this).closest('#imageModal').length === 0) {
-            return; // Biarkan form lain (seperti delete) berjalan normal atau ditangani handler lain
+            return; 
         }
 
         e.preventDefault();
-        
         const form = $(this);
-        const submitBtn = form.find('button[type="submit"], #btn-modal-save');
-        const originalText = submitBtn.text();
+
+        // --- [PERBAIKAN TARGET TOMBOL] ---
+        // Kita target LANGSUNG ke ID yang ada di Master Blade
+        let submitBtn = $("#btn-modal-save");
+
+        // Pengecekan Tambahan:
+        // Jika tombol Master tidak terlihat (misal lagi di halaman Detail/Edit Gambar),
+        // baru kita cari tombol yang ada di dalam form.
+        if (submitBtn.length === 0 || !submitBtn.is(":visible")) {
+            submitBtn = form.find('button[type="submit"]');
+        }
+
+        // Simpan text asli
+        const originalText = submitBtn.html(); 
         
-        submitBtn.attr("disabled", true).text("Saving...");
+        // --- UBAH JADI LOADING ---
+        // Pakai .html() untuk memasukkan icon spinner
+        submitBtn.prop("disabled", true).html('<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...');
+        
         $(".is-invalid").removeClass("is-invalid");
         $(".error").text("");
 
@@ -177,59 +195,45 @@ $(function () {
             });
 
             if (response) {
-              Swal.fire({
-                    position: "center",
-                    icon: "success",
-                    title: response.message || "Success",
-                    showConfirmButton: false,
-                    timer: 1500,
-                    iconColor: "#50200C",
-                    customClass: {
-                        title: "swal-title-brown"
-                    }
+                // SUKSES: Ubah jadi hijau & Centang
+                submitBtn.removeClass('btn-primary').addClass('btn-success').html('<i class="fas fa-check"></i> Berhasil!');
+
+                Swal.fire({
+                    position: "center", icon: "success", title: response.message || "Success",
+                    showConfirmButton: false, timer: 1500, iconColor: "#50200C",
+                    customClass: { title: "swal-title-brown" }
                 });
 
                 const modal = getModal();
                 if(modal) modal.hide();
                 
-                // === LOGIKA REDIRECT/RELOAD ===
                 if (datatable) {
-                    // Jika ada datatable (Halaman Index), reload tabel saja
                     datatable.ajax.reload();
-                } else {
-                    // Jika TIDAK ada datatable (Halaman Detail/Show), RELOAD HALAMAN
-                    // Ini akan membuat browser me-refresh halaman detail
-                    // sehingga gambar baru terlihat.
+                    // Reset tombol setelah 1 detik
                     setTimeout(() => {
-                        window.location.reload(); 
-                    }, 1500); // Tunggu notifikasi Swal selesai
+                        submitBtn.prop("disabled", false).html("Simpan").removeClass('btn-success').addClass('btn-primary');
+                    }, 1000);
+                } else {
+                    setTimeout(() => { window.location.reload(); }, 1500); 
                 }
             }
         } catch (e) {
+            // ERROR: Balikin tombol
+            submitBtn.prop("disabled", false).html(originalText);
+
             if (e.status === 422) {
                 let errors = e.responseJSON.errors;
                 for (let field in errors) {
                     $(`#${field}`).addClass('is-invalid');
                     $(`#error_${field}`).text(errors[field][0]);
                 }
-                Swal.fire({ icon: "error", title: "Validation Error", text: "Check inputs." });
+                Swal.fire({ icon: "error", title: "Validasi Error", text: "Cek kembali inputan anda." });
             } else {
                 console.error(e);
-                Swal.fire({ 
-                    icon: "error", 
-                    title: "Error", 
-                    text: e.responseJSON?.message || "Failed.",
-                    iconColor: '#50200C', // ✅ Warna icon success
-                    customClass: {
-                        title: 'swal-title-brown' // ✅ Custom warna title
-                    }
-                });
+                Swal.fire({ icon: "error", title: "Error", text: e.responseJSON?.message || "Gagal menyimpan." });
             }
-        } finally {
-            submitBtn.attr("disabled", false).text(originalText);
         }
     });
-
     // 4. Event Delete Room
     $(document).on("submit", ".delete-room", async function (e) {
         e.preventDefault(); // Mencegah refresh halaman

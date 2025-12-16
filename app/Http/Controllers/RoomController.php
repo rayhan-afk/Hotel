@@ -10,6 +10,7 @@ use App\Repositories\Interface\RoomRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class RoomController extends Controller
 {
@@ -56,14 +57,15 @@ class RoomController extends Controller
             $filename = 'room_' . $data['number'] . '_' . time() . '.' . $file->getClientOriginalExtension();
             
             // Simpan ke storage/app/public/img/rooms
-            // $path akan berisi: "img/rooms/room_101_123456.jpg"
             $path = $file->storeAs('img/rooms', $filename, 'public');
             
-            // PERBAIKAN: Simpan path relatif saja, jangan pakai 'storage/' di depannya.
-            // Biarkan Model Accessor (getImage) yang menambahkan 'storage/' saat ditampilkan.
-            $data['image'] = $path; // Pastikan nama kolom di DB adalah 'image' atau 'main_image_path'
-            // Jika kolom di DB namanya 'main_image_path', gunakan baris bawah ini:
-            // $data['main_image_path'] = $path;
+            // Simpan path dengan prefix 'storage/'
+            // ✅ SESUAIKAN dengan nama kolom di tabel rooms Anda
+            // $data['image_url'] = 'storage/' . $path;
+            // Jika kolom DB Anda namanya 'image', gunakan:
+            // $data['image'] = 'storage/' . $path;
+            // Jika kolom DB Anda namanya 'main_image_path', gunakan:
+            $data['main_image_path'] = 'storage/' . $path;
         }
 
         Room::create($data);
@@ -94,35 +96,55 @@ class RoomController extends Controller
         ]);
     }
 
-    // === [UPDATE: LOGIC APPROVAL] ===
+    // === [UPDATE: LOGIC APPROVAL - FIXED] ===
     public function update(Room $room, StoreRoomRequest $request)
     {
         // 1. Validasi Data
         $data = $request->validated();
-        $oldImage = $room->image ?? $room->main_image_path; // Ambil path gambar lama
+        
+        // ✅ PERBAIKAN 1: Ambil path gambar lama dengan lebih robust
+        // Cek kolom mana yang dipakai di database Anda
+        $oldImage = $room->main_image_path ?? $room->image ?? $room->main_image_path ?? null;
 
         // 2. Handle Upload Gambar Baru (Jika Ada)
         if ($request->hasFile('image')) {
             $file = $request->file('image');
             $filename = 'room_' . $data['number'] . '_' . time() . '.' . $file->getClientOriginalExtension();
             
-            // Upload gambar baru
+            // Upload gambar baru ke storage/app/public/img/rooms
             $path = $file->storeAs('img/rooms', $filename, 'public');
             
-            // Simpan path relatif ke array data
-            // Sesuaikan nama kolom DB Anda ('image' atau 'main_image_path')
-            if (isset($room->image)) {
-                $data['image'] = $path;
-            } else {
-                $data['main_image_path'] = $path;
-            }
+            // ✅ PERBAIKAN 2: Set ke kolom yang benar dengan prefix 'storage/'
+            // PENTING: Sesuaikan 'image_url' dengan nama kolom di tabel rooms Anda
+            // $data['image_url'] = 'storage/' . $path;
+            
+            // Jika kolom DB Anda namanya 'image', gunakan:
+            // $data['image'] = 'storage/' . $path;
+            
+            // Jika kolom DB Anda namanya 'main_image_path', gunakan:
+            $data['main_image_path'] = 'storage/' . $path;
         }
 
         // 3. Persiapkan Data Lama (Untuk history approval)
         $oldData = $room->toArray();
+        
+        // ✅ PERBAIKAN 3: Pastikan image_url ada di oldData
+        // Karena toArray() mungkin tidak include accessor, tambahkan manual
+        if (!isset($oldData['main_image_path']) && $oldImage) {
+            $oldData['main_image_path'] = $oldImage;
+        }
+        
+        // Jika kolom DB Anda 'image', gunakan:
+        // if (!isset($oldData['image']) && $oldImage) {
+        //     $oldData['image'] = $oldImage;
+        // }
+        
+        // Jika kolom DB Anda 'main_image_path', gunakan:
+        // if (!isset($oldData['main_image_path']) && $oldImage) {
+        //     $oldData['main_image_path'] = $oldImage;
+        // }
 
         // 4. Cek Role User
-        // Menggunakan helper Auth::user() agar lebih aman
         $user = Auth::user();
 
         if ($user->role === 'Super' || $user->role === 'Manager') {
@@ -133,9 +155,12 @@ class RoomController extends Controller
 
             // Hapus gambar lama HANYA JIKA update berhasil DAN ada gambar baru
             if ($request->hasFile('image') && $oldImage) {
+                // Bersihkan path dari prefix 'storage/' jika ada
+                $cleanPath = str_replace('storage/', '', $oldImage);
+                
                 // Hapus file fisik jika ada
-                if (Storage::disk('public')->exists($oldImage)) {
-                    Storage::disk('public')->delete($oldImage);
+                if (Storage::disk('public')->exists($cleanPath)) {
+                    Storage::disk('public')->delete($cleanPath);
                 }
             }
 
@@ -146,14 +171,22 @@ class RoomController extends Controller
         } else {
             // === JALUR ADMIN/STAFF (BUTUH APPROVAL) ===
             
+            // ✅ PERBAIKAN 4: Log untuk debugging (opsional, bisa dihapus nanti)
+            Log::info('Room Approval Created', [
+                'room_id' => $room->id,
+                'old_image' => $oldData['main_image_path'] ?? 'tidak ada',
+                'new_image' => $data['main_image_path'] ?? 'tidak ada',
+                'has_file_upload' => $request->hasFile('image')
+            ]);
+            
             // Buat Ticket Approval
             Approval::create([
-                'type' => 'room', // Pastikan ini sesuai dengan logic di ApprovalController
+                'type' => 'room',
                 'reference_id' => $room->id,
                 'requested_by' => $user->id,
-                'new_data' => $data, // Data baru (termasuk path gambar baru jika ada)
-                'old_data' => $oldData,
-                'status' => 'Pending'
+                'new_data' => $data, // ✅ Sekarang sudah include image_url
+                'old_data' => $oldData, // ✅ Sekarang sudah include image_url
+                'status' => 'pending' // ✅ Perbaiki: huruf kecil 'pending'
             ]);
 
             return response()->json([
@@ -170,23 +203,27 @@ class RoomController extends Controller
         }
 
         try {
-            // Ambil path gambar
-            // Sesuaikan kolom DB Anda
-            $imagePath = $room->image ?? $room->main_image_path;
+            // ✅ Ambil path gambar dengan robust
+            $imagePath = $room->main_image_path ?? $room->image ?? $room->main_image_path ?? null;
 
             // Hapus data kamar dari DB
             $room->delete();
 
-            // Hapus file gambar fisik SETELAH data berhasil dihapus (agar aman)
-            if ($imagePath && Storage::disk('public')->exists($imagePath)) {
-                Storage::disk('public')->delete($imagePath);
+            // Hapus file gambar fisik SETELAH data berhasil dihapus
+            if ($imagePath) {
+                // Bersihkan path dari prefix 'storage/' jika ada
+                $cleanPath = str_replace('storage/', '', $imagePath);
+                
+                if (Storage::disk('public')->exists($cleanPath)) {
+                    Storage::disk('public')->delete($cleanPath);
+                }
             }
 
             return response()->json([
                 'message' => 'Kamar berhasil dihapus!',
             ]);
         } catch (\Exception $e) {
-          // === PENANGANAN ERROR DATABASE ===
+            // === PENANGANAN ERROR DATABASE ===
             
             // Kode Error 23000 biasanya adalah Integrity Constraint Violation (Foreign Key)
             if ($e->getCode() == "23000") {
@@ -198,12 +235,6 @@ class RoomController extends Controller
             // Error database lain
             return response()->json([
                 'message' => 'Terjadi kesalahan database: ' . $e->getMessage()
-            ], 500);
-
-        } catch (\Exception $e) {
-            // Error umum lainnya
-            return response()->json([
-                'message' => 'Gagal menghapus kamar. Terjadi kesalahan sistem.'
             ], 500);
         }
     }

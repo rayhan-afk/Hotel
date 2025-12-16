@@ -90,7 +90,12 @@ class Room extends Model
      */
     public function firstImage()
     {
-        return $this->image_url;
+        return $this->image;
+    }
+
+    public function getImage()
+    {
+        return $this->main_image_path;   //disini
     }
 
     public function getImage()

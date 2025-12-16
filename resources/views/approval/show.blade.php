@@ -67,11 +67,17 @@
                     // Gabung semua key, hapus duplikat
                     $allKeys = array_unique(array_merge(array_keys($oldData), array_keys($newData)));
                     
-                    // Daftar kolom yang TIDAK perlu ditampilkan (Blacklist)
+                    // ✅ PERUBAHAN 1: Daftar kolom yang TIDAK perlu ditampilkan (Blacklist)
+                    // PASTIKAN 'image_url' TIDAK ada di sini
                     $ignoredKeys = [
                         'id', 'created_at', 'updated_at', 'deleted_at', 
-                        'image', 'main_image_path', 'remember_token', 'password',
-                        'email_verified_at', 'requester_id', 'requested_by'
+                        'image',  // Ignore kolom 'image' (binary/base64)
+                        'main_image_path', 
+                        'remember_token', 
+                        'password',
+                        'email_verified_at', 
+                        'requester_id', 
+                        'requested_by'
                     ]; 
                     
                     $hasChanges = false;
@@ -97,9 +103,7 @@
                         if(is_numeric($newVal)) $newVal = 'Rp ' . number_format($newVal, 0, ',', '.');
                     }
 
-                    // ========================================
-                    // ✅ TAMBAHKAN MAPPING NAMA KOLOM DISINI
-                    // ========================================
+                    // ✅ PERUBAHAN 2: TAMBAHKAN MAPPING NAMA KOLOM
                     $columnLabels = [
                         'type_id' => 'Tipe Kamar',
                         'number' => 'Nomor Kamar',
@@ -111,7 +115,7 @@
                         'breakfast' => 'Sarapan',
                         'room_facilities' => 'Fasilitas Kamar',
                         'bathroom_facilities' => 'Fasilitas Kamar Mandi',
-                        // Tambahkan mapping lainnya sesuai kebutuhan
+                        'main_image_path' => 'Gambar Kamar', // ✅ MAPPING UNTUK IMAGE
                     ];
                     
                     // Ambil label atau fallback ke format default
@@ -119,34 +123,94 @@
                 @endphp
 
                 <tr>
-                    
                     {{-- NAMA KOLOM - GUNAKAN MAPPING --}}
                     <td class="fw-bold bg-white" style="color: #50200C;">
                         {{ $columnLabel }}
                     </td>
                     
-                    {{-- DATA LAMA --}}
-                    <td class="{{ $isChanged ? 'text-dark' : 'text-muted' }}" 
-                        style="color:#50200C !important; {{ $isChanged ? 'background-color: #f9b9b9ff;' : '' }}">
-                        @if($isChanged) 
-                            <del class="small opacity-75">
-                                {{ is_array($oldVal) ? json_encode($oldVal, JSON_PRETTY_PRINT) : $oldVal }}
-                            </del>
-                        @else 
-                            {{ is_array($oldVal) ? json_encode($oldVal) : $oldVal }}
-                        @endif
-                    </td>
+                    {{-- ✅ PERUBAHAN 3: KONDISI KHUSUS UNTUK IMAGE_URL --}}
+                    @if($key === 'image_url')
+                        {{-- DATA LAMA - IMAGE --}}
+                        <td class="{{ $isChanged ? 'text-dark' : 'text-muted' }}" 
+                            style="color:#50200C !important; {{ $isChanged ? 'background-color: #f9b9b9ff;' : '' }}">
+                            @if($oldVal !== '-')
+                                <div class="d-flex flex-column">
+                                    @if($isChanged)
+                                        <del class="small opacity-75 mb-2">
+                                            {{ basename($oldVal) }}
+                                        </del>
+                                    @else
+                                        <span class="small mb-2">{{ basename($oldVal) }}</span>
+                                    @endif
+                                    
+                                    <div class="border {{ $isChanged ? 'border-danger' : 'border-secondary' }} rounded p-2" style="max-width: 120px;">
+                                        <img src="{{ $oldVal }}" 
+                                             alt="Gambar Lama" 
+                                             class="img-fluid rounded"
+                                             style="cursor: pointer; max-height: 100px; object-fit: cover;"
+                                             onclick="window.open('{{ $oldVal }}', '_blank')"
+                                             onerror="this.src='{{ asset('img/default/no-image.png') }}'">
+                                    </div>
+                                    <small class="text-muted mt-1"><i class="fas fa-search-plus me-1"></i>Klik untuk perbesar</small>
+                                </div>
+                            @else
+                                @if($isChanged)
+                                    <del class="small opacity-75">Tidak ada gambar</del>
+                                @else
+                                    <span class="text-muted">Tidak ada gambar</span>
+                                @endif
+                            @endif
+                        </td>
 
-                    {{-- DATA BARU --}}
-                    <td class="{{ $isChanged ? 'fw-bold text-dark' : '' }}" 
-                        style="color:#50200C !important; {{ $isChanged ? 'background-color: #fff3cd; border-left: 4px solid #ffc107;' : '' }}">
-                        
-                        {{ is_array($newVal) ? json_encode($newVal, JSON_PRETTY_PRINT) : $newVal }}
-                        
-                        @if($isChanged)
-                            <i class="fas fa-check-circle text-success float-end mt-1"></i>
-                        @endif
-                    </td>
+                        {{-- DATA BARU - IMAGE --}}
+                        <td class="{{ $isChanged ? 'fw-bold text-dark' : '' }}" 
+                            style="color:#50200C !important; {{ $isChanged ? 'background-color: #fff3cd; border-left: 4px solid #ffc107;' : '' }}; position: relative;">
+                            @if($newVal !== '-')
+                                <div class="d-flex flex-column">
+                                    <strong class="mb-2">
+                                        {{ basename($newVal) }}
+                                    </strong>
+                                    <div class="border border-success rounded p-2" style="max-width: 120px;">
+                                        <img src="{{ $newVal }}" 
+                                             alt="Gambar Baru" 
+                                             class="img-fluid rounded"
+                                             style="cursor: pointer; max-height: 100px; object-fit: cover;"
+                                             onclick="window.open('{{ $newVal }}', '_blank')"
+                                             onerror="this.src='{{ asset('img/default/no-image.png') }}'">
+                                    </div>
+                                    <small class="text-muted mt-1"><i class="fas fa-search-plus me-1"></i>Klik untuk perbesar</small>
+                                </div>
+                                @if($isChanged)
+                                    <i class="fas fa-check-circle text-success position-absolute top-0 end-0 m-2"></i>
+                                @endif
+                            @else
+                                -
+                            @endif
+                        </td>
+                    @else
+                        {{-- DATA LAMA - TEXT (UNTUK FIELD LAIN) --}}
+                        <td class="{{ $isChanged ? 'text-dark' : 'text-muted' }}" 
+                            style="color:#50200C !important; {{ $isChanged ? 'background-color: #f9b9b9ff;' : '' }}">
+                            @if($isChanged) 
+                                <del class="small opacity-75">
+                                    {{ is_array($oldVal) ? json_encode($oldVal, JSON_PRETTY_PRINT) : $oldVal }}
+                                </del>
+                            @else 
+                                {{ is_array($oldVal) ? json_encode($oldVal) : $oldVal }}
+                            @endif
+                        </td>
+
+                        {{-- DATA BARU - TEXT (UNTUK FIELD LAIN) --}}
+                        <td class="{{ $isChanged ? 'fw-bold text-dark' : '' }}" 
+                            style="color:#50200C !important; {{ $isChanged ? 'background-color: #fff3cd; border-left: 4px solid #ffc107;' : '' }}">
+                            
+                            {{ is_array($newVal) ? json_encode($newVal, JSON_PRETTY_PRINT) : $newVal }}
+                            
+                            @if($isChanged)
+                                <i class="fas fa-check-circle text-success float-end mt-1"></i>
+                            @endif
+                        </td>
+                    @endif
                 </tr>
             @endforeach
 

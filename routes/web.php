@@ -80,7 +80,7 @@ Route::group(['middleware' => 'guest'], function () {
 | Hanya Super dan Housekeeping yang bisa akses amenities
 |--------------------------------------------------------------------------
 */
-Route::group(['middleware' => ['auth', 'checkRole:Super,Housekeeping']], function () {
+Route::group(['middleware' => ['auth', 'checkRole:Super,Housekeeping,Admin,Manager']], function () {
     // Resource Amenities
     Route::resource('amenity', AmenityController::class);
     

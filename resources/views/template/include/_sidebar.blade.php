@@ -18,7 +18,6 @@
                     </button>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profil</a></li>
-                        <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Pengaturan</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
                             <a class="dropdown-item" href="{{ route('logout') }}"

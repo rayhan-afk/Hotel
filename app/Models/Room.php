@@ -93,10 +93,10 @@ class Room extends Model
         return $this->image;
     }
 
-    public function getImage()
-    {
-        return $this->main_image_path;   //disini
-    }
+    // public function getImage()
+    // {
+    //     return $this->main_image_path;   //disini
+    // }
 
     public function getImage()
     {

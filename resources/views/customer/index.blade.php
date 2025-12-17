@@ -5,18 +5,19 @@
 <div class="container-fluid">
     {{-- HEADER & SEARCH --}}
     <div class="row mt-4 mb-3 align-items-center">
-        <div class="col-md-6">
-            <h3 class="fw-bold text-dark"><i class="fas fa-users me-2"></i>Daftar Tamu</h3>
-            <p class="text-muted mb-0">Kelola data tamu, kontak, dan riwayat kunjungan.</p>
+        <div class="col-md-6" style="color: #50200C">
+            <h3 class="fw-bold"><i class="fas fa-users me-2"></i>Daftar Tamu</h3>
+            <p class="mb-0">Kelola data tamu, kontak, dan riwayat kunjungan.</p>
         </div>
         <div class="col-md-6">
             <div class="d-flex justify-content-md-end gap-2 mt-3 mt-md-0">
                 {{-- Search Form (ID "searchInput" ditambahkan agar terdeteksi JS) --}}
                 <div class="input-group" style="max-width: 300px;">
-                    <span class="input-group-text bg-white border-end-0">
-                        <i class="fas fa-search text-muted"></i>
+                    <span class="input-group-text bg-white border-end-0" style="color: #50200C">
+                        <i class="fas fa-search"></i>
                     </span>
                     <input type="text" class="form-control border-start-0 ps-0" 
+                           style="color: #50200C" 
                            id="searchInput" 
                            placeholder="Cari Nama / No. HP..." 
                            name="q" 

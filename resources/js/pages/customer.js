@@ -53,12 +53,12 @@ $(function () {
                     data: "name",
                     name: "name",
                     render: function (data, type, row) {
-                        let genderIcon = row.gender === 'Male' ? 'fas fa-mars text-primary' : 'fas fa-venus text-danger';
+                        let genderIcon = row.gender === 'Male' ? 'fas fa-mars' : 'fas fa-venus';
                         let genderLabel = row.gender === 'Male' ? 'Laki-laki' : 'Perempuan';
                         
                         return `
-                            <span class="d-block fw-bold text-dark h6 mb-0">${data}</span>
-                            <small class="text-muted">
+                            <span class="d-block fw-bold h6 mb-0" style="color: #50200C">${data}</span>
+                            <small class=" " style="color: #50200C">
                                 <i class="${genderIcon} me-1"></i> ${genderLabel}
                             </small>
                         `;
@@ -68,14 +68,14 @@ $(function () {
                     data: "phone",
                     name: "phone",
                     render: function (data, type, row) {
-                        let phoneHtml = '<span class="text-dark fw-bold">-</span>';
+                        let phoneHtml = '<span class="fw-bold" style="color: #50200C">-</span>';
                         
                         if (data) {
                             let waNum = data.replace(/^0/, '62').replace(/[^0-9]/g, '');
                             phoneHtml = `
-                                <div class="mb-1">
-                                    <a href="https://wa.me/${waNum}" target="_blank" class="text-decoration-none text-dark fw-bold">
-                                        <i class="fab fa-whatsapp text-success fw-bold me-1"></i> ${data}
+                                <div class="mb-1" style="color: #50200C">
+                                    <a href="https://wa.me/${waNum}" target="_blank" class="text-decoration-none fw-bold" style="color: #50200C">
+                                        <i class="fab fa-whatsapp fw-bold me-1"></i> ${data}
                                     </a>
                                 </div>`;
                         }
@@ -84,8 +84,8 @@ $(function () {
                         
                         return `
                             ${phoneHtml}
-                            <span class="d-block text-dark fw-bold">
-                                <i class="fas fa-envelope text-dark fw-bold me-1"></i> ${email}
+                            <span class="d-block fw-bold" style="color: #50200C">
+                                <i class="fas fa-envelope fw-bold me-1"></i> ${email}
                             </span>
                         `;
                     }
@@ -94,7 +94,7 @@ $(function () {
                     data: "job",
                     name: "job",
                     render: function (data) {
-                        return `<span class="badge bg-light text-dark border">${data || '-'}</span>`;
+                        return `<span class="badge bg-light border" style="color: #50200C">${data || '-'}</span>`;
                     }
                 },
                 {
@@ -223,9 +223,18 @@ $(function () {
     $(document).on("submit", ".delete-customer", async function (e) {
         e.preventDefault(); 
         const result = await Swal.fire({
-            title: "Hapus Customer Ini?", text: "Data tidak bisa dikembalikan!", icon: "warning", 
-            showCancelButton: true, confirmButtonColor: "#d33", confirmButtonText: "Ya, Hapus!", 
-            customClass: { confirmButton: "text-50200C", cancelButton: "text-50200C" },
+            title: "Yakin ingin menghapus?",
+            text: "Data amenities ini tidak bisa dikembalikan!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#F2C2B8",
+            cancelButtonColor: "#8FB8E1",
+            confirmButtonText: "Ya, Hapus!",
+            cancelButtonText: "Batal",
+            customClass: {
+                confirmButton: "text-50200C",
+                cancelButton: "text-50200C",
+            },
         });
         if (!result.isConfirmed) return;
 
@@ -237,7 +246,15 @@ $(function () {
             Swal.fire({ position: "center", icon: "success", title: "Data berhasil dihapus", showConfirmButton: false, timer: 1500, iconColor: '#50200C', customClass: { title: 'swal-title-brown' } });
             if(datatable) datatable.ajax.reload(); else window.location.href = '/customer'; 
         } catch (e) {
-            Swal.fire({ icon: "error", title: "Gagal", text: "Gagal menghapus data." });
+            Swal.fire({
+                title: "Gagal",
+                text: "Gagal menghapus data.",
+                icon: "error",
+                iconColor: '#50200C', // Warna icon
+                customClass: {
+                    title: 'swal-title-brown' // Custom warna title
+                }
+            });
         }
     });
 

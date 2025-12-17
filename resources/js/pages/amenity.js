@@ -304,6 +304,11 @@ $(function () {
                 $(this).css("background-color", "#ff6b6b");
             });
         },
+        language: {
+            emptyTable: "Tidak ada data amenities saat ini.",
+            processing: "Memuat data...",
+            zeroRecords: "Data tidak ditemukan"
+        }
     });
 
     // --- LOGIKA MODAL & BUTTONS ---

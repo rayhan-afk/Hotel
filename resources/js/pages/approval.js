@@ -124,6 +124,11 @@ $(function () {
                     tooltipTriggerList.map(function (tooltipTriggerEl) {
                         return new bootstrap.Tooltip(tooltipTriggerEl)
                     })
+                },
+                language: {
+                    emptyTable: "Tidak ada data perubahan kamar saat ini.",
+                    processing: "Memuat data...",
+                    zeroRecords: "Data tidak ditemukan"
                 }
             });
         }
@@ -194,11 +199,15 @@ $(function () {
 
                 if(typeof Swal !== 'undefined') {
                     Swal.fire({
-                        position: "top-end",
+                        position: "center",
                         icon: "success",
                         title: res.message || "Berhasil!",
                         showConfirmButton: false,
-                        timer: 1500
+                        timer: 1500,
+                        iconColor: '#50200C', // ✅ Warna icon success
+                        customClass: {
+                            title: 'swal-title-brown' // ✅ Custom warna title
+                        }
                     });
                 } else {
                     alert(res.message);
@@ -209,7 +218,15 @@ $(function () {
             },
             error: function(xhr) { 
                 if(typeof Swal !== 'undefined') {
-                    Swal.fire('Gagal', xhr.responseJSON?.message || 'Terjadi kesalahan', 'error');
+                    Swal.fire({
+                        title: "Gagal",
+                        text: "Gagal menghapus data.",
+                        icon: "error",
+                        iconColor: '#50200C', // Warna icon
+                        customClass: {
+                            title: 'swal-title-brown' // Custom warna title
+                        }
+                    });
                 } else {
                     alert('Error: ' + (xhr.responseJSON?.message || 'Gagal')); 
                 }

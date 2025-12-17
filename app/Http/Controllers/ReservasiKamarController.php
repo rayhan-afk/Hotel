@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Transaction; // Jangan lupa use Model Transaction
+use App\Models\Transaction; 
 use App\Repositories\Interface\ReservasiKamarRepositoryInterface;
 use Illuminate\Http\Request;
+use Carbon\Carbon; // <--- JANGAN LUPA IMPORT CARBON
 
 class ReservasiKamarController extends Controller
 {
@@ -25,28 +26,39 @@ class ReservasiKamarController extends Controller
         return view('room-info.reservation');
     }
 
-    // === METHOD BARU UNTUK BATALKAN ===
     public function cancel($id)
     {
-        // Cari transaksi berdasarkan ID
         $transaction = Transaction::findOrFail($id);
         
-        // Ubah status jadi Cancel
         $transaction->update([
             'status' => 'Cancel'
         ]);
 
-        // Kembalikan response sukses ke JS
         return response()->json(['message' => 'Reservasi berhasil dibatalkan']);
     }
 
+    // === [METHOD UTAMA YANG DIPERBAIKI] ===
     public function checkIn($id)
     {
-        $transaction = \App\Models\Transaction::findOrFail($id);
+        $transaction = Transaction::findOrFail($id);
 
+        // 1. VALIDASI TANGGAL (SATPAM)
+        // Ambil tanggal check in dan tanggal hari ini (jam diabaikan, fokus ke tanggal saja)
+        $checkInDate = Carbon::parse($transaction->check_in)->startOfDay();
+        $today = Carbon::today();
+
+        // Jika Check In > Hari Ini (Artinya belum waktunya)
+        if ($checkInDate->gt($today)) {
+            return response()->json([
+                'status' => 'failed',
+                'message' => 'Gagal! Belum waktunya Check In. Tanggal reservasi adalah: ' . $checkInDate->format('d/m/Y')
+            ], 422); // Kode 422 artinya "Data tidak valid" (Ditolak)
+        }
+
+        // 2. PROSES CHECK IN
         if($transaction->status == 'Reservation') {
             
-            // [PERBAIKAN] Cek apakah paid_amount masih 0? Jika ya, anggap sudah lunas saat Check In
+            // Cek pembayaran
             $paidAmount = $transaction->paid_amount;
             if ($paidAmount == 0) {
                 $paidAmount = $transaction->total_price;
@@ -54,7 +66,7 @@ class ReservasiKamarController extends Controller
 
             $transaction->update([
                 'status' => 'Check In',
-                'paid_amount' => $paidAmount // Update paid_amount
+                'paid_amount' => $paidAmount
             ]);
             
             return response()->json(['message' => 'Berhasil Check In! Tamu kini berstatus aktif.']);

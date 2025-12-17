@@ -12,40 +12,49 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // === [LOGIC BARU] CEGAH DAPUR MASUK DASHBOARD ===
-        // Jika yang login adalah orang Dapur, paksa pindah ke halaman Bahan Baku.
+        // 1. CEK ROLE DAPUR
         if (Auth::user()->role === 'Dapur') {
             return redirect()->route('ingredient.index');
         }
 
-        // === STATS CARD ===
+        // === [STATS CARD] ===
         
-        // 1. Kamar Terpakai (Status: Check In)
+        // A. Kamar Terpakai (Status: Check In)
         $occupiedRoomsCount = Transaction::where('status', 'Check In')->count();
 
-        // 2. Kamar Dibersihkan (Status Fisik Kamar)
+        // B. Kamar Dibersihkan (Status Fisik Kamar)
         $cleaningRoomsCount = Room::where('status', 'Cleaning')->count();
 
-        // 3. Reservasi Datang / Belum Check In
-        $todayReservationsCount = Transaction::where('status', 'Reservation')
-            ->whereDate('check_in', '>=', Carbon::today()) 
+        // C. Reservasi Aktif Hari Ini (YANG BELUM CHECK IN)
+        // (Digunakan untuk perhitungan ketersediaan kamar, biar akurat)
+        $reservedNowCount = Transaction::where('status', 'Reservation')
+            ->whereDate('check_in', '<=', Carbon::today()) 
+            ->whereDate('check_out', '>', Carbon::today())
             ->count();
 
-        // 4. Kamar Tersedia (Total - Sibuk)
+        // D. Reservasi Datang Hari Ini (Untuk Tampilan Card Dashboard)
+        // Kita pakai nama variabel lama ($todayReservationsCount) agar View tidak error.
+        // TAPI logic-nya sudah kita perbaiki: Hanya hitung yang Check-In HARI INI.
+        $todayReservationsCount = Transaction::where('status', 'Reservation')
+                ->whereDate('check_in', '>=', Carbon::today()) 
+                ->count();
+
+        // E. HITUNG KAMAR TERSEDIA (Total - Sibuk)
         $totalRooms = Room::count();
-        $unavailableCount = $occupiedRoomsCount + $cleaningRoomsCount;
+        
+        // Sibuk = Sedang Inap + Sedang Dibersihkan + Sudah Dipesan Hari Ini
+        $unavailableCount = $occupiedRoomsCount + $cleaningRoomsCount + $reservedNowCount;
         
         $availableRoomsCount = $totalRooms - $unavailableCount;
         if ($availableRoomsCount < 0) $availableRoomsCount = 0;
 
-        // === [PERBAIKAN UTAMA: TAMU BULANAN] ===
-        // Hitung semua transaksi bulan ini yang statusnya BUKAN 'Cancel'.
+        // F. Tamu Bulan Ini (Statistik)
         $thisMonth = Transaction::whereMonth('check_in', Carbon::now()->month)
             ->whereYear('check_in', Carbon::now()->year)
             ->where('status', '!=', 'Cancel') 
             ->count();
 
-        // === TABEL DASHBOARD (Tamu Hari Ini) ===
+        // === [TABEL DASHBOARD] ===
         $transactions = Transaction::with('user', 'room', 'customer')
             ->whereDate('check_in', '<=', Carbon::today())
             ->whereDate('check_out', '>=', Carbon::today())
@@ -58,11 +67,12 @@ class DashboardController extends Controller
             ->limit(10)
             ->get();
 
+        // Return View (Syntax compact sekarang sudah benar)
         return view('dashboard.index', compact(
             'availableRoomsCount',
             'occupiedRoomsCount',
             'cleaningRoomsCount',
-            'todayReservationsCount',
+            'todayReservationsCount', // Nama variabel sudah sesuai, tidak perlu panah '=>'
             'thisMonth',
             'transactions'
         ));

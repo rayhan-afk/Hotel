@@ -60,7 +60,7 @@ $(function () {
                         if (data === 'Yes') {
                             return `<span class="badge rounded-pill" style="background-color: #A8D5BA; color: #50200C;
                             font-size: 10px; padding: 6px 12px; font-weight: 700;">
-                                        <i class="fas fa-utensils me-1" style="color: #50200C; font-size: 10px;"></i>Ya
+                                            <i class="fas fa-utensils me-1" style="color: #50200C; font-size: 10px;"></i>Ya
                                     </span>`;
                         } else {
                             return `<span class="badge rounded-pill" style="background-color: #F2C2B8; color: #50200C; 
@@ -71,39 +71,39 @@ $(function () {
 
                 // 7. Total Harga
                 { 
-                    name: "rooms.price", // Gunakan nama kolom asli untuk sorting
+                    name: "rooms.price", 
                     data: "total_price",
                     className: "text-end fw-bold",
                     render: function(data) {
                         return new Intl.NumberFormat('id-ID', { 
                             style: 'currency', 
-                            currency: 'IDR',
+                            currency: 'IDR', 
                             minimumFractionDigits: 0 
                         }).format(data);
                     }
                 },
 
-                // 8. [BARU] Sisa Bayar (Kekurangan akibat Extend)
+                // 8. Sisa Bayar (Kekurangan akibat Extend)
                 { 
                     name: "transactions.paid_amount", 
                     data: "remaining_payment",
-                    className: "text-center", // Diubah jadi center agar badge rapi
+                    className: "text-center",
                     render: function(data) {
                         let formatted = new Intl.NumberFormat('id-ID', { 
                             style: 'currency', 
-                            currency: 'IDR',
+                            currency: 'IDR', 
                             minimumFractionDigits: 0 
                         }).format(data);
 
-                        // Jika ada sisa bayar > 0 (MERAH PASTEL - Solid)
+                        // Jika ada sisa bayar > 0 (MERAH PASTEL)
                         if (data > 0) {
                             return `<span class="badge rounded-pill" style="background-color: #F2C2B8; color: #50200C; 
-                                    font-size: 13px; padding: 6px 12px; font-weight: 800; border: 1px solid #E57373;">
+                                    font-size: 11px; padding: 6px 12px; font-weight: 800; border: 1px solid #E57373;">
                                     ${formatted}
                                     </span>`;
                         }
                         
-                        // Jika 0 (HIJAU PASTEL - Solid)
+                        // Jika 0 (HIJAU PASTEL)
                         return `<span class="badge rounded-pill" style="background-color: #A8D5BA; color: #50200C; 
                                 font-size: 11px; padding: 6px 12px; font-weight: 800; border: 1px solid #81C784;">
                                 Lunas
@@ -121,7 +121,7 @@ $(function () {
                         color: #50200C; font-size: 10px; padding: 6px 12px; font-weight: 700;">${data}</span>`;
                     }
                 },
-                // 10. Aksi (Edit & Check Out)
+                // 10. Aksi
                 {
                     data: 'id',
                     orderable: false,
@@ -181,7 +181,7 @@ $(function () {
             });
         });
 
-        // === EVENT: SUBMIT FORM EDIT (UPDATE DURASI/KAMAR) ===
+        // === [PERBAIKAN UTAMA] EVENT: SUBMIT FORM EDIT ===
         $(document).on('submit', '#form-edit-checkin', function(e) {
             e.preventDefault(); 
 
@@ -199,45 +199,65 @@ $(function () {
                 type: 'POST', 
                 data: data,
                 success: function(response) {
-                    // Tutup modal
+                    // 1. Tutup Modal
                     let modalEl = document.getElementById('editCheckinModal');
                     let modal = bootstrap.Modal.getInstance(modalEl);
                     if (modal) {
                         modal.hide();
                     }
                     
+                    // 2. Tentukan Warna & Pesan Alert berdasarkan Status Keuangan
+                    let iconType = response.status || 'success'; // default success
+                    let titleText = 'Berhasil Diperbarui!';
+                    
+                    if (iconType === 'warning') {
+                        // Kasus Kurang Bayar
+                        titleText = 'Perhatian: Kurang Bayar!';
+                    } else if (iconType === 'info') {
+                        // Kasus Lebih Bayar
+                        titleText = 'Info Refund';
+                    }
+
+                    // 3. Tampilkan Alert
                     if (typeof Swal !== 'undefined') {
                         Swal.fire({
-                            icon: 'success',
-                            title: 'Berhasil Diperbarui!',
-                            text: response.message,
-                            showConfirmButton: false,
-                            timer: 2000,
-                            iconColor: '#50200C', // ✅ Warna icon success
+                            icon: iconType, // warning, info, atau success
+                            title: titleText,
+                            text: response.message, // Pesan detail (Rp ...)
+                            // Styling custom kamu
+                            iconColor: '#50200C', 
                             customClass: {
-                                title: 'swal-title-brown' // ✅ Custom warna title
+                                title: 'swal-title-brown',
+                                htmlContainer: 'swal-text-brown',
+                                confirmButton: 'swal-btn-blue'
                             }
                         });
                     } else {
-                        alert("SUKSES: " + response.message); 
+                        alert(titleText + "\n" + response.message); 
                     }
                     
-                    // Reload tabel agar sisa bayar terupdate
+                    // 4. Reload tabel agar kolom 'Sisa Bayar' terupdate
                     table.ajax.reload(null, false);
                 },
                 error: function(xhr) {
                     btn.prop('disabled', false).html(originalContent);
                     
+                    // 1. Ambil Pesan Error (Termasuk Pesan Bentrok Jadwal)
                     let msg = "Gagal menyimpan perubahan.";
                     if(xhr.responseJSON && xhr.responseJSON.message) {
-                        msg += "\n" + xhr.responseJSON.message;
+                        msg = xhr.responseJSON.message;
                     }
                     
+                    // 2. Tampilkan Error
                     if (typeof Swal !== 'undefined') {
                         Swal.fire({
                             icon: 'error',
                             title: 'Gagal Menyimpan',
-                            text: msg
+                            text: msg, // "Gagal Extend! Kamar ini sudah di-booking..."
+                            customClass: {
+                                title: 'swal-title-brown',
+                                confirmButton: 'swal-btn-blue'
+                            }
                         });
                     } else {
                          alert(msg);

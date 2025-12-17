@@ -7,6 +7,7 @@ use App\Repositories\Interface\CheckinRepositoryInterface;
 use App\Models\Room;
 use App\Models\Transaction;
 use Carbon\Carbon;
+use App\Helpers\Helper; 
 
 class CheckinController extends Controller
 {
@@ -31,55 +32,126 @@ class CheckinController extends Controller
         return view('transaction.checkin.edit', compact('transaction', 'rooms'));
     }
 
+    // === [METHOD UTAMA: AMAN DARI BENTROK & AMAN DARI INFLASI HARGA] ===
     public function update(Request $request, $id)
     {
         // 1. Validasi Input
         $request->validate([
-            'room_id'   => 'required|exists:rooms,id',
+            'room_id'   => 'required|exists:rooms,id', 
             'check_in'  => 'required|date', 
             'check_out' => 'required|date|after:check_in',
-            'breakfast' => 'required|in:Yes,No', // Pastikan validasi ini ada
+            'breakfast' => 'required|in:Yes,No',
         ]);
 
-        // 2. Ambil Transaksi & Kamar
         $transaction = Transaction::findOrFail($id);
-        $room = Room::findOrFail($request->room_id);
-
-        // 3. Hitung Durasi Baru
-        $checkIn = Carbon::parse($request->check_in);
-        $checkOut = Carbon::parse($request->check_out);
         
-        // Hitung selisih hari (minimal 1 hari)
-        $dayDifference = $checkIn->diffInDays($checkOut);
-        if ($dayDifference < 1) {
-            $dayDifference = 1;
+        $newCheckIn = Carbon::parse($request->check_in);
+        $newCheckOut = Carbon::parse($request->check_out);
+
+        // ---------------------------------------------------------
+        // FITUR 1: CEK BENTROK JADWAL (COLLISION CHECK)
+        // ---------------------------------------------------------
+        // Pastikan perpanjangan tanggal tidak menabrak jadwal tamu lain
+        $collision = Transaction::where('room_id', $transaction->room_id) // Pakai room_id asli (karena gabisa pindah)
+            ->where('id', '!=', $transaction->id)
+            ->whereIn('status', ['Reservation', 'Check In'])
+            ->where(function ($q) use ($newCheckIn, $newCheckOut) {
+                // Rumus Tabrakan: (StartA < EndB) && (EndA > StartB)
+                $q->where('check_in', '<', $newCheckOut)
+                  ->where('check_out', '>', $newCheckIn);
+            })
+            ->with('customer')
+            ->first();
+
+        if ($collision) {
+            $nabrakSiapa = $collision->customer ? $collision->customer->name : 'Tamu Lain';
+            $tglNabrak = Carbon::parse($collision->check_in)->format('d/m/Y');
+            
+            return response()->json([
+                'status' => 'error',
+                'message' => "Gagal Extend! Kamar ini sudah di-booking oleh {$nabrakSiapa} mulai tanggal {$tglNabrak}."
+            ], 422);
         }
 
-        // 4. Hitung Ulang Total Harga
-        $roomPriceTotal = $room->price * $dayDifference;
+        // ---------------------------------------------------------
+        // FITUR 2: KUNCI HARGA (PRICE LOCK)
+        // ---------------------------------------------------------
+        // Kita BONGKAR harga lama untuk menemukan harga per malam yang asli.
+        // Tujuannya: Agar harga tidak berubah meskipun Admin menaikkan harga di Master Data.
         
-        // Hitung Biaya Sarapan (140rb/malam jika Yes)
+        // A. Hitung durasi lama
+        $oldIn = Carbon::parse($transaction->check_in);
+        $oldOut = Carbon::parse($transaction->check_out);
+        $oldDays = $oldIn->diffInDays($oldOut) ?: 1;
+
+        // B. Reverse Engineering (Mundur dari Grand Total)
+        // Rumus: GrandTotal = (HargaKamar + BiayaSarapan) * 1.1 (Pajak)
+        
+        $oldSubTotal = $transaction->total_price / 1.10; // Hilangkan Pajak 10%
+        
+        // Hilangkan Biaya Sarapan Lama
+        $oldBreakfastCost = ($transaction->breakfast == 'Yes') ? (140000 * $oldDays) : 0;
+        
+        // Ketemu Total Harga Kamar Murni
+        $oldRoomTotalPure = $oldSubTotal - $oldBreakfastCost;
+        
+        // KETEMU! Ini harga deal per malamnya.
+        $pricePerNight = $oldRoomTotalPure / $oldDays;
+
+
+        // ---------------------------------------------------------
+        // 3. HITUNG ULANG DENGAN HARGA KUNCIAN
+        // ---------------------------------------------------------
+        
+        // Hitung Durasi Baru
+        $dayDifference = $newCheckIn->diffInDays($newCheckOut);
+        if ($dayDifference < 1) $dayDifference = 1;
+
+        // Total Harga Kamar Baru (Pakai Harga Kuncian $pricePerNight)
+        $roomPriceTotal = $pricePerNight * $dayDifference;
+        
+        // Hitung Biaya Sarapan Baru
         $breakfastPrice = 0;
-        // Cek input breakfast dari request form
         if($request->breakfast == 'Yes') {
             $breakfastPrice = 140000 * $dayDifference;
         }
 
-        // Hitung Pajak
+        // Hitung Pajak & Grand Total
         $subTotal   = $roomPriceTotal + $breakfastPrice;
-        $tax        = $subTotal * 0.10; // Pajak 10%
+        $tax        = $subTotal * 0.10;
         $grandTotal = $subTotal + $tax;
 
-        // 5. Update Database
+        // 4. Update Database
         $transaction->update([
-            'room_id'     => $request->room_id,
+            // room_id TIDAK DIUPDATE karena fitur pindah kamar tidak ada
             'check_in'    => $request->check_in,
             'check_out'   => $request->check_out,
-            'breakfast'   => $request->breakfast, // Simpan status sarapan baru
-            'total_price' => $grandTotal          // Simpan harga baru
+            'breakfast'   => $request->breakfast,
+            'total_price' => $grandTotal
         ]);
 
-        return response()->json(['message' => 'Data berhasil diperbarui! Total harga baru: ' . \App\Helpers\Helper::convertToRupiah($grandTotal)]);
+        // ---------------------------------------------------------
+        // FITUR 3: CEK KEUANGAN (KURANG BAYAR)
+        // ---------------------------------------------------------
+        $alreadyPaid = $transaction->paid_amount;
+        $shortfall = $grandTotal - $alreadyPaid;
+
+        if ($shortfall > 0) {
+            $msg = 'Update Berhasil. Tamu KURANG BAYAR ' . Helper::convertToRupiah($shortfall) . '. Mohon segera minta pelunasan!';
+            $status = 'warning';
+        } elseif ($shortfall < 0) {
+            $refund = abs($shortfall);
+            $msg = 'Update Berhasil. Tamu LEBIH BAYAR ' . Helper::convertToRupiah($refund) . '. Cek prosedur refund.';
+            $status = 'info';
+        } else {
+            $msg = 'Data berhasil diperbarui!';
+            $status = 'success';
+        }
+
+        return response()->json([
+            'status' => $status,
+            'message' => $msg
+        ]);
     }
 
     public function destroy($id)

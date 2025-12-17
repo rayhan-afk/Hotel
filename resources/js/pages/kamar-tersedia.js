@@ -15,69 +15,86 @@ $(function () {
                 type: "GET",
                 data: function (d) {
                     d.type = $("#type").val();
+                    // Opsional: Jika nanti butuh filter tanggal check_date, tambahkan di sini
+                    // d.check_date = $("#check_date").val(); 
                 },
                 error: function (xhr, status, error) {
                     console.error("Datatable Error:", error);
                 },
             },
             columns: [
-                // No
+                // 0. No
                 { 
-                    name: "number", // Sort by number
+                    name: "number", 
                     data: "number",
                     render: function (data, type, row, meta) {
                         return meta.row + meta.settings._iDisplayStart + 1;
                     }
                 },
-                // Nomor Kamar (Asli)
+                // 1. Nomor Kamar (Asli)
                 { name: "number", data: "number" },
-                // Nama Kamar
+                // 2. Nama Kamar
                 { name: "name", data: "name" },
-                // Tipe
-                { 
-                    name: "types.name", // Sort by relasi
-                    data: "type" 
-                },
-                // Luas
+                // 3. Tipe
+                { name: "types.name", data: "type" },
+                // 4. Luas
                 { 
                     name: "area_sqm", 
                     data: "area_sqm", 
                     render: function(data) { return data ? data + ' m²' : '-'; } 
                 },
-                // Fasilitas Kamar
+                // 5. Fasilitas Kamar
                 { 
                     name: "room_facilities", 
                     data: "room_facilities", 
                     render: function(data) { return data ? (data.length > 30 ? data.substr(0, 30) + '...' : data) : '-'; } 
                 },
-                // Fasilitas Mandi
+                // 6. Fasilitas Mandi
                 { 
                     name: "bathroom_facilities", 
                     data: "bathroom_facilities", 
                     render: function(data) { return data ? (data.length > 30 ? data.substr(0, 30) + '...' : data) : '-'; } 
                 },
-                // Kapasitas
+                // 7. Kapasitas
                 { name: "capacity", data: "capacity", className: "text-center" },
-                // Harga
+                // 8. Harga
                 {
                     name: "price",
                     data: "price",
                     className: "text-end",
                     render: function (price) {
-                        return `<div class="fw-bold style="color: #50200C;">Rp ${new Intl.NumberFormat('id-ID').format(price)}</div>`;
+                        return `<div class="fw-bold" style="color: #50200C;">Rp ${new Intl.NumberFormat('id-ID').format(price)}</div>`;
                     },
                 },
-                // Status (Logic Tersedia)
+                // 9. Status (LOGIKA BARU - DINAMIS)
                 {
-                    name: "id", // Dummy
-                    data: "id",
+                    name: "id", // Tetap 'id' atau kosong karena sorting biasanya disable di sini
+                    data: "status", // Ambil data 'status' dari JSON repository
                     className: "text-center",
                     orderable: false,
                     searchable: false,
-                    render: function (id) {
-                        // Karena halaman ini sudah memfilter yang tersedia, kita hardcode statusnya
-                        return `<span class="badge rounded-pill" style="background-color: #A8D5BA; color: #50200C;
-                            font-size: 10px; padding: 6px 12px; font-weight: 700;">Tersedia</span>`;
+                    render: function (status, type, row) {
+                        // Style Default (Font Size & Padding)
+                        const styleBase = 'font-size: 10px; padding: 6px 12px; font-weight: 700;';
+
+                        if (status === 'Menunggu Checkout') {
+                            // KUNING (Warning)
+                            return `<span class="badge rounded-pill bg-warning text-dark" style="${styleBase}">
+                                <i class="fas fa-clock me-1"></i> Menunggu Checkout
+                            </span>`;
+                        } 
+                        else if (status === 'Sedang Dibersihkan') {
+                            // BIRU (Info)
+                            return `<span class="badge rounded-pill bg-info text-white" style="${styleBase}">
+                                <i class="fas fa-broom me-1"></i> Sedang Dibersihkan
+                            </span>`;
+                        } 
+                        else {
+                            // HIJAU (Tersedia / Default Style Kamu)
+                            return `<span class="badge rounded-pill" style="background-color: #A8D5BA; color: #50200C; ${styleBase}">
+                                <i class="fas fa-check me-1"></i> Tersedia
+                            </span>`;
+                        }
                     }
                 },
             ],

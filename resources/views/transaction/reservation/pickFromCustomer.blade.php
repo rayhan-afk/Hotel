@@ -95,7 +95,7 @@
                             $group = $customer->customer_group ?? 'WalkIn';
                             $badgeClass = 'bg-general';
                             if($group == 'OTA') $badgeClass = 'bg-corporate';
-                            if($group == 'Corporate) $badgeClass = 'bg-family';
+                            if($group == 'Corporate') $badgeClass = 'bg-family';
                             if($group == 'OwnerReferral') $badgeClass = 'bg-government';
                         @endphp
                         <span class="badge badge-group {{ $badgeClass }}">

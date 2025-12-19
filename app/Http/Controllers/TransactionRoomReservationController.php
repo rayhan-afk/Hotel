@@ -96,13 +96,10 @@ class TransactionRoomReservationController extends Controller
         $roomsCount = $rooms->total();
 
         // === [FIX 1] INJECT HARGA SULTAN KE LIST KAMAR ===
-        // Agar admin melihat harga ASLI (termasuk weekend/diskon) sebelum memilih
         $rooms->getCollection()->transform(function ($room) use ($customer, $stayFrom, $stayUntil, $dayDifference) {
             
-            // Panggil fungsi calculateRoomCost
             $totalPrice = $this->calculateRoomCost($room, $customer, $stayFrom, $stayUntil);
             
-            // Masukkan hasil hitungan ke object room sebagai atribut tambahan
             $room->total_price_estimate = $totalPrice;
             $room->price_per_night_estimate = $totalPrice / $dayDifference;
 
@@ -145,47 +142,61 @@ class TransactionRoomReservationController extends Controller
         ]);
     }
 
+    // ===============================================================
+    // METHOD 1: PREVIEW INVOICE (UNTUK RESERVASI AWAL)
+    // ===============================================================
     public function previewInvoice(Customer $customer, Room $room, $stayFrom, $stayUntil, Request $request)
     {
-        $dayDifference = Helper::getDateDifference($stayFrom, $stayUntil);
-        if ($dayDifference < 1) $dayDifference = 1;
+        $days = Helper::getDateDifference($stayFrom, $stayUntil);
+        if ($days < 1) $days = 1;
 
         $breakfast = $request->query('breakfast', 'No');
 
-        // Hitung Harga Kamar (Sultan Mode)
-        $roomPriceTotal = $this->calculateRoomCost($room, $customer, $stayFrom, $stayUntil);
+        // --- LOGIK HITUNG WEEKDAY/WEEKEND ---
+        $calc = $this->calculateDetailPrice($room, $customer, $stayFrom, $stayUntil);
+        
+        $roomPriceTotal = $calc['total_price']; // Total Harga Kamar
         
         // Hitung Sarapan
-        $breakfastPrice = ($breakfast === 'Yes') ? (self::BREAKFAST_PRICE * $dayDifference) : 0;
+        $breakfastPrice = ($breakfast === 'Yes') ? (self::BREAKFAST_PRICE * $days) : 0;
         
         $subTotal   = $roomPriceTotal + $breakfastPrice;
         $tax        = $subTotal * 0.10; 
         $grandTotal = $subTotal + $tax;
 
-        $dateCode = Carbon::now()->format('dmY');
-        $nextId = Transaction::count() + 1; 
-        $transactionCode = $dateCode . '-' . str_pad($nextId, 3, '0', STR_PAD_LEFT);
+        $transactionCode = 'INV-PREVIEW'; // Dummy code
 
         $invoiceData = [
             'customer' => $customer,
             'room' => $room,
             'check_in' => $stayFrom,
             'check_out' => $stayUntil,
-            'days' => $dayDifference,
+            'days' => $days,
             'breakfast_status' => $breakfast,
+            
+            // Data Rincian Weekday/Weekend
+            'weekday_count' => $calc['weekday_count'],
+            'weekend_count' => $calc['weekend_count'],
+            'weekday_total' => $calc['weekday_total'],
+            'weekend_total' => $calc['weekend_total'],
+            'weekday_price_satuan' => $calc['weekday_price_satuan'],
+            'weekend_price_satuan' => $calc['weekend_price_satuan'],
+
             'room_price_total' => $roomPriceTotal,
             'breakfast_price_total' => $breakfastPrice,
-            'sub_total' => $subTotal, // Tambahkan subtotal agar view aman
+            'sub_total' => $subTotal, 
             'tax' => $tax,
             'grand_total' => $grandTotal,
             'transaction_code' => $transactionCode,
             'date' => Carbon::now()->format('Y-m-d'),
-            'user_name' => auth()->user()->name
+            'user_name' => auth()->user()->name ?? 'Admin',
+            // Transaction null karena belum disimpan
+            'transaction' => null 
         ];
 
         return view('transaction.reservation.invoice_preview', $invoiceData);
     }
-
+    
     public function payDownPayment(Customer $customer, Room $room, Request $request) 
     {
         $request->validate([
@@ -240,16 +251,25 @@ class TransactionRoomReservationController extends Controller
                 $query->where('check_in', '<', $checkOut)
                       ->where('check_out', '>', $checkIn);
             })
-            ->where('status', '!=', 'Done') 
+            // [FIX BUG]
+            // Jangan pakai: ->where('status', '!=', 'Done')
+            // Karena 'Canceled' pun akan dianggap kamar terisi.
+            
+            // GANTI DENGAN INI:
+            // Hanya anggap kamar terisi jika statusnya 'Reservation' (Booking) atau 'Check In' (Sedang Menginap)
+            ->whereIn('status', ['Reservation', 'Check In']) 
+            
             ->pluck('room_id');
     }
 
     // Fungsi Hitung Harga Dinamis
+    // Fungsi Hitung Harga Dinamis (FIXED: START OF DAY & SAFETY NET)
     private function calculateRoomCost($room, $customer, $checkIn, $checkOut)
     {
         try {
-            $start = Carbon::parse($checkIn);
-            $end = Carbon::parse($checkOut);
+            // [FIX] Tambahkan startOfDay() agar jam checkin/checkout tidak merusak loop
+            $start = Carbon::parse($checkIn)->startOfDay();
+            $end   = Carbon::parse($checkOut)->startOfDay();
             
             // Loop per hari
             $period = CarbonPeriod::create($start, $end->copy()->subDay());
@@ -261,8 +281,10 @@ class TransactionRoomReservationController extends Controller
                                      ->first();
 
             $totalPrice = 0;
+            $daysCount = 0; // Untuk cek apakah loop berjalan
 
             foreach ($period as $date) {
+                $daysCount++;
                 $isWeekend = $date->isWeekend();
                 $dailyPrice = 0;
 
@@ -283,62 +305,146 @@ class TransactionRoomReservationController extends Controller
                 $totalPrice += $dailyPrice;
             }
 
+            // [SAFETY NET] Jika karena suatu alasan loop tidak jalan (total 0),
+            // Hitung manual berdasarkan selisih hari x harga dasar
+            if ($totalPrice == 0 || $daysCount == 0) {
+                $diff = $start->diffInDays($end);
+                if ($diff < 1) $diff = 1;
+                return $room->price * $diff;
+            }
+
             return $totalPrice;
 
         } catch (\Exception $e) {
+            // Fallback terakhir jika error sistem
             $diff = Helper::getDateDifference($checkIn, $checkOut);
             if ($diff < 1) $diff = 1;
             return $room->price * $diff;
         }
     }
 
-    // === [FIX 2] PRINT INVOICE LENGKAP ===
+    // === [FIX 2] PRINT INVOICE LENGKAP & VALID ===
+    // ===============================================================
+    // METHOD 2: PRINT INVOICE (UNTUK LAPORAN / AKHIR)
+    // ===============================================================
     public function printInvoice(Transaction $transaction)
     {
-        // Pastikan load relasi
         $transaction->load(['customer', 'room', 'user']);
 
         $days = Helper::getDateDifference($transaction->check_in, $transaction->check_out);
         if ($days < 1) $days = 1;
 
-        // --- REVERSE ENGINEERING UNTUK TAMPILAN ---
-        // Karena di DB cuma simpan 'total_price' (Grand Total), 
-        // kita perlu hitung mundur komponennya agar invoice terlihat detail.
-        
+        // --- LOGIK HITUNG WEEKDAY/WEEKEND ---
+        $calc = $this->calculateDetailPrice($transaction->room, $transaction->customer, $transaction->check_in, $transaction->check_out);
+
+        // Ambil data keuangan dari DB agar presisi
         $grandTotal = $transaction->total_price;
-        $subTotal = $grandTotal / 1.1; // Asumsi Tax 10%
+        $subTotal = $grandTotal / 1.1; 
         $tax = $grandTotal - $subTotal;
 
-        // Pisahkan Harga Sarapan & Kamar
+        // Hitung Sarapan
+        // A. Sarapan Utama (Per Hari)
         $breakfastPrice = 0;
-        if ($transaction->breakfast == 'Yes' || $transaction->breakfast == 1) {
-            $breakfastPrice = self::BREAKFAST_PRICE * $days;
+        if ($transaction->breakfast == 'Yes') {
+            $breakfastPrice = 100000 * $days;
         }
 
-        // Sisanya adalah Harga Kamar Total
-        $roomPriceTotal = $subTotal - $breakfastPrice;
+        // B. Extra Bed & Breakfast
+        // [FIX] Extra Bed jadi FLAT (Hapus pengali $days)
+        $extraBedPrice = ($transaction->extra_bed ?? 0) * 200000; 
+        
+        // Extra Breakfast tetap PER HARI (Tetap ada pengali $days)
+        $extraBreakfastPrice = ($transaction->extra_breakfast ?? 0) * 125000 * $days;
 
+        // 5. Hitung Harga Kamar Murni
+        $roomPriceTotal = $subTotal - $breakfastPrice - $extraBedPrice - $extraBreakfastPrice;
+        
         $invoiceData = [
             'customer' => $transaction->customer,
             'room' => $transaction->room,
             'check_in' => $transaction->check_in,
             'check_out' => $transaction->check_out,
             'days' => $days,
-            
             'breakfast_status' => $transaction->breakfast,
             
-            // Rincian Biaya (Hasil Hitung Mundur)
+            // Data Rincian Weekday/Weekend
+            'weekday_count' => $calc['weekday_count'],
+            'weekend_count' => $calc['weekend_count'],
+            'weekday_total' => $calc['weekday_total'],
+            'weekend_total' => $calc['weekend_total'],
+            'weekday_price_satuan' => $calc['weekday_price_satuan'],
+            'weekend_price_satuan' => $calc['weekend_price_satuan'],
+
             'room_price_total' => $roomPriceTotal,
             'breakfast_price_total' => $breakfastPrice,
             'sub_total' => $subTotal,
             'tax' => $tax,
-            'grand_total' => $grandTotal, // <--- Ini yang paling Valid dari DB
+            'grand_total' => $grandTotal,
             
             'transaction_code' => 'INV-' . str_pad($transaction->id, 5, '0', STR_PAD_LEFT),
             'date' => Carbon::parse($transaction->created_at)->format('Y-m-d'),
-            'user_name' => $transaction->user->name ?? 'Admin'
+            'user_name' => $transaction->user->name ?? 'Admin',
+            'transaction' => $transaction,
         ];
 
         return view('transaction.reservation.invoice_preview', $invoiceData);
+    }
+
+    // ===============================================================
+    // HELPER: FUNGSI HITUNG RINCIAN (Agar coding tidak berulang)
+    // ===============================================================
+    private function calculateDetailPrice($room, $customer, $checkIn, $checkOut)
+    {
+        // [FIX] Tambahkan startOfDay() agar jam tidak bikin bug loop
+        $start = Carbon::parse($checkIn)->startOfDay();
+        $end   = Carbon::parse($checkOut)->startOfDay();
+        
+        // Loop range tanggal
+        $period = CarbonPeriod::create($start, $end->copy()->subDay());
+        
+        $customerGroup = $customer->customer_group ?? 'WalkIn';
+        $specialPrice = TypePrice::where('type_id', $room->type_id)
+            ->where('customer_group', $customerGroup)
+            ->first();
+
+        $data = [
+            'weekday_count' => 0, 'weekday_total' => 0, 'weekday_price_satuan' => $room->price,
+            'weekend_count' => 0, 'weekend_total' => 0, 'weekend_price_satuan' => $room->price,
+            'total_price' => 0
+        ];
+
+        foreach ($period as $date) {
+            $isWeekend = $date->isWeekend(); 
+            $dailyPrice = $room->price; 
+
+            if ($specialPrice) {
+                if ($isWeekend) {
+                    $dailyPrice = $specialPrice->price_weekend > 0 ? $specialPrice->price_weekend : $room->price;
+                } else {
+                    $dailyPrice = $specialPrice->price_weekday > 0 ? $specialPrice->price_weekday : $room->price;
+                }
+            }
+
+            if ($isWeekend) {
+                $data['weekend_count']++;
+                $data['weekend_total'] += $dailyPrice;
+                $data['weekend_price_satuan'] = $dailyPrice;
+            } else {
+                $data['weekday_count']++;
+                $data['weekday_total'] += $dailyPrice;
+                $data['weekday_price_satuan'] = $dailyPrice;
+            }
+            $data['total_price'] += $dailyPrice;
+        }
+        
+        // [SAFETY NET] Jika loop gagal (misal 0 hari), paksa hitung minimal 1 hari (Weekday default)
+        if ($data['total_price'] == 0) {
+            $days = $start->diffInDays($end) ?: 1;
+            $data['weekday_count'] = $days;
+            $data['weekday_total'] = $room->price * $days;
+            $data['total_price']   = $room->price * $days;
+        }
+        
+        return $data;
     }
 }

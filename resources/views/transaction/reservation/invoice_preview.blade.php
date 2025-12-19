@@ -62,30 +62,97 @@
                 </tr>
             </thead>
             <tbody>
-                {{-- Kamar --}}
-                <tr>
-                    <td>Sewa Kamar Tipe {{ $room->type->name }} (No. {{ $room->number }})</td>
-                    <td class="text-center">{{ $days }} Malam</td>
-                    {{-- Harga Satuan (Base Rate) --}}
-                    <td class="text-right">{{ Helper::convertToRupiah($room->price) }}</td>
-                    {{-- Total (Hasil kalkulasi Controller Weekday/Weekend) --}}
-                    <td class="text-right">{{ Helper::convertToRupiah($room_price_total) }}</td>
-                </tr>
+                
+                {{-- A. SEWA KAMAR (Logic Weekday & Weekend) --}}
+                @php
+                    // Cek apakah data breakdown tersedia dan valid (jumlahnya > 0)
+                    $hasBreakdown = isset($weekday_count) && isset($weekend_count) && (($weekday_count + $weekend_count) > 0);
+                @endphp
 
-                {{-- Sarapan (Jika Ada) --}}
+                @if($hasBreakdown)
+                    
+                    {{-- 1. Baris Weekday --}}
+                    @if($weekday_count > 0)
+                    <tr>
+                        <td>
+                            Sewa Kamar Tipe {{ $room->type->name }} (No. {{ $room->number }})
+                            <br><small class="text-muted"><i>Rate Weekday</i></small>
+                        </td>
+                        <td class="text-center">{{ $weekday_count }} Malam</td>
+                        <td class="text-right">{{ Helper::convertToRupiah($weekday_price_satuan) }}</td>
+                        <td class="text-right">{{ Helper::convertToRupiah($weekday_total) }}</td>
+                    </tr>
+                    @endif
+
+                    {{-- 2. Baris Weekend --}}
+                    @if($weekend_count > 0)
+                    <tr>
+                        <td>
+                            Sewa Kamar Tipe {{ $room->type->name }} (No. {{ $room->number }})
+                            <br><small class="text-muted"><i>Rate Weekend</i></small>
+                        </td>
+                        <td class="text-center">{{ $weekend_count }} Malam</td>
+                        <td class="text-right">{{ Helper::convertToRupiah($weekend_price_satuan) }}</td>
+                        <td class="text-right">{{ Helper::convertToRupiah($weekend_total) }}</td>
+                    </tr>
+                    @endif
+
+                @else
+                    {{-- FALLBACK: Jika breakdown 0 atau error, TAMPILKAN STANDAR (Biar gak kosong) --}}
+                    <tr>
+                        <td>Sewa Kamar Tipe {{ $room->type->name }} (No. {{ $room->number }})</td>
+                        <td class="text-center">{{ $days }} Malam</td>
+                        <td class="text-right">{{ Helper::convertToRupiah($room->price) }}</td>
+                        <td class="text-right">{{ Helper::convertToRupiah($room_price_total) }}</td>
+                    </tr>
+                @endif
+
+
+                {{-- B. ITEM LAINNYA --}}
+                
+                {{-- Sarapan Utama --}}
                 @if($breakfast_status == 'Yes')
                 <tr>
-                    <td>Paket Sarapan</td>
-                    <td class="text-center">{{ $days }} Hari (2  orang)</td>
+                    <td>Paket Sarapan (Tamu Utama)</td>
+                    <td class="text-center">{{ $days }} Hari</td>
                     <td class="text-right">Rp 100.000</td>
                     <td class="text-right">{{ Helper::convertToRupiah($breakfast_price_total) }}</td>
                 </tr>
                 @endif
+{{-- Extra Bed --}}
+                @if(isset($transaction) && ($transaction->extra_bed > 0))
+                    @php 
+                        // [FIX] Hapus pengali $days di sini juga
+                        $totalExtraBed = $transaction->extra_bed * 200000; 
+                    @endphp
+                    <tr>
+                        <td>Extra Bed (Termasuk Sarapan)</td>
+                        
+                        {{-- [FIX] Tampilan Qty beda dengan breakfast --}}
+                        <td class="text-center">{{ $transaction->extra_bed }} Unit <br><small>(Flat Rate)</small></td>
+                        
+                        <td class="text-right">Rp 200.000</td>
+                        <td class="text-right">{{ Helper::convertToRupiah($totalExtraBed) }}</td>
+                    </tr>
+                @endif
+
+                {{-- Extra Breakfast (TETAP SAMA KARENA PER HARI) --}}
+                @if(isset($transaction) && ($transaction->extra_breakfast > 0))
+                    @php $totalExtraBreakfast = $transaction->extra_breakfast * 125000 * $days; @endphp
+                    <tr>
+                        <td>Extra Breakfast Only</td>
+                        <td class="text-center">{{ $transaction->extra_breakfast }} Porsi x {{ $days }} Malam</td>
+                        <td class="text-right">Rp 125.000</td>
+                        <td class="text-right">{{ Helper::convertToRupiah($totalExtraBreakfast) }}</td>
+                    </tr>
+                @endif
+
             </tbody>
             <tfoot>
                 <tr>
+                    {{-- Subtotal dihitung mundur dari Grand Total dikurangi Pajak --}}
                     <td colspan="3" class="text-right font-weight-bold">Subtotal</td>
-                    <td class="text-right">{{ Helper::convertToRupiah($room_price_total + $breakfast_price_total) }}</td>
+                    <td class="text-right">{{ Helper::convertToRupiah($grand_total - $tax) }}</td>
                 </tr>
                 <tr>
                     <td colspan="3" class="text-right font-weight-bold">Pajak PB1 (10%)</td>

@@ -42,13 +42,9 @@ class CheckinRepository implements CheckinRepositoryInterface
         foreach ($data as $trx) {
             
             // === LOGIKA SISA BAYAR (REMAINING PAYMENT) ===
-            // Ambil data paid_amount (default 0 jika belum diset)
             $paid = $trx->paid_amount ?? 0;
-            
-            // Hitung selisih: Total Tagihan - Uang Masuk
             $remaining = $trx->total_price - $paid;
             
-            // Pastikan tidak negatif (jika ada kelebihan bayar/kembalian, anggap sisa hutang 0)
             if ($remaining < 0) {
                 $remaining = 0;
             }
@@ -63,11 +59,14 @@ class CheckinRepository implements CheckinRepositoryInterface
                 ],
                 'check_in' => Helper::dateFormat($trx->check_in),
                 'check_out' => Helper::dateFormat($trx->check_out),
+                
+                // [UPDATE WAJIB] Ambil Data Extra dari Database
+                'extra_bed' => (int) $trx->extra_bed, 
+                'extra_breakfast' => (int) $trx->extra_breakfast, 
+
                 'breakfast' => $trx->breakfast ? $trx->breakfast : 'No',
                 
                 'total_price' => (float) $trx->total_price,
-                
-                // [BARU] Kirim data sisa bayar ke JavaScript
                 'remaining_payment' => (float) $remaining, 
 
                 'status' => 'Check In',

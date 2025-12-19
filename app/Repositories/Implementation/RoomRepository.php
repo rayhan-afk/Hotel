@@ -171,7 +171,7 @@ class RoomRepository implements RoomRepositoryInterface
         $folderName = $room->id . '-' . Str::slug($room->name);
         $path = public_path('img/room/' . $folderName);
         
-        if (File::exists($path)) {
+        if (File::exists($path)) {  
             File::deleteDirectory($path);
         }
 

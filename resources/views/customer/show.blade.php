@@ -13,6 +13,7 @@
                 <div class="card-body text-center p-4" style="background-color: #fff; color: #50200C;">
                     {{-- Avatar --}}
                     <div class="mb-3">
+                        {{-- KEMBALI KE KODE ASLI (Pakai getAvatar) --}}
                         <img src="{{ $customer->user->getAvatar() }}" 
                              class="rounded-3 border shadow-sm p-1" 
                              style="width: 180px; aspect-ratio: 16 / 9; object-fit: cover; border-color: #C49A6C !important;" 
@@ -20,24 +21,41 @@
                     </div>
                     
                     <h4 class="fw-bold mb-1">{{ $customer->name }}</h4>
-                    <span class="badge mb-3" style="background-color: #50200C;">{{ $customer->job }}</span>
+                    
+                    {{-- Badge Pekerjaan & Grup Customer --}}
+                    <div class="mb-3">
+                        <span class="badge me-1" style="background-color: #50200C;">{{ $customer->job }}</span>
+                        
+                        @php
+                            $group = $customer->customer_group ?? 'General';
+                            $badgeClass = 'bg-secondary'; // Default General
+                            if($group == 'Corporate') $badgeClass = 'bg-primary';
+                            if($group == 'Family') $badgeClass = 'bg-success';
+                            if($group == 'Government') $badgeClass = 'bg-warning text-dark';
+                        @endphp
+                        <span class="badge {{ $badgeClass }}">
+                            {{ $group }}
+                        </span>
+                    </div>
 
                     <hr style="border-color: #C49A6C;">
 
                     {{-- Detail Kontak --}}
                     <div class="text-start" style="color: #50200C">
                         <div class="mb-2">
-                            <i class="fas fa-envelope me-2"></i> {{ $customer->user->email }}
+                            <i class="fas fa-envelope me-2" style="width: 20px; text-align: center;"></i> {{ $customer->user->email }}
                         </div>
                         <div class="mb-2">
-                            <i class="fas fa-phone me-2"></i> {{ $customer->phone ?? '-' }}
+                            <i class="fas fa-phone me-2" style="width: 20px; text-align: center;"></i> 
+                            {{ $customer->phone ?? '-' }}
                         </div>
                         <div class="mb-2">
-                            <i class="fas fa-venus-mars me-2"></i> 
+                            <i class="fas fa-venus-mars me-2" style="width: 20px; text-align: center;"></i> 
                             {{ $customer->gender == 'Male' ? 'Laki-laki' : 'Perempuan' }}
                         </div>
-                        <div class="mb-2">
-                            <i class="fas fa-map-marker-alt me-2"></i> {{ $customer->address }}
+                        <div class="mb-2 d-flex">
+                            <i class="fas fa-map-marker-alt me-2 mt-1" style="width: 20px; text-align: center;"></i> 
+                            <span>{{ $customer->address }}</span>
                         </div>
                     </div>
 
@@ -71,7 +89,6 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {{-- Asumsi relasi di model Customer adalah 'transactions' --}}
                                 @forelse ($customer->transactions as $transaction)
                                     <tr>
                                         <td class="px-4 fw-bold" style="color: #50200C">{{ $loop->iteration }}</td>
@@ -99,7 +116,7 @@
                                 @empty
                                     <tr>
                                         <td colspan="6" class="text-center py-5" style="color: #50200C">
-                                            <i class="fas fa-ghost fa-2x mb-2"></i>
+                                            <i class="fas fa-ghost fa-2x mb-2 d-block"></i>
                                             <p class="mb-0">Belum ada riwayat reservasi.</p>
                                         </td>
                                     </tr>

@@ -26,7 +26,7 @@ class ReservasiKamarRepository implements ReservasiKamarRepositoryInterface
         // QUERY UTAMA
         $query = Transaction::query()
             ->select([
-                'transactions.*',
+                'transactions.*', // Ini sudah mengambil kolom 'total_price' yang benar
                 'customers.name as customer_name',
                 'rooms.number as room_number',
                 'rooms.price as room_price',
@@ -36,16 +36,10 @@ class ReservasiKamarRepository implements ReservasiKamarRepositoryInterface
             ->join('rooms', 'transactions.room_id', '=', 'rooms.id')
             ->join('types', 'rooms.type_id', '=', 'types.id')
             
-            // === [FILTER WAKTU (YANG SUDAH DIPERBAIKI)] ===
-            // Ganti logika: Jangan filter berdasarkan check_in >= hari ini.
-            // Tapi filter berdasarkan check_out >= hari ini.
-            // Artinya: Selama belum waktunya pulang (check-out), data ini akan TETAP MUNCUL.
-            // Contoh: Check In tgl 15, sekarang tgl 16, Check Out tgl 17. 
-            // Karena 17 >= 16 (TRUE), data akan muncul.
+            // FILTER WAKTU (Tetap Pertahankan)
             ->whereDate('transactions.check_out', '>=', Carbon::today())
             
-            // === [FILTER STATUS] ===
-            // Hanya tampilkan yang statusnya masih 'Reservation'
+            // FILTER STATUS (Tetap Pertahankan)
             ->where('transactions.status', 'Reservation'); 
 
         // SEARCHING
@@ -78,17 +72,21 @@ class ReservasiKamarRepository implements ReservasiKamarRepositoryInterface
         foreach ($models as $t) {
             $checkIn  = Carbon::parse($t->check_in);
             $checkOut = Carbon::parse($t->check_out);
-            $duration = $checkIn->diffInDays($checkOut) ?: 1;
             
-            // Logic Breakfast
+            // Logic Breakfast (Hanya untuk display text Yes/No)
             $rawBreakfast = $t->breakfast ?? 'No';
             $breakfast = (strtolower($rawBreakfast) === 'yes' || $rawBreakfast == '1') ? 'Yes' : 'No';
 
-            // Hitung Harga
-            $roomTotal = $duration * $t->room_price;
-            $breakfastTotal = ($breakfast === 'Yes') ? ($duration * 140000) : 0;
-            $subTotal = $roomTotal + $breakfastTotal;
-            $finalTotal = $subTotal + ($subTotal * 0.10); 
+            // =============================================================
+            // [PERBAIKAN UTAMA DISINI]
+            // =============================================================
+            // DULU: Hitung manual (Salah karena pakai harga dasar & breakfast lama)
+            // $roomTotal = $duration * $t->room_price; ... (HAPUS INI)
+            
+            // SEKARANG: Ambil langsung dari database
+            // Karena Controller Reservasi sudah menyimpan harga "Sultan Mode" yang fix.
+            $finalTotal = $t->total_price; 
+            // =============================================================
 
             $data[] = [
                 'id'            => $t->id,
@@ -100,7 +98,7 @@ class ReservasiKamarRepository implements ReservasiKamarRepositoryInterface
                 'check_in'      => $checkIn->format('d/m/Y'),
                 'check_out'     => $checkOut->format('d/m/Y'),
                 'breakfast'     => $breakfast, 
-                'total_price'   => $finalTotal, 
+                'total_price'   => $finalTotal, // Kirim harga yang benar
                 'status'        => $t->status,
                 'raw_id'        => $t->id 
             ];
@@ -108,13 +106,9 @@ class ReservasiKamarRepository implements ReservasiKamarRepositoryInterface
 
         return [
             'draw'            => intval($request->input('draw')),
-            
-            // === [FIX JUGA TOTAL RECORD DISINI] ===
-            // Pastikan hitungan total paginasi juga menggunakan logika yang sama (check_out)
             'recordsTotal'    => Transaction::where('status', 'Reservation')
                                             ->whereDate('check_out', '>=', Carbon::today())
                                             ->count(),
-                                            
             'recordsFiltered' => $totalFiltered,
             'data'            => $data,
         ];

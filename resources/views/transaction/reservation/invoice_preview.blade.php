@@ -11,23 +11,17 @@
         .logo { max-width: 300px; }
         .invoice-title { float: right; color: #555; }
         .table th { background-color: #f8f9fa; }
-
-        
-        /* Watermark dihapus */
     </style>
 </head>
-<body onload="window.print()"> {{-- Otomatis trigger print saat dibuka --}}
-
-    {{-- Watermark dihapus --}}
+<body onload="window.print()"> 
 
     <div class="container mt-5">
         {{-- Header --}}
         <div class="row invoice-header">
             <div class="col-7">
-                {{-- Logo Hotel Sawunggaling --}}
+                {{-- Logo Hotel --}}
                 <img src="{{ asset('img/logo-anda.png') }}" alt="Logo Hotel" class="logo">
                 <br>
-                {{-- Alamat Baru --}}
                 <small>Jl. Sawunggaling No.13, Tamansari, Kec. Bandung Wetan,<br> 
                 Kota Bandung, Jawa Barat | Telp. 081917044390</small>
             </div>
@@ -44,9 +38,10 @@
             <div class="col-6">
                 <strong>Nama Tamu:</strong><br>
                 <h4>{{ $customer->name }}</h4>
-                <p>{{ $customer->address }}<br>
-                {{-- Ganti Pekerjaan jadi No HP --}}
-                No. HP: {{ $customer->phone ?? '-' }}</p>
+                <p>
+                    {{ $customer->address }}<br>
+                    No. HP: {{ $customer->phone ?? '-' }}
+                </p>
             </div>
             <div class="col-6 text-right">
                 <strong>Detail Reservasi:</strong><br>
@@ -71,7 +66,9 @@
                 <tr>
                     <td>Sewa Kamar Tipe {{ $room->type->name }} (No. {{ $room->number }})</td>
                     <td class="text-center">{{ $days }} Malam</td>
+                    {{-- Harga Satuan (Base Rate) --}}
                     <td class="text-right">{{ Helper::convertToRupiah($room->price) }}</td>
+                    {{-- Total (Hasil kalkulasi Controller Weekday/Weekend) --}}
                     <td class="text-right">{{ Helper::convertToRupiah($room_price_total) }}</td>
                 </tr>
 
@@ -79,8 +76,8 @@
                 @if($breakfast_status == 'Yes')
                 <tr>
                     <td>Paket Sarapan</td>
-                    <td class="text-center">{{ $days }} Hari</td>
-                    <td class="text-right">Rp 140.000</td>
+                    <td class="text-center">{{ $days }} Hari (2  orang)</td>
+                    <td class="text-right">Rp 100.000</td>
                     <td class="text-right">{{ Helper::convertToRupiah($breakfast_price_total) }}</td>
                 </tr>
                 @endif
@@ -100,8 +97,6 @@
                 </tr>
             </tfoot>
         </table>
-
-        {{-- Footer Dihapus --}}
     </div>
 </body>
 </html>

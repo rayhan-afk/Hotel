@@ -28,24 +28,23 @@ class LaporanKamarRepository implements LaporanKamarRepositoryInterface
         }
         // ---------------------
 
-        $query = Transaction::select('transactions.*')
+        $query = Transaction::select('transactions.*') // PENTING: Ambil semua kolom transaksi (termasuk total_price)
             ->join('customers', 'transactions.customer_id', '=', 'customers.id')
             ->join('rooms', 'transactions.room_id', '=', 'rooms.id')
             ->join('types', 'rooms.type_id', '=', 'types.id')
             ->with(['customer.user', 'room.type']);
 
-        // === LOGIC BARU: FILTER STATUS ===
-        // Filter ini MENCEGAH Reservasi baru, Tamu Check-in, dan Kamar Cleaning muncul di laporan.
-        // Data baru muncul di sini hanya jika statusnya sudah 'Done' (via Scheduler 1 jam)
-        // atau 'Checked Out' / 'Paid' (Data lama).
+        // === FILTER STATUS ===
+        // Hanya tampilkan data histori (Selesai/Lunas/Checkout)
+        // Jangan tampilkan yang masih aktif (Reservation/Check In)
         $query->whereNotIn('transactions.status', ['Reservation', 'Check In', 'Cleaning']);
 
         // Filter Tanggal
         if ($startDate) {
-            $query->where('transactions.check_in', '>=', $startDate);
+            $query->whereDate('transactions.check_in', '>=', $startDate);
         }
         if ($endDate) {
-            $query->where('transactions.check_in', '<=', $endDate);
+            $query->whereDate('transactions.check_in', '<=', $endDate);
         }
 
         // Filter Search Global
@@ -53,7 +52,8 @@ class LaporanKamarRepository implements LaporanKamarRepositoryInterface
             $query->where(function ($q) use ($search) {
                 $q->where('customers.name', 'LIKE', "%{$search}%")
                   ->orWhere('rooms.number', 'LIKE', "%{$search}%")
-                  ->orWhere('types.name', 'LIKE', "%{$search}%");
+                  ->orWhere('types.name', 'LIKE', "%{$search}%")
+                  ->orWhere('transactions.id', 'LIKE', "%{$search}%"); // Tambah cari by ID
             });
         }
         
@@ -65,7 +65,7 @@ class LaporanKamarRepository implements LaporanKamarRepositoryInterface
 
     public function saveToLaporan($t)
     {
-        // Method legacy, biarkan saja jika tidak dipakai
+        // Method legacy, biarkan saja
     }
 
     /**
@@ -84,88 +84,86 @@ class LaporanKamarRepository implements LaporanKamarRepositoryInterface
             4 => 'transactions.breakfast',
             5 => 'transactions.total_price', 
             6 => 'transactions.status',
-            // 7 => Aksi (Tidak perlu sorting)
+            // 7 => Aksi
         ];
 
-        // Hitung Total Data (Sesuai Filter Status di atas)
+        // Hitung Total Data
         $totalData = Transaction::whereNotIn('status', ['Reservation', 'Check In', 'Cleaning'])->count();
         $totalFiltered = $query->count(); 
 
         // Pagination
-        $limit = $request->input('length');
-        $start = $request->input('start');
-        $orderColumnIndex = $request->input('order.0.column');
-        $orderDir = $request->input('order.0.dir') ?? 'desc';
+        $limit = $request->input('length', 10);
+        $start = $request->input('start', 0);
+        $orderColumnIndex = $request->input('order.0.column', 3); // Default sort by Check Out
+        $orderDir = $request->input('order.0.dir', 'desc');
 
-        $orderBy = $columns[$orderColumnIndex] ?? 'transactions.updated_at'; // Default sort update terakhir
-
-        if ($limit) {
-            $query->offset($start)->limit($limit);
-        }
+        $orderBy = $columns[$orderColumnIndex] ?? 'transactions.updated_at';
 
         // Validasi order by column agar tidak error
         $query->orderBy($orderBy, $orderDir);
+        
+        if ($limit != -1) {
+            $query->offset($start)->limit($limit);
+        }
 
         $models = $query->get();
 
         $data = [];
         foreach ($models as $model) {
-            // Hitung Total Harga
-            $totalHarga = $model->total_price ?? $model->getTotalPrice();
+            // 1. AMBIL HARGA DARI DATABASE (Safe History)
+            // Prioritaskan kolom 'total_price' di DB.
+            $totalHarga = $model->total_price; 
+            
+            // Jika data lama kosong, baru fallback ke helper
+            if (!$totalHarga) {
+                $totalHarga = $model->getTotalPrice(); 
+            }
 
-            // [UPDATE] Tentukan Label Status dengan Badge HTML
+            // 2. STATUS LABEL BADGE
             $statusLabel = $model->status;
             if ($model->status == 'Done') {
-                $statusLabel = '<span class="badge bg-success">Selesai</span>';
+                $statusLabel = '<span class="badge bg-success shadow-sm">Selesai</span>';
             } elseif ($model->status == 'Paid') {
-                $statusLabel = '<span class="badge bg-primary">Lunas</span>';
+                $statusLabel = '<span class="badge bg-primary shadow-sm">Lunas</span>';
+            } elseif ($model->status == 'Cancel') {
+                $statusLabel = '<span class="badge bg-danger shadow-sm">Dibatalkan</span>';
             } else {
                 $statusLabel = '<span class="badge bg-secondary">'.$model->status.'</span>';
             }
 
-            // === [LOGIKA BARU] URL INVOICE & TOMBOL AKSI ===
-            // Format tanggal Y-m-d agar bersih di URL
-            $checkInRaw = Carbon::parse($model->check_in)->format('Y-m-d');
-            $checkOutRaw = Carbon::parse($model->check_out)->format('Y-m-d');
+            // === [FIX UTAMA] INVOICE LINK KE STATIC HISTORY ===
+            // Jangan pakai 'previewInvoice' lagi.
+            // Gunakan route baru 'transaction.invoice.print' yang mengambil data DB.
+            $invoiceUrl = route('transaction.invoice.print', ['transaction' => $model->id]);
 
-            // Generate URL ke route previewInvoice
-            $invoiceUrl = route('transaction.reservation.previewInvoice', [
-                'customer' => $model->customer_id,
-                'room' => $model->room_id,
-                'from' => $checkInRaw,
-                'to' => $checkOutRaw
-            ]) . '?breakfast=' . $model->breakfast;
-
-            // Buat Tombol HTML
             $btnAction = '
                 <a href="'.$invoiceUrl.'" target="_blank" 
-                   class="btn btn-sm btn-light border shadow-sm" 
-                   style="color: #50200C; font-weight: 600; background-color: #8FB8E1;" 
-                   title="Lihat & Download Invoice">
-                    <i class="fas fa-file-invoice me-1"></i> Invoice
+                   class="btn btn-sm btn-outline-primary shadow-sm fw-bold" 
+                   title="Cetak Invoice">
+                    <i class="fas fa-print me-1"></i> Invoice
                 </a>
             ';
 
             $data[] = [
-                'tamu' => $model->customer->name,
-                'kamar' => 'Room ' . $model->room->number . ' (' . ($model->room->type->name ?? '-') . ')',
-                'check_in' => Helper::dateFormat($model->check_in),
+                'tamu'      => $model->customer->name,
+                'kamar'     => '<strong>' . $model->room->number . '</strong> <span class="text-muted small">(' . ($model->room->type->name ?? '-') . ')</span>',
+                'check_in'  => Helper::dateFormat($model->check_in),
                 'check_out' => Helper::dateFormat($model->check_out),
-                'sarapan' => $model->breakfast,
+                'sarapan'   => $model->breakfast,
                 
-                // Kirim ANGKA MENTAH (float) untuk diformat oleh JS
+                // Kirim float agar JS bisa format Rupiah
                 'total_harga' => (float) $totalHarga, 
                 
-                'status' => $statusLabel, // Mengirim HTML Badge
-                'aksi' => $btnAction // [BARU] Kolom Aksi
+                'status'    => $statusLabel,
+                'aksi'      => $btnAction 
             ];
         }
 
         return [
-            'draw' => intval($request->input('draw')),
-            'recordsTotal' => $totalData,
+            'draw'            => intval($request->input('draw')),
+            'recordsTotal'    => $totalData,
             'recordsFiltered' => $totalFiltered,
-            'data' => $data, // Gunakan 'data' sesuai standar DataTables terbaru
+            'data'            => $data, 
         ];
     }
 }

@@ -5,6 +5,7 @@
     <div class="row">
         {{-- KOLOM KIRI --}}
         <div class="col-lg-6">
+            {{-- NAMA --}}
             <div class="mb-3">
                 <label class="form-label fw-bold" style="color: #50200C;">Nama Lengkap</label>
                 <input type="text" class="form-control @error('name') is-invalid @enderror" 
@@ -13,9 +14,9 @@
                 @error('name') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
             </div>
 
+            {{-- EMAIL --}}
             <div class="mb-3">
                 <label class="form-label fw-bold" style="color: #50200C;">Email User</label>
-                {{-- [UPDATED] Input Email sekarang BISA diedit --}}
                 <input type="email" class="form-control @error('email') is-invalid @enderror" 
                        style="color: #50200C; border-color: #C49A6C;"
                        name="email" 
@@ -24,6 +25,7 @@
                 @error('email') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
             </div>
 
+            {{-- NO HP --}}
             <div class="mb-3">
                 <label class="form-label fw-bold" style="color: #50200C;">No. HP / WhatsApp</label>
                 <div class="input-group">
@@ -37,6 +39,7 @@
                 @error('phone') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
             </div>
 
+            {{-- GENDER --}}
             <div class="mb-3">
                 <label class="form-label fw-bold" style="color: #50200C;">Jenis Kelamin</label>
                 <select class="form-select @error('gender') is-invalid @enderror" 
@@ -50,6 +53,7 @@
 
         {{-- KOLOM KANAN --}}
         <div class="col-lg-6">
+            {{-- PEKERJAAN --}}
             <div class="mb-3">
                 <label class="form-label fw-bold" style="color: #50200C;">Pekerjaan</label>
                 <input type="text" class="form-control @error('job') is-invalid @enderror" 
@@ -58,6 +62,21 @@
                 @error('job') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
             </div>
 
+            {{-- [BARU] CUSTOMER GROUP --}}
+            <div class="mb-3">
+                <label class="form-label fw-bold" style="color: #50200C;">Grup Tamu (Diskon & Harga)</label>
+                <select class="form-select select2 @error('customer_group') is-invalid @enderror" 
+                        name="customer_group" 
+                        style="color: #50200C; border-color: #C49A6C; width: 100%;">
+                    <option value="General" {{ old('customer_group', $customer->customer_group) == 'General' ? 'selected' : '' }}>General (Umum)</option>
+                    <option value="Corporate" {{ old('customer_group', $customer->customer_group) == 'Corporate' ? 'selected' : '' }}>Corporate (Perusahaan)</option>
+                    <option value="Family" {{ old('customer_group', $customer->customer_group) == 'Family' ? 'selected' : '' }}>Family (Keluarga)</option>
+                    <option value="Government" {{ old('customer_group', $customer->customer_group) == 'Government' ? 'selected' : '' }}>Government (Pemerintah)</option>
+                </select>
+                @error('customer_group') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+            </div>
+
+            {{-- TANGGAL LAHIR --}}
             <div class="mb-3">
                 <label class="form-label fw-bold" style="color: #50200C;">Tanggal Lahir</label>
                 <input type="date" class="form-control @error('birthdate') is-invalid @enderror" 
@@ -66,6 +85,7 @@
                 @error('birthdate') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
             </div>
 
+            {{-- ALAMAT --}}
             <div class="mb-3">
                 <label class="form-label fw-bold" style="color: #50200C;">Alamat Lengkap</label>
                 <textarea class="form-control @error('address') is-invalid @enderror" 
@@ -74,6 +94,7 @@
                 @error('address') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
             </div>
             
+            {{-- AVATAR --}}
             <div class="mb-3">
                 <label class="form-label fw-bold" style="color: #50200C;">Ganti Foto (Opsional)</label>
                 <div class="d-flex align-items-center gap-3">

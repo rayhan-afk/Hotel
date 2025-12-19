@@ -7,6 +7,7 @@ use App\Repositories\Interface\TypeRepositoryInterface;
 
 class TypeRepository implements TypeRepositoryInterface
 {
+    // Method lama (biarkan saja jika masih dipakai di tempat lain)
     public function showAll($request)
     {
         $types = Type::orderBy('id', 'DESC');
@@ -19,73 +20,69 @@ class TypeRepository implements TypeRepositoryInterface
         return $types;
     }
 
+    /**
+     * Method baru yang diperbaiki untuk Datatable Server-side
+     * Menggunakan format return array standard (bukan json_encode manual)
+     */
     public function getTypesDatatable($request)
     {
+        // 1. Definisi Kolom untuk Sorting
+        // Urutan harus sama dengan kolom di Javascript (type.js)
         $columns = [
-            0 => 'types.id',
-            1 => 'types.name',
-            2 => 'types.information',
-            3 => 'types.id',
+            0 => 'id',          // Kolom No (Mapping ke ID atau Number)
+            1 => 'name',        // Kolom Nama
+            2 => 'information', // Kolom Informasi
+            3 => 'id',          // Kolom Aksi
         ];
 
-        $limit = $request->input('length');
-        $start = $request->input('start');
-        $order = $columns[$request->input('order.0.column')];
-        $dir = $request->input('order.0.dir');
+        // 2. Query Dasar
+        $query = Type::query();
 
-        $main_query = Type::select(
-            'types.id as number',
-            'types.name',
-            'types.information',
-            'types.id',
-        );
-
-        $totalData = $main_query->get()->count();
-
-        // Filter global column
-        if ($request->input('search.value')) {
+        // 3. Pencarian Global (Search)
+        if ($request->filled('search.value')) {
             $search = $request->input('search.value');
-            $main_query->where(function ($query) use ($search, $columns) {
-                $i = 0;
-                foreach ($columns as $column) {
-                    if ($i == 0) {
-                        $query->where($column, 'LIKE', "%{$search}%");
-                    } else {
-                        $query->orWhere($column, 'LIKE', "%{$search}%");
-                    }
-                    $i++;
-                }
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                  ->orWhere('information', 'LIKE', "%{$search}%");
             });
         }
 
-        $totalFiltered = $main_query->count();
+        // 4. Sorting
+        $orderIndex = $request->input('order.0.column', 0); // Ambil index kolom yang diklik
+        $orderDir = $request->input('order.0.dir', 'desc'); // Ambil arah sort (asc/desc)
+        $orderColumn = $columns[$orderIndex] ?? 'id';       // Default sort by ID
+        
+        $query->orderBy($orderColumn, $orderDir);
 
-        $main_query->offset($start)
-            ->limit($limit)
-            ->orderBy($order, $dir);
+        // 5. Hitung Total Data (Penting untuk Pagination)
+        $totalData = Type::count();       // Total semua data di DB
+        $totalFiltered = $query->count(); // Total data setelah difilter search
 
-        $models = $main_query->get();
+        // 6. Pagination (Limit & Offset)
+        $limit = $request->input('length', 10);
+        $start = $request->input('start', 0);
+        
+        $models = $query->offset($start)->limit($limit)->get();
 
+        // 7. Mapping Data (Agar sesuai dengan key yang diminta JS: 'number', 'name', dll)
         $data = [];
-        if (! empty($models)) {
-            foreach ($models as $model) {
-                $data[] = [
-                    'number' => $model->id,
-                    'name' => $model->name,
-                    'information' => $model->information,
-                    'id' => $model->id,
-                ];
-            }
+        foreach ($models as $model) {
+            $data[] = [
+                'number'      => $model->id,          // Key 'number' untuk kolom nomor
+                'name'        => $model->name,        // Key 'name'
+                'information' => $model->information, // Key 'information'
+                'id'          => $model->id,          // Key 'id' untuk tombol aksi
+            ];
         }
 
-        $response = [
-            'draw' => intval($request->input('draw')),
-            'iTotalRecords' => $totalData,
-            'iTotalDisplayRecords' => $totalFiltered,
-            'aaData' => $data,
+        // 8. Return Array (Controller akan otomatis mengubahnya jadi JSON)
+        // Format ini SAMA PERSIS dengan CustomerRepository
+        return [
+            'draw'            => intval($request->input('draw')),
+            'recordsTotal'    => $totalData,
+            'recordsFiltered' => $totalFiltered,
+            'data'            => $data
         ];
-
-        return json_encode($response);
     }
 
     public function store($typeData)
@@ -100,6 +97,6 @@ class TypeRepository implements TypeRepositoryInterface
 
     public function getTypeList($request)
     {
-        return Type::get();
+        return Type::all();
     }
 }

@@ -153,11 +153,22 @@ Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Manager']], functi
         Route::get('/{customer}/{room}/{from}/{to}/preview-invoice', 
             [TransactionRoomReservationController::class, 'previewInvoice']
         )->name('previewInvoice');
+
     });
+
+    // === TAMBAHKAN KODE INI ===
+    Route::get('/transaction/invoice/{transaction}', [TransactionRoomReservationController::class, 'printInvoice'])
+        ->name('transaction.invoice.print');
 
     // Resource Controllers
     Route::resource('customer', CustomerController::class);
     Route::resource('type', TypeController::class);
+    // [BARU] Route untuk API Modal Harga (Weekday vs Weekend)
+    // === [PASTE DISINI] ===
+    // Route Khusus untuk Fitur Harga Dinamis (Sultan Mode)
+    Route::get('/type/get-prices/{id}', [TypeController::class, 'getPrices'])->name('type.getPrices');
+    Route::post('/type/store-prices', [TypeController::class, 'storePrices'])->name('type.storePrices');
+    // ========================
     Route::resource('room', RoomController::class);
     Route::resource('roomstatus', RoomStatusController::class);
     Route::resource('facility', FacilityController::class);
@@ -213,6 +224,7 @@ Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Manager']], functi
         // Laporan Kamar
         Route::get('/kamar', [LaporanKamarController::class, 'index'])->name('kamar.index'); 
         Route::get('/kamar/export', [LaporanKamarController::class, 'exportExcel'])->name('kamar.export');
+        
     });
 
     /*
@@ -259,6 +271,9 @@ Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Customer,Manager,D
         Route::post('/reservation/{id}/cancel', [ReservasiKamarController::class, 'cancel'])->name('reservation.cancel');
         Route::get('/cleaning', [KamarDibersihkanController::class, 'index'])->name('cleaning');
         Route::post('/cleaning/{id}/finish', [KamarDibersihkanController::class, 'finishCleaning'])->name('cleaning.finish');
+
+        // Route untuk hitung harga via AJAX
+    Route::get('/transaction/payment/count', [TransactionController::class, 'getCountPayment'])->name('transaction.countPayment');
     });
 
     // === OPERASIONAL CHECK IN - CHECK OUT ===

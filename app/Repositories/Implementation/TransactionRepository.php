@@ -10,30 +10,14 @@ class TransactionRepository implements TransactionRepositoryInterface
 {
     public function store($request, $customer, $room)
     {
-        // 1. Hitung Durasi (Hari)
+        // 1. Ambil data checkin/checkout sekadar untuk disimpan (bukan untuk hitung harga)
         $check_in = Carbon::parse($request->check_in);
         $check_out = Carbon::parse($request->check_out);
-        $duration = $check_in->diffInDays($check_out) ?: 1; // Minimal 1 hari
 
-        // 2. Hitung Komponen Harga
-        // A. Harga Kamar
-        $roomPrice = $room->price * $duration;
-
-        // B. Harga Breakfast (Jika Yes, 140rb/malam)
-        $breakfastPrice = 0;
-        if ($request->breakfast == 'Yes') { 
-            $breakfastPrice = 140000 * $duration; 
-        }
-
-        // C. Subtotal
-        $subTotal = $roomPrice + $breakfastPrice;
-
-        // D. Pajak PB1 10%
-        $tax = $subTotal * 0.10;
-
-        // E. Total Akhir
-        $totalPrice = $subTotal + $tax;
-
+        // 2. SIMPAN TRANSAKSI
+        // PENTING: Kita TIDAK menghitung harga lagi disini.
+        // Kita ambil 'total_price' yang dikirim dari Controller (Controller sudah benar 880.000)
+        
         return Transaction::create([
             'user_id'     => auth()->id(), 
             'customer_id' => $customer->id,
@@ -41,14 +25,18 @@ class TransactionRepository implements TransactionRepositoryInterface
             'check_in'    => $request->check_in,
             'check_out'   => $request->check_out,
             'status'      => 'Reservation', 
+            
             'breakfast'   => $request->breakfast ?? 'No',
-            'total_price' => $totalPrice // Harga fix (Kamar + Breakfast + Pajak)
+            
+            // [KUNCI PERBAIKAN] 
+            // Ambil langsung dari Request yang dikirim Controller.
+            // Jangan ada rumus matematika lagi disini.
+            'total_price' => $request->total_price 
         ]);
     }
 
     public function getTransaction($request)
     {
-        // Logic DataTables (Tetap sama)
         return Transaction::with('user', 'room', 'customer')
             ->where('check_out', '>=', Carbon::now())
             ->orderBy('check_in', 'ASC')

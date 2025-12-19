@@ -11,9 +11,8 @@ $(function () {
             serverSide: true,
             ordering: true,
             
-            // 🔥 HAPUS PENCARIAN DEFAULT DATATABLES (Biar tidak double)
+            // 🔥 HAPUS PENCARIAN DEFAULT DATATABLES
             searching: false, 
-            // Opsional: Hapus pilihan "Show 10 entries" jika ingin tampilan lebih bersih
             lengthChange: false, 
 
             ajax: {
@@ -21,7 +20,6 @@ $(function () {
                 type: "GET",
                 headers: { "X-Requested-With": "XMLHttpRequest" },
                 data: function (d) {
-                    // Ambil value dari Custom Search Input kita
                     d.q = $('#searchInput').val();
                 },
                 error: function (xhr, status, error) {
@@ -64,6 +62,25 @@ $(function () {
                         `;
                     }
                 },
+                
+                // === [BARU] KOLOM CUSTOMER GROUP ===
+                {
+                    data: "customer_group",
+                    name: "customer_group",
+                    className: "text-center",
+                    render: function (data) {
+                        // Warnai badge sesuai grup
+                        let badgeColor = 'secondary'; // Default General
+                        if (data === 'Corporate') badgeColor = 'primary';
+                        if (data === 'Family') badgeColor = 'success';
+                        if (data === 'Government') badgeColor = 'warning text-dark';
+
+                        let text = data ? data : 'General';
+                        return `<span class="badge bg-${badgeColor}">${text}</span>`;
+                    }
+                },
+                // ===================================
+
                 {
                     data: "phone",
                     name: "phone",
@@ -119,7 +136,7 @@ $(function () {
                                     <i class="fas fa-edit"></i>
                                 </button>
                                 
-                                <form class="d-inline delete-customer" method="POST"
+                                <form class="d-inline delete-customer p-0 m-0" method="POST"
                                     action="/customer/${id}">
                                     <input type="hidden" name="_method" value="DELETE"> 
                                     <button type="submit" class="btn btn-light btn-sm rounded shadow-sm border delete"
@@ -154,7 +171,37 @@ $(function () {
 
     // --- Event Handler ---
 
-    // 1. Klik Tombol Edit
+    // 1. [BARU] Klik Tombol Tambah Customer
+    $(document).on("click", "#add-button", async function () {
+        const modal = getModal();
+        if (!modal) return;
+
+        modal.show();
+        
+        // Reset State
+        $("#btn-modal-save").text("Simpan").attr("disabled", true);
+        $("#main-modal .modal-title").text("Tambah Tamu Baru"); // Judul Tambah
+        $("#main-modal .modal-body").html(`<div class="d-flex justify-content-center py-5"><div class="spinner-border text-primary"></div></div>`);
+        
+        try {
+            // Panggil Route Create
+            const response = await $.get(`/customer/create`);
+            if (response) {
+                let content = response.view ? response.view : response;
+                $("#main-modal .modal-body").html(content);
+                
+                // Init Select2 di dalam Modal (Penting untuk Dropdown Grup)
+                if($.fn.select2) { 
+                    $(".select2").select2({ dropdownParent: $('#main-modal'), width: '100%' }); 
+                }
+            }
+        } catch (error) {
+            $("#main-modal .modal-body").html(`<div class="alert alert-danger">Gagal memuat form.</div>`);
+        }
+        $("#btn-modal-save").text("Simpan").attr("disabled", false);
+    });
+
+    // 2. Klik Tombol Edit
     $(document).on("click", '[data-action="edit-customer"]', async function () {
         const modal = getModal();
         if (!modal) return;
@@ -178,10 +225,10 @@ $(function () {
         $("#btn-modal-save").text("Simpan").attr("disabled", false);
     });
 
-    // 2. Klik Tombol Simpan
+    // 3. Klik Tombol Simpan
     $(document).on("click", "#btn-modal-save", function () { $("#main-modal form").submit(); });
 
-    // 3. Submit Form
+    // 4. Submit Form (Create / Update)
     $(document).on("submit", "#main-modal form", async function (e) {
         e.preventDefault();
         const submitBtn = $("#btn-modal-save");
@@ -210,21 +257,21 @@ $(function () {
                     if(!errorSpan.length) errorSpan = $(`[name="${field}"]`).next('.invalid-feedback');
                     if(errorSpan.length) errorSpan.text(errors[field][0]);
                 }
-                Swal.fire({ icon: "error", title: "Validasi Gagal", text: "Mohon periksa inputan Anda." });
+                Swal.fire({ icon: "error", title: "Validasi Gagal", text: "Mohon periksa inputan Anda.", iconColor: '#50200C', customClass: { title: 'swal-title-brown' } });
             } else {
-                Swal.fire({ icon: "error", title: "Error", text: "Gagal menyimpan data." });
+                Swal.fire({ icon: "error", title: "Error", text: "Gagal menyimpan data.", iconColor: '#50200C', customClass: { title: 'swal-title-brown' } });
             }
         } finally {
             submitBtn.attr("disabled", false).text("Simpan");
         }
     });
 
-    // 4. Delete Customer
+    // 5. Delete Customer
     $(document).on("submit", ".delete-customer", async function (e) {
         e.preventDefault(); 
         const result = await Swal.fire({
             title: "Yakin ingin menghapus?",
-            text: "Data amenities ini tidak bisa dikembalikan!",
+            text: "Data ini tidak bisa dikembalikan!",
             icon: "warning",
             showCancelButton: true,
             confirmButtonColor: "#F2C2B8",
@@ -248,17 +295,15 @@ $(function () {
         } catch (e) {
             Swal.fire({
                 title: "Gagal",
-                text: "Gagal menghapus data.",
+                text: e.responseJSON?.message || "Gagal menghapus data.",
                 icon: "error",
-                iconColor: '#50200C', // Warna icon
-                customClass: {
-                    title: 'swal-title-brown' // Custom warna title
-                }
+                iconColor: '#50200C',
+                customClass: { title: 'swal-title-brown' }
             });
         }
     });
 
-    // 5. Search Trigger (Debounce)
+    // 6. Search Trigger (Debounce)
     function debounce(func, wait) {
         let timeout;
         return function () {

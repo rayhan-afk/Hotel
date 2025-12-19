@@ -38,38 +38,22 @@
         }
 
         .btn-download-invoice {
-            /* Gradasi: Sedikit lebih terang di awal, berakhir di #8FB8E1 */
             background: linear-gradient(135deg, #A8C9E8 0%, #8FB8E1 100%) !important;
             border: 1px solid #8FB8E1 !important;
             border-radius: 0.75rem !important;
-            
-            /* Warna Teks Putih */
             color: #50200C !important;
-            
-            /* Layout & Typography (Sama persis dengan tombol konfirmasi) */
             padding: 0.75rem 1.2rem !important;
             font-size: 1.125rem !important;
             font-weight: 600 !important;
             line-height: 1.5rem !important;
-            
             box-sizing: border-box !important;
             cursor: pointer !important;
-            flex: 0 0 auto !important;
             text-align: center !important;
             text-decoration: none !important;
-            user-select: none !important;
-            -webkit-user-select: none !important;
-            touch-action: manipulation !important;
-            width: auto !important;
-            
-            /* Shadow dengan nuansa #8FB8E1 (RGB: 143, 184, 225) */
             box-shadow: 0 4px 12px rgba(143, 184, 225, 0.3) !important;
-            transition-duration: 0.3s !important;
-            transition-property: background-color, border-color, color, fill, stroke, box-shadow, transform !important;
-            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
         }
 
-        /* Efek Hover (Sedikit lebih gelap/tegas) */
         .btn-download-invoice:hover {
             background: linear-gradient(135deg, #8FB8E1 0%, #7DA3CC 100%) !important;
             border-color: #7DA3CC !important;
@@ -77,24 +61,9 @@
             transform: translateY(-2px) !important;
             color: #50200C !important;
         }
-
-        /* Efek Klik */
-        .btn-download-invoice:active {
-            transform: translateY(0) !important;
-            box-shadow: 0 2px 8px rgba(143, 184, 225, 0.25) !important;
-        }
-
-        /* Efek Fokus */
-        .btn-download-invoice:focus {
-            box-shadow: 0 0 0 3px rgba(143, 184, 225, 0.5), 0 4px 12px rgba(143, 184, 225, 0.25) !important;
-            outline: 2px solid transparent !important;
-            outline-offset: 2px !important;
-        }
-
-        @media (min-width: 768px) {
-            #btn-download-invoice {
-                padding: 0.75rem 1.5rem !important;
-            }
+        
+        .bg-custom-list {
+            background-color: #fff; 
         }
     </style>
 @endsection
@@ -117,6 +86,11 @@
                                 <p class="mb-1 small text-uppercase fw-bold">Info Kamar</p>
                                 <h5 class="fw-bold">{{ $room->number }} - {{ $room->type->name }}</h5>
                                 <p class="mb-0"><i class="fas fa-user me-1"></i> {{ $room->capacity }} Orang</p>
+                                
+                                {{-- [BARU] Tampilkan Grup Customer agar admin tau kenapa harganya sekian --}}
+                                <div class="mt-2">
+                                    <span class="badge bg-secondary">Rate: {{ $customer->customer_group ?? 'General' }}</span>
+                                </div>
                             </div>
                             <div class="col-md-6 text-md-end" style="color:#50200C">
                                 <p class="mb-1 small text-uppercase fw-bold">Tanggal Menginap</p>
@@ -127,10 +101,9 @@
 
                         <hr class="my-4">
 
-                       <form method="POST" 
+                        <form method="POST" 
                             id="reservation-form" 
-                            data-room-price="{{ $room->price }}" 
-                            data-duration="{{ $dayDifference }}"
+                            {{-- [PENTING] Data harga ini tidak lagi dipakai JS hitung manual, tapi JS akan pakai variabel Blade di bawah --}}
                             action="{{ route('transaction.reservation.payDownPayment', ['customer' => $customer->id, 'room' => $room->id]) }}">
                             @csrf
                             
@@ -145,7 +118,7 @@
                                     <thead>
                                         <tr>
                                             <th>Deskripsi Item</th>
-                                            <th class="text-end">Harga Satuan</th>
+                                            <th class="text-end">Info Harga</th>
                                             <th class="text-center">Qty</th>
                                             <th class="text-end">Jumlah</th>
                                         </tr>
@@ -155,11 +128,19 @@
                                         <tr>
                                             <td>
                                                 <span class="fw-bold" style="color:#50200C">Sewa Kamar</span>
-                                                <div class="small" style="color:#50200C">Harga per malam</div>
+                                                <div class="small" style="color:#50200C">
+                                                    {{ $customer->customer_group ?? 'General' }} Rate
+                                                </div>
                                             </td>
-                                            <td class="text-end" style="color:#50200C">{{ Helper::convertToRupiah($room->price) }}</td>
+                                            <td class="text-end" style="color:#50200C">
+                                                {{-- Karena harga per malam bisa beda (Weekday/Weekend), kita tulis dinamis --}}
+                                                <small class="text-muted"><i>Sesuai Tanggal</i></small>
+                                            </td>
                                             <td class="text-center" style="color:#50200C">{{ $dayDifference }} Malam</td>
-                                            <td class="text-end fw-bold" style="color:#50200C">{{ Helper::convertToRupiah($room->price * $dayDifference) }}</td>
+                                            <td class="text-end fw-bold" style="color:#50200C">
+                                                {{-- [PENTING] Gunakan variabel $roomPriceTotal dari Controller --}}
+                                                {{ Helper::convertToRupiah($roomPriceTotal) }}
+                                            </td>
                                         </tr>
 
                                         {{-- Item 2: Sarapan (Dinamis) --}}
@@ -170,7 +151,7 @@
                                                     <span class="breakfast-badge" style="color:#50200C"><i class="fas fa-utensils me-1"></i> Max 2 Orang</span>
                                                 </div>
                                             </td>
-                                            <td class="text-end" style="color:#50200C">Rp 140.000</td>
+                                            <td class="text-end" style="color:#50200C">Rp 100.000</td>
                                             <td class="text-center" style="color:#50200C">{{ $dayDifference }} Malam</td>
                                             <td class="text-end fw-bold" style="color:#50200C" id="display_breakfast_total">Rp 0</td>
                                         </tr>
@@ -196,7 +177,7 @@
                                                     </label>
                                                     <select class="form-select w-auto border-primary" style="color:#50200C" id="breakfast_select" name="breakfast">
                                                         <option value="No" selected>Tidak</option>
-                                                        <option value="Yes">Ya, Tambahkan (+Rp 140.000/malam)</option>
+                                                        <option value="Yes">Ya, Tambahkan (+Rp 100.000/malam)</option>
                                                     </select>
                                                 </div>
                                             </td>
@@ -212,33 +193,29 @@
                                         </tr>
                                     </tfoot>
                                 </table>
-                            </div>{{-- [PENTING] Form DITUTUP DISINI sebelum tombol aksi --}}
-                </form>
+                            </div>
+                        </form>
 
-                {{-- Tombol Aksi (Sekarang DI LUAR Form) --}}
-                <div class="d-flex justify-content-between mt-4">
-                    {{-- Tombol Kembali --}}
-                    <a href="{{ route('transaction.reservation.chooseRoom', ['customer' => $customer->id]) }}?check_in={{$stayFrom}}&check_out={{$stayUntil}}&count_person={{$countPerson}}" 
-                       class="btn btn-modal-close px-4 py-2" id="btn-modal-close">
-                        <i class="fas fa-arrow-left me-2"></i>Kembali
-                    </a>
+                        {{-- Tombol Aksi --}}
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ route('transaction.reservation.chooseRoom', ['customer' => $customer->id]) }}?check_in={{$stayFrom}}&check_out={{$stayUntil}}&count_person={{$countPerson}}" 
+                               class="btn btn-modal-close px-4 py-2" id="btn-modal-close">
+                                <i class="fas fa-arrow-left me-2"></i>Kembali
+                            </a>
 
-                    {{-- Group Tombol Kanan (Download + Konfirmasi) --}}
-                    <div class="d-flex gap-2">
-                        {{-- [UPDATE] Gunakan class 'btn-download-invoice' --}}
-                        <a href="{{ route('transaction.reservation.previewInvoice', ['customer' => $customer->id, 'room' => $room->id, 'from' => $stayFrom, 'to' => $stayUntil]) }}?breakfast=No" 
-                        target="_blank" 
-                        class="btn-download-invoice me-2" 
-                        id="btn-download-invoice">
-                            <i class="fas fa-file-download me-2"></i>Unduh Kwitansi
-                        </a>
+                            <div class="d-flex gap-2">
+                                <a href="{{ route('transaction.reservation.previewInvoice', ['customer' => $customer->id, 'room' => $room->id, 'from' => $stayFrom, 'to' => $stayUntil]) }}?breakfast=No" 
+                                target="_blank" 
+                                class="btn-download-invoice me-2" 
+                                id="btn-download-invoice">
+                                    <i class="fas fa-file-download me-2"></i>Unduh Kwitansi
+                                </a>
 
-                        {{-- Tombol Submit --}}
-                        <button type="submit" form="reservation-form" class="btn btn-modal-save px-3 py-2" id="btn-modal-save">
-                            Konfirmasi & Bayar Lunas <i class="fas fa-money-bill-wave ms-2"></i>
-                        </button>
-                    </div>
-                </div>
+                                <button type="submit" form="reservation-form" class="btn btn-modal-save px-3 py-2" id="btn-modal-save">
+                                    Konfirmasi & Bayar Lunas <i class="fas fa-money-bill-wave ms-2"></i>
+                                </button>
+                            </div>
+                        </div>
                         
                     </div>
                 </div>
@@ -246,9 +223,13 @@
 
             {{-- Kolom Kanan: Data Pelanggan --}}
             <div class="col-lg-4">
-                <div class="card invoice-card border-0 sticky-top" style="top: 20px; z-index: 1; background-color: #F7F3E4"">
+                <div class="card invoice-card border-0 sticky-top" style="top: 20px; z-index: 1; background-color: #F7F3E4">
                     <div class="card-header text-center py-4 border-0">
-                        <img src="{{ $customer->user->getAvatar() }}"
+                        {{-- Handle jika getAvatar tidak ada, fallback --}}
+                        @php
+                            $avatar = method_exists($customer->user, 'getAvatar') ? $customer->user->getAvatar() : asset('img/default/default-user.jpg');
+                        @endphp
+                        <img src="{{ $avatar }}"
                             class="rounded-circle shadow border p-1" 
                             style="width: 100px; height: 100px; object-fit: cover;">
                         <h5 class="mt-3 mb-0 fw-bold" style="color:#50200C">{{ $customer->name }}</h5>
@@ -256,6 +237,10 @@
                     </div>
                     <div class="card-body p-0">
                         <ul class="list-group list-group-flush bg-custom-list">
+                            <li class="list-group-item px-4 py-3 d-flex justify-content-between" style="color:#50200C">
+                                <span class=" "><i class="fas fa-users me-2"></i> Grup Tamu</span>
+                                <span class="fw-bold text-primary">{{ $customer->customer_group ?? 'General' }}</span>
+                            </li>
                             <li class="list-group-item px-4 py-3 d-flex justify-content-between" style="color:#50200C">
                                 <span class=" "><i class="fas fa-venus-mars me-2"></i> Jenis Kelamin</span>
                                 <span class="fw-medium">
@@ -282,14 +267,13 @@
 
 @section('footer')
 <script>
-    // Ambil data langsung dari Controller
-    // Menggunakan intval/floatval via blade untuk memastikan tipe data angka
-    const roomPricePerNight = {{ $room->price }};
-    const dayCount = {{ $dayDifference }};
-    const breakfastPricePerDay = 140000; 
+    // [PENTING] KITA GUNAKAN HARGA TOTAL DARI CONTROLLER (SULTAN MODE)
+    // Bukan lagi room->price * days, karena harga per hari bisa beda.
+    // Variabel ini sudah berisi Total Harga Kamar (Weekday + Weekend + Diskon Grup)
+    const baseRoomTotal = {{ $roomPriceTotal }}; 
     
-    // Hitung total dasar (Hanya sewa kamar)
-    const baseRoomTotal = roomPricePerNight * dayCount;
+    const dayCount = {{ $dayDifference }};
+    const breakfastPricePerDay = 100000; 
 
     // Elemen DOM
     const breakfastSelect = document.getElementById('breakfast_select');
@@ -298,12 +282,8 @@
     const displayTax = document.getElementById('display_tax');
     const displayTotalPrice = document.getElementById('display_total_price');
     const inputTotalPrice = document.getElementById('input_total_price');
-    
-    // [BARU] Elemen Tombol Download
     const btnDownloadInvoice = document.getElementById('btn-download-invoice');
     
-    // [BARU] Base URL Invoice (tanpa query string breakfast)
-    // Pastikan route 'transaction.reservation.previewInvoice' SUDAH DIBUAT di web.php
     const baseInvoiceUrl = "{{ route('transaction.reservation.previewInvoice', ['customer' => $customer->id, 'room' => $room->id, 'from' => $stayFrom, 'to' => $stayUntil]) }}";
 
     // Fungsi Format Rupiah
@@ -318,43 +298,37 @@
 
     // Event Listener
     breakfastSelect.addEventListener('change', function() {
-        // Mulai hitung dari harga kamar
+        // Mulai hitungan dari baseRoomTotal (yang sudah dihitung Controller)
         let currentSubTotal = baseRoomTotal; 
         
-        // [BARU] Variabel untuk query string URL download
         let breakfastParam = 'No';
 
         if (this.value === 'Yes') {
-            // Jika pilih sarapan
             const breakfastTotal = breakfastPricePerDay * dayCount;
-            currentSubTotal += breakfastTotal; // Tambah ke subtotal
+            currentSubTotal += breakfastTotal; 
             
-            // Tampilkan baris sarapan
             rowBreakfast.style.display = 'table-row';
             displayBreakfastTotal.innerText = formatRupiah(breakfastTotal);
             
-            // Set parameter
             breakfastParam = 'Yes';
         } else {
-            // Jika tidak pilih sarapan
             rowBreakfast.style.display = 'none';
         }
 
         // --- HITUNG PAJAK & TOTAL ---
-        const taxAmount = currentSubTotal * 0.10; // 10% dari Subtotal (Kamar + Sarapan)
+        const taxAmount = currentSubTotal * 0.10; 
         const finalTotal = currentSubTotal + taxAmount;
 
         // Update Tampilan Angka
         displayTax.innerText = formatRupiah(taxAmount);
         displayTotalPrice.innerText = formatRupiah(finalTotal);
         
-        // Update Input Hidden (agar terkirim ke server)
+        // Update Input Hidden
         if(inputTotalPrice) {
             inputTotalPrice.value = finalTotal;
         }
 
-        // [BARU] Update Link Download Invoice secara Real-time
-        // Mengubah href tombol download agar sesuai pilihan user
+        // Update Link Download
         if (btnDownloadInvoice) {
             btnDownloadInvoice.href = `${baseInvoiceUrl}?breakfast=${breakfastParam}`;
         }

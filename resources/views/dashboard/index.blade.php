@@ -134,7 +134,11 @@
                                                         {{ $transaction->customer->name }}
                                                     </a>
                                                 </div>
-                                                <div class="small" style="color:#50200C">ID: {{ $transaction->customer->id }}</div>
+                                                {{-- [BARU] Menampilkan Tipe Tamu --}}
+                                                <span class="badge bg-light text-dark border" style="font-size: 0.65rem;">
+                                                    {{ $transaction->customer->customer_group ?? 'General' }}
+                                                </span>
+                                                <!-- <div class="small" style="color:#50200C">ID: {{ $transaction->customer->id }}</div> -->
                                             </div>
                                         </div>
                                     </td>
@@ -163,24 +167,25 @@
                                     </td>
 
                                     <td class="fw-medium" style="color:#50200C">
-                                        {{ Helper::convertToRupiah($transaction->total_price ?? $transaction->getTotalPrice()) }}
+                                        {{-- Mengambil Total Harga dari Database (Hasil hitungan Sultan Mode) --}}
+                                        {{ Helper::convertToRupiah($transaction->total_price) }}
                                     </td>
 
                                     <td>
-                                       @if($transaction->status == 'Check In')
-                                        {{-- Status Check In (Hijau) --}}
-                                        <span class="badge badge-lh" style="background-color: #8FB8E1; color: #50200C;">
-                                            <i class="fas fa-check-circle me-1"></i>Check In
-                                        </span>
-                                    @elseif($transaction->status == 'Reservation')
-                                        {{-- Status Reservasi (Kuning) --}}
-                                        <span class="badge badge-lh" style="background-color: #FAE8A4; color: #50200C;">
-                                            <i class="fas fa-clock me-1"></i>Belum Check In
-                                        </span>
-                                    @else
-                                        {{-- Status Lainnya --}}
-                                        <span class="badge bg-secondary badge-lh">{{ $transaction->status }}</span>
-                                    @endif
+                                        @if($transaction->status == 'Check In')
+                                            {{-- Status Check In (Hijau) --}}
+                                            <span class="badge badge-lh" style="background-color: #8FB8E1; color: #50200C;">
+                                                <i class="fas fa-check-circle me-1"></i>Check In
+                                            </span>
+                                        @elseif($transaction->status == 'Reservation')
+                                            {{-- Status Reservasi (Kuning) --}}
+                                            <span class="badge badge-lh" style="background-color: #FAE8A4; color: #50200C;">
+                                                <i class="fas fa-clock me-1"></i>Belum Check In
+                                            </span>
+                                        @else
+                                            {{-- Status Lainnya --}}
+                                            <span class="badge bg-secondary badge-lh">{{ $transaction->status }}</span>
+                                        @endif
                                     </td>
                                 </tr>
                             @empty
@@ -197,12 +202,6 @@
                     </table>
                 </div>
             </div>
-
-            <!-- <div class="card-footer text-center">
-                <a href="{{ route('transaction.index') }}" class="text-decoration-none fw-bold small">
-                    Lihat Semua Reservasi <i class="fas fa-arrow-right ms-1"></i>
-                </a>
-            </div> -->
         </div>
     </div>
 

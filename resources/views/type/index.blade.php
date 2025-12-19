@@ -2,7 +2,6 @@
 @section('title', 'Room Types')
 @section('content')
     <div class="container-fluid">
-        <!-- Add Type Button -->
         <div class="row mb-4">
             <div class="col-12">
                 <button id="add-button" type="button" class="add-room-btn">
@@ -12,42 +11,68 @@
             </div>
         </div>
 
-        <!-- Professional Table Container -->
         <div class="professional-table-container">
-            <!-- Table Header -->
             <div class="table-header">
                 <h4><i class="fas fa-home me-2"></i>Manajemen Tipe Kamar</h4>
-                <p>Kelola berbagai jenis kamar dan informasinya</p>
+                <p>Kelola berbagai jenis kamar dan atur harga spesial disini</p>
             </div>
 
-            <!-- Professional Table -->
             <div class="table-responsive">
                 <table id="type-table" class="professional-table table" style="width: 100%;">
                     <thead>
                         <tr>
-                            <th scope="col">
-                                <i class="fas fa-hashtag me-1"></i>#
-                            </th>
-                            <th scope="col">
-                                <i class="fas fa-tag me-1"></i>Nama
-                            </th>
-                            <th scope="col">
-                                <i class="fas fa-info-circle me-1"></i>Informasi
-                            </th>
-                            <th scope="col">
-                                <i class="fas fa-cog me-1"></i>Aksi
-                            </th>
+                            <th><i class="fas fa-hashtag me-1"></i>#</th>
+                            <th><i class="fas fa-tag me-1"></i>Nama</th>
+                            <th><i class="fas fa-info-circle me-1"></i>Informasi</th>
+                            <th><i class="fas fa-cog me-1"></i>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- DataTable will populate this -->
-                    </tbody>
+                        </tbody>
                 </table>
             </div>
+        </div>
+    </div>
 
-            <!-- Table Footer -->
-            <div class="table-footer">
+    <div class="modal fade" id="priceModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header text-white" style="background-color: #50200C;">
+                    <h5 class="modal-title"><i class="fas fa-tags me-2"></i>Atur Harga Spesial</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
                 
+                <div class="modal-body">
+                    <form id="priceForm">
+                        <input type="hidden" id="price_type_id" name="type_id">
+                        
+                        <div class="alert alert-light border-start border-5 border-secondary shadow-sm" role="alert">
+                            <small class="text-secondary">
+                                <i class="fas fa-info-circle me-1"></i> 
+                                Jika kolom dikosongkan, sistem akan otomatis menggunakan <b>Harga Dasar Kamar</b>.
+                            </small>
+                        </div>
+
+                        <table class="table table-bordered table-hover align-middle">
+                            <thead style="background-color: #f8f9fa; color: #50200C; border-top: 3px solid #50200C;">
+                                <tr>
+                                    <th width="30%" class="text-uppercase font-weight-bold">Grup Customer</th>
+                                    <th width="35%" class="text-uppercase font-weight-bold">Weekday <small class="text-muted">(Senin-Kamis)</small></th>
+                                    <th width="35%" class="text-uppercase font-weight-bold">Weekend <small class="text-muted">(Jumat-Sabtu)</small></th>
+                                </tr>
+                            </thead>
+                            <tbody id="priceTableBody">
+                                </tbody>
+                        </table>
+                    </form>
+                </div>
+                
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-sm text-white" id="savePriceBtn" style="background-color: #50200C;">
+                        <i class="fas fa-save me-1"></i> Simpan Perubahan
+                    </button>
+                </div>
             </div>
         </div>
     </div>

@@ -26,7 +26,7 @@
                                         @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                     </div>
 
-                                    {{-- NO HP (Wajib - Baru) --}}
+                                    {{-- NO HP (Wajib) --}}
                                     <div class="mb-3">
                                         <label for="phone" class="form-label fw-bold" style="color:#50200C">Nomor HP / WhatsApp <span class="text-danger">*</span></label>
                                         <input type="number" class="form-control @error('phone') is-invalid @enderror" id="phone" name="phone" value="{{ old('phone') }}" placeholder="0812xxxx" style="color:#50200C">
@@ -50,6 +50,21 @@
 
                                 {{-- KOLOM KANAN --}}
                                 <div class="col-md-6">
+                                    {{-- [BARU] GRUP TAMU --}}
+                                    <div class="mb-3">
+                                        <label for="customer_group" class="form-label fw-bold" style="color:#50200C">Grup Tamu</label>
+                                        <select class="form-select select2 @error('customer_group') is-invalid @enderror" 
+                                                name="customer_group" id="customer_group"
+                                                style="color:#50200C; width: 100%;">
+                                            <option value="General" {{ old('customer_group') == 'General' ? 'selected' : '' }}>General (Umum)</option>
+                                            <option value="Corporate" {{ old('customer_group') == 'Corporate' ? 'selected' : '' }}>Corporate (Perusahaan)</option>
+                                            <option value="Family" {{ old('customer_group') == 'Family' ? 'selected' : '' }}>Family (Keluarga)</option>
+                                            <option value="Government" {{ old('customer_group') == 'Government' ? 'selected' : '' }}>Government (Pemerintah)</option>
+                                        </select>
+                                        <small class="text-muted" style="color: #C49A6C;">*Menentukan harga diskon member.</small>
+                                        @error('customer_group') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    </div>
+
                                     {{-- TANGGAL LAHIR (Opsional) --}}
                                     <div class="mb-3">
                                         <label for="birthdate" class="form-label fw-bold" style="color:#50200C">Tanggal Lahir <small class="text-muted fw-normal">(Opsional)</small></label>
@@ -89,7 +104,7 @@
                             <div class="d-flex justify-content-between">
                                 {{-- TOMBOL KIRI: KEMBALI KE PILIH CUSTOMER --}}
                                 <a href="{{ route('transaction.reservation.pickFromCustomer') }}" class="btn btn-modal-close" id="btn-modal-close">
-                                    <i class="fas me-1"></i> Pilih Customer Lama
+                                    <i class="fas fa-users me-1"></i> Pilih Customer Lama
                                 </a>
 
                                 {{-- TOMBOL KANAN: SIMPAN CUSTOMER BARU --}}

@@ -59,7 +59,7 @@
                 Tidak (Tanpa Sarapan)
             </option>
             <option value="Yes" {{ ($transaction->breakfast == 'Yes' || $transaction->breakfast == 1) ? 'selected' : '' }}>
-                Ya (Dengan Sarapan) + Rp 140.000/malam
+                Ya (Dengan Sarapan) + Rp 100.000/malam
             </option>
         </select>
         <small class="text-muted">Biaya total akan otomatis dihitung ulang.</small>

@@ -11,9 +11,9 @@ class AddCustomerGroupToCustomersTable extends Migration
         Schema::table('customers', function (Blueprint $table) {
             // Kita taruh setelah kolom 'job' biar rapi
             $table->string('customer_group')
-                  ->default('General') // Default 'General' biar user lama aman
+                  ->default('WalkIn') // Default 'General' biar user lama aman
                   ->after('job') 
-                  ->comment('General, Corporate, Family, Government');
+                  ->comment('WalkIn, OTA, Corporate, OwnerReferral');
         });
     }
 

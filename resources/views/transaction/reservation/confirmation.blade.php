@@ -89,7 +89,7 @@
                                 
                                 {{-- [BARU] Tampilkan Grup Customer agar admin tau kenapa harganya sekian --}}
                                 <div class="mt-2">
-                                    <span class="badge bg-secondary">Rate: {{ $customer->customer_group ?? 'General' }}</span>
+                                    <span class="badge bg-secondary">Rate: {{ $customer->customer_group ?? 'WalkIn' }}</span>
                                 </div>
                             </div>
                             <div class="col-md-6 text-md-end" style="color:#50200C">
@@ -129,7 +129,7 @@
                                             <td>
                                                 <span class="fw-bold" style="color:#50200C">Sewa Kamar</span>
                                                 <div class="small" style="color:#50200C">
-                                                    {{ $customer->customer_group ?? 'General' }} Rate
+                                                    {{ $customer->customer_group ?? 'WalkIn' }} Rate
                                                 </div>
                                             </td>
                                             <td class="text-end" style="color:#50200C">
@@ -239,7 +239,7 @@
                         <ul class="list-group list-group-flush bg-custom-list">
                             <li class="list-group-item px-4 py-3 d-flex justify-content-between" style="color:#50200C">
                                 <span class=" "><i class="fas fa-users me-2"></i> Grup Tamu</span>
-                                <span class="fw-bold text-primary">{{ $customer->customer_group ?? 'General' }}</span>
+                                <span class="fw-bold text-primary">{{ $customer->customer_group ?? 'WalkIn' }}</span>
                             </li>
                             <li class="list-group-item px-4 py-3 d-flex justify-content-between" style="color:#50200C">
                                 <span class=" "><i class="fas fa-venus-mars me-2"></i> Jenis Kelamin</span>

@@ -254,7 +254,7 @@ class TransactionRoomReservationController extends Controller
             // Loop per hari
             $period = CarbonPeriod::create($start, $end->copy()->subDay());
             
-            $customerGroup = $customer->customer_group ?? 'General';
+            $customerGroup = $customer->customer_group ?? 'WalkIn';
             
             $specialPrice = TypePrice::where('type_id', $room->type_id)
                                      ->where('customer_group', $customerGroup)

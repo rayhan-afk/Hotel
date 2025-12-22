@@ -57,7 +57,7 @@
 
     @vite('resources/js/app.js')
 
-    
+    @stack('scripts')
     @yield('scripts')
 
     <!-- jQuery (Required for delete functionality) -->

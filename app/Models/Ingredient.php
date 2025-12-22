@@ -7,6 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Ingredient extends Model
 {
+    public function menus()
+    {
+        return $this->belongsToMany(Menu::class, 'menu_ingredients')
+                    ->withPivot('quantity_needed')
+                    ->withTimestamps();
+    }
     use HasFactory;
 
     protected $guarded = ['id'];
@@ -22,3 +28,4 @@ class Ingredient extends Model
         'Lainnya'
     ];
 }
+

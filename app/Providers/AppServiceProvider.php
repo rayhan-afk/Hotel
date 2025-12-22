@@ -21,6 +21,9 @@ use App\Repositories\Implementation\CheckoutRepository;
 use App\Repositories\Implementation\ReservasiKamarRepository;
 use App\Repositories\Implementation\KamarTersediaRepository;
 use App\Repositories\Implementation\KamarDibersihkanRepository;
+use App\Repositories\Implementation\OrderRepository;
+use App\Repositories\Implementation\LaporanPosRepository; // TAMBAHKAN INI
+use App\Repositories\Interface\LaporanPosRepositoryInterface;
 use App\Repositories\Interface\CustomerRepositoryInterface;
 use App\Repositories\Interface\ImageRepositoryInterface;
 use App\Repositories\Interface\PaymentRepositoryInterface;
@@ -40,16 +43,17 @@ use App\Repositories\Interface\CheckoutRepositoryInterface;
 use App\Repositories\Interface\ReservasiKamarRepositoryInterface;
 use App\Repositories\Interface\KamarTersediaRepositoryInterface;
 use App\Repositories\Interface\KamarDibersihkanRepositoryInterface;
+use App\Repositories\Interface\OrderRepositoryInterface;
+
+
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
     /**
      * Register any application services.
-     *
-     * @return void
      */
-    public function register()
+    public function register(): void
     {
         $this->app->bind(CustomerRepositoryInterface::class, CustomerRepository::class);
         $this->app->bind(ImageRepositoryInterface::class, ImageRepository::class);
@@ -69,15 +73,16 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ReservasiKamarRepositoryInterface::class, ReservasiKamarRepository::class);
         $this->app->bind(KamarTersediaRepositoryInterface::class, KamarTersediaRepository::class);
         $this->app->bind(KamarDibersihkanRepositoryInterface::class, KamarDibersihkanRepository::class);
+        $this->app->bind(OrderRepositoryInterface::class, OrderRepository::class);
         
+        // BINDING UNTUK LAPORAN POS (FIXED)
+        $this->app->bind(LaporanPosRepositoryInterface::class, LaporanPosRepository::class);
     }
 
     /**
      * Bootstrap any application services.
-     *
-     * @return void
      */
-    public function boot()
+    public function boot(): void
     {
         //
     }

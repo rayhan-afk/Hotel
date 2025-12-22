@@ -16,8 +16,11 @@ use App\Http\Controllers\KamarDibersihkanController;
 use App\Http\Controllers\KamarTersediaController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\LaporanKamarController; 
+use App\Http\Controllers\LaporanPosController;
 use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\POSController;
+use App\Http\Controllers\RecipeController;
 use App\Http\Controllers\ReservasiKamarController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RoomStatusController;
@@ -80,7 +83,7 @@ Route::group(['middleware' => 'guest'], function () {
 | Hanya Super dan Housekeeping yang bisa akses amenities
 |--------------------------------------------------------------------------
 */
-Route::group(['middleware' => ['auth', 'checkRole:Super,Housekeeping,Admin,Manager']], function () {
+Route::group(['middleware' => ['auth', 'checkRole:Super,Housekeeping,Manager']], function () {
     // Resource Amenities
     Route::resource('amenity', AmenityController::class);
     
@@ -126,8 +129,31 @@ Route::middleware(['auth'])->group(function () {
 Route::resource('ingredient', IngredientController::class)
     ->middleware(['auth', 'checkRole:Super,Dapur'])
     ->names('ingredient');
+// POS Routes
+Route::get('/pos', [POSController::class, 'index'])->name('pos.index');
+Route::post('/pos/store', [POSController::class, 'store'])->name('pos.store');
+Route::get('/pos/history', [POSController::class, 'history'])->name('pos.history');
+// ... route pos yang lain ...
+Route::get('/pos/print/{invoice}', [PosController::class, 'printStruk'])->name('pos.print');
+// Route untuk Resep
+// Halaman Utama
+// Recipe Routes
+Route::get('/recipes', [RecipeController::class, 'index'])->name('recipes.index');
+Route::get('/recipes/get/{menuId}', [RecipeController::class, 'getRecipe'])->name('recipes.get');
+Route::post('/recipes/update', [RecipeController::class, 'updateApi'])->name('recipes.updateApi');
+Route::post('/recipes/create-menu', [RecipeController::class, 'createMenu'])->name('recipes.createMenu');
+// --- TAMBAHKAN INI ---
+// Route untuk Edit Identitas Menu (Nama, Harga, Gambar)
+Route::get('/recipes/edit-menu/{id}', [RecipeController::class, 'editMenu'])->name('recipes.editMenu');
+Route::put('/recipes/update-menu/{id}', [RecipeController::class, 'updateMenu'])->name('recipes.updateMenu');
+// Route untuk Hapus Menu
+Route::delete('/recipes/delete-menu/{id}', [RecipeController::class, 'destroyMenu'])->name('recipes.destroyMenu');
 
-
+// Group Laporan
+Route::prefix('laporan')->name('laporan.')->group(function () {
+    Route::get('/pos', [LaporanPosController::class, 'index'])->name('pos.index');
+    Route::get('/pos/export', [LaporanPosController::class, 'exportExcel'])->name('pos.export');
+});
 /*
 |--------------------------------------------------------------------------
 | ROLE: SUPER + ADMIN + MANAGER (Operasional Utama)

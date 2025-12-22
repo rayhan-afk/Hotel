@@ -67,7 +67,7 @@ class TransactionController extends Controller
         if (!$room) return response()->json(['total' => 0, 'text' => 'Rp 0']);
 
         // 3. Tentukan Grup Customer
-        $customerGroup = 'General'; // Default jika tamu belum dipilih
+        $customerGroup = 'WalkIn'; // Default jika tamu belum dipilih
         if ($customerId) {
             $customer = Customer::find($customerId);
             if ($customer && $customer->customer_group) {

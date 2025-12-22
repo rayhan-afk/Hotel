@@ -27,11 +27,11 @@
                         <span class="badge me-1" style="background-color: #50200C;">{{ $customer->job }}</span>
                         
                         @php
-                            $group = $customer->customer_group ?? 'General';
+                            $group = $customer->customer_group ?? 'WalkIn';
                             $badgeClass = 'bg-secondary'; // Default General
-                            if($group == 'Corporate') $badgeClass = 'bg-primary';
-                            if($group == 'Family') $badgeClass = 'bg-success';
-                            if($group == 'Government') $badgeClass = 'bg-warning text-dark';
+                            if($group == 'OTA') $badgeClass = 'bg-primary';
+                            if($group == 'Corporate') $badgeClass = 'bg-success';
+                            if($group == 'OwnerReferral') $badgeClass = 'bg-warning text-dark';
                         @endphp
                         <span class="badge {{ $badgeClass }}">
                             {{ $group }}

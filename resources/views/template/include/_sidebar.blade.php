@@ -278,6 +278,14 @@
                                     </a>
                                 @endif
                                 
+                                <a href="{{ route('pos.index') }}" class="nav-subitem {{ request()->routeIs('pos.*') ? 'active' : '' }}">
+                                    <i class="fas fa-cash-register me-2"></i>Kasir
+                                </a>
+                                
+                                <a href="{{ route('recipes.index') }}" class="nav-subitem {{ request()->routeIs('recipes.*') ? 'active' : '' }}">
+                                     <i class="fas fa-fw fa-scroll"></i> <span>Atur Resep Menu</span>
+                                </a>
+                                
                                 {{-- Amenities: Semua role di blok else ini (Super, Admin, Manager) bisa lihat --}}
                                 <a href="{{ route('amenity.index') }}" class="nav-subitem {{ request()->routeIs('amenity.*') ? 'active' : '' }} ">
                                     <i class="fas fa-soap me-2"></i>Amenities
@@ -322,6 +330,11 @@
                                 <a href="{{ route('laporan.rapat.index') }}" class="nav-subitem {{ Route::currentRouteName() == 'laporan.rapat.index' ? 'active' : '' }} ">
                                     <i class="fas fa-handshake me-2"></i>Laporan Rapat
                                 </a>
+                                <!-- MENU LAPORAN KASIR (Baru) -->
+                                <a href="{{ route('laporan.pos.index') }}" class="nav-subitem {{ Route::currentRouteName() == 'laporan.pos.index' ? 'active' : '' }} ">
+                                    <i class="fas fa-cash-register me-2"></i>Laporan Kasir
+                                </a>
+
                             </div>
                         </div>
                     </div>

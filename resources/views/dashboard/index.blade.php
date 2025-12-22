@@ -136,7 +136,7 @@
                                                 </div>
                                                 {{-- [BARU] Menampilkan Tipe Tamu --}}
                                                 <span class="badge bg-light text-dark border" style="font-size: 0.65rem;">
-                                                    {{ $transaction->customer->customer_group ?? 'General' }}
+                                                    {{ $transaction->customer->customer_group ?? 'WalkIn' }}
                                                 </span>
                                                 <!-- <div class="small" style="color:#50200C">ID: {{ $transaction->customer->id }}</div> -->
                                             </div>

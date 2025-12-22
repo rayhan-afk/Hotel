@@ -121,7 +121,7 @@ class TypeController extends Controller
                     ->toArray();
         
         // 2. Definisi Grup Standar (Yang WAJIB selalu muncul)
-        $defaultGroups = ['General', 'Corporate', 'Family', 'Government'];
+        $defaultGroups = ['WalkIn', 'OTA', 'Corporate', 'OwnerReferral'];
 
         // 3. [FIX] GABUNGKAN keduanya dan hapus duplikat
         // Walaupun di DB cuma ada "General", Corporate dkk tetap muncul.

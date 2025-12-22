@@ -3,6 +3,41 @@
 @section('head')
     <link rel="stylesheet" href="{{ asset('style/css/progress-indication.css') }}">
     <style>
+        /* === STYLE TAMBAHAN (DIPULIHKAN) === */
+        .btn-modal-close {
+            background: linear-gradient(135deg, #F2C2B8 0%, #E8B3A8 100%);
+            border: 1px solid #E8B3A8;
+            border-radius: 0.75rem;
+            color: #50200C;
+            font-weight: 600;
+            padding: 0.5rem 1.2rem;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+        .btn-modal-close:hover {
+            background: linear-gradient(135deg, #E8B3A8 0%, #DDA498 100%);
+            color: #50200C;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(80, 32, 12, 0.15);
+        }
+        .btn-modal-save {
+            background-color: #50200C;
+            color: white;
+            border-radius: 0.75rem;
+            padding: 0.7rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .btn-modal-save:hover {
+            background-color: #3d1809;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(80, 32, 12, 0.25);
+        }
+        /* =================================== */
+
         .invoice-card {
             border: none;
             box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
@@ -87,9 +122,8 @@
                                 <h5 class="fw-bold">{{ $room->number }} - {{ $room->type->name }}</h5>
                                 <p class="mb-0"><i class="fas fa-user me-1"></i> {{ $room->capacity }} Orang</p>
                                 
-                                {{-- [BARU] Tampilkan Grup Customer agar admin tau kenapa harganya sekian --}}
                                 <div class="mt-2">
-                                    <span class="badge bg-secondary">Rate: {{ $customer->customer_group ?? 'General' }}</span>
+                                    <span class="badge bg-secondary">Rate: {{ $customer->customer_group ?? 'WalkIn' }}</span>
                                 </div>
                             </div>
                             <div class="col-md-6 text-md-end" style="color:#50200C">
@@ -103,14 +137,15 @@
 
                         <form method="POST" 
                             id="reservation-form" 
-                            {{-- [PENTING] Data harga ini tidak lagi dipakai JS hitung manual, tapi JS akan pakai variabel Blade di bawah --}}
                             action="{{ route('transaction.reservation.payDownPayment', ['customer' => $customer->id, 'room' => $room->id]) }}">
                             @csrf
                             
                             <input type="hidden" name="check_in" value="{{ $stayFrom }}">
                             <input type="hidden" name="check_out" value="{{ $stayUntil }}">
-                            {{-- Value default adalah DownPayment yang sudah dihitung di controller (Kamar + Pajak) --}}
                             <input type="hidden" name="total_price" id="input_total_price" value="{{ $downPayment }}"> 
+                            
+                            {{-- [MODIFIED] Force count_person to 2 (HARDCODE AMAN) --}}
+                            <input type="hidden" name="count_person" value="2">
 
                             {{-- Tabel Rincian Biaya --}}
                             <div class="table-responsive">
@@ -129,16 +164,14 @@
                                             <td>
                                                 <span class="fw-bold" style="color:#50200C">Sewa Kamar</span>
                                                 <div class="small" style="color:#50200C">
-                                                    {{ $customer->customer_group ?? 'General' }} Rate
+                                                    {{ $customer->customer_group ?? 'WalkIn' }} Rate
                                                 </div>
                                             </td>
                                             <td class="text-end" style="color:#50200C">
-                                                {{-- Karena harga per malam bisa beda (Weekday/Weekend), kita tulis dinamis --}}
                                                 <small class="text-muted"><i>Sesuai Tanggal</i></small>
                                             </td>
                                             <td class="text-center" style="color:#50200C">{{ $dayDifference }} Malam</td>
                                             <td class="text-end fw-bold" style="color:#50200C">
-                                                {{-- [PENTING] Gunakan variabel $roomPriceTotal dari Controller --}}
                                                 {{ Helper::convertToRupiah($roomPriceTotal) }}
                                             </td>
                                         </tr>
@@ -162,7 +195,6 @@
                                                 Pajak PB1 (10%)
                                             </td>
                                             <td class="text-end fw-bold" style="color:#50200C" id="display_tax">
-                                                {{-- Menampilkan pajak awal (dari Controller) --}}
                                                 {{ Helper::convertToRupiah($minimumTax) }}
                                             </td>
                                         </tr>
@@ -187,7 +219,6 @@
                                         <tr class="total-row total-text">
                                             <td colspan="3" class="text-end">Total yang Harus Dibayar</td>
                                             <td class="text-end" id="display_total_price">
-                                                {{-- Menampilkan Total Awal (Kamar + Pajak) --}}
                                                 {{ Helper::convertToRupiah($downPayment) }}
                                             </td>
                                         </tr>
@@ -198,7 +229,8 @@
 
                         {{-- Tombol Aksi --}}
                         <div class="d-flex justify-content-between mt-4">
-                            <a href="{{ route('transaction.reservation.chooseRoom', ['customer' => $customer->id]) }}?check_in={{$stayFrom}}&check_out={{$stayUntil}}&count_person={{$countPerson}}" 
+                            {{-- [MODIFIED] Tombol Kembali -> HARDCODE count_person=2 --}}
+                            <a href="{{ route('transaction.reservation.chooseRoom', ['customer' => $customer->id]) }}?check_in={{$stayFrom}}&check_out={{$stayUntil}}&count_person=2" 
                                class="btn btn-modal-close px-4 py-2" id="btn-modal-close">
                                 <i class="fas fa-arrow-left me-2"></i>Kembali
                             </a>
@@ -225,7 +257,6 @@
             <div class="col-lg-4">
                 <div class="card invoice-card border-0 sticky-top" style="top: 20px; z-index: 1; background-color: #F7F3E4">
                     <div class="card-header text-center py-4 border-0">
-                        {{-- Handle jika getAvatar tidak ada, fallback --}}
                         @php
                             $avatar = method_exists($customer->user, 'getAvatar') ? $customer->user->getAvatar() : asset('img/default/default-user.jpg');
                         @endphp
@@ -239,7 +270,7 @@
                         <ul class="list-group list-group-flush bg-custom-list">
                             <li class="list-group-item px-4 py-3 d-flex justify-content-between" style="color:#50200C">
                                 <span class=" "><i class="fas fa-users me-2"></i> Grup Tamu</span>
-                                <span class="fw-bold text-primary">{{ $customer->customer_group ?? 'General' }}</span>
+                                <span class="fw-bold text-primary">{{ $customer->customer_group ?? 'WalkIn' }}</span>
                             </li>
                             <li class="list-group-item px-4 py-3 d-flex justify-content-between" style="color:#50200C">
                                 <span class=" "><i class="fas fa-venus-mars me-2"></i> Jenis Kelamin</span>
@@ -268,8 +299,6 @@
 @section('footer')
 <script>
     // [PENTING] KITA GUNAKAN HARGA TOTAL DARI CONTROLLER (SULTAN MODE)
-    // Bukan lagi room->price * days, karena harga per hari bisa beda.
-    // Variabel ini sudah berisi Total Harga Kamar (Weekday + Weekend + Diskon Grup)
     const baseRoomTotal = {{ $roomPriceTotal }}; 
     
     const dayCount = {{ $dayDifference }};
@@ -298,9 +327,7 @@
 
     // Event Listener
     breakfastSelect.addEventListener('change', function() {
-        // Mulai hitungan dari baseRoomTotal (yang sudah dihitung Controller)
         let currentSubTotal = baseRoomTotal; 
-        
         let breakfastParam = 'No';
 
         if (this.value === 'Yes') {
@@ -315,20 +342,16 @@
             rowBreakfast.style.display = 'none';
         }
 
-        // --- HITUNG PAJAK & TOTAL ---
         const taxAmount = currentSubTotal * 0.10; 
         const finalTotal = currentSubTotal + taxAmount;
 
-        // Update Tampilan Angka
         displayTax.innerText = formatRupiah(taxAmount);
         displayTotalPrice.innerText = formatRupiah(finalTotal);
         
-        // Update Input Hidden
         if(inputTotalPrice) {
             inputTotalPrice.value = finalTotal;
         }
 
-        // Update Link Download
         if (btnDownloadInvoice) {
             btnDownloadInvoice.href = `${baseInvoiceUrl}?breakfast=${breakfastParam}`;
         }

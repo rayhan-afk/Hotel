@@ -21,6 +21,8 @@ class Transaction extends Model
         'total_price',
         'breakfast',
         'paid_amount',
+        'extra_bed',
+        'extra_breakfast'
     ];
 
     public function user()

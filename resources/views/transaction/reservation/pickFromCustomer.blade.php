@@ -92,11 +92,11 @@
                         
                         {{-- [BARU] Badge Grup Tamu --}}
                         @php
-                            $group = $customer->customer_group ?? 'General';
+                            $group = $customer->customer_group ?? 'WalkIn';
                             $badgeClass = 'bg-general';
-                            if($group == 'Corporate') $badgeClass = 'bg-corporate';
-                            if($group == 'Family') $badgeClass = 'bg-family';
-                            if($group == 'Government') $badgeClass = 'bg-government';
+                            if($group == 'OTA') $badgeClass = 'bg-corporate';
+                            if($group == 'Corporate') $badgeClass = 'bg-family';
+                            if($group == 'OwnerReferral') $badgeClass = 'bg-government';
                         @endphp
                         <span class="badge badge-group {{ $badgeClass }}">
                             {{ $group }}

@@ -132,7 +132,7 @@
                         <ul class="list-group list-group-flush bg-custom-list">
                             <li class="list-group-item d-flex justify-content-between align-items-center px-0" style="color:#50200C">
                                 <span><i class="fas fa-users me-2"></i> Grup Tamu</span>
-                                <span class="fw-bold text-primary">{{ $customer->customer_group ?? 'General' }}</span>
+                                <span class="fw-bold text-primary">{{ $customer->customer_group ?? 'WalkIn' }}</span>
                             </li>
                             <li class="list-group-item d-flex justify-content-between align-items-center px-0" style="color:#50200C">
                                 <span><i class="fas fa-venus-mars me-2"></i> Gender</span>

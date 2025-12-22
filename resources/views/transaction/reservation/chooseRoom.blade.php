@@ -23,6 +23,20 @@
             color: #F7F3E4;
             transform: scale(1.01);
         }
+
+        /* [BARU] Style untuk Tombol Kembali */
+        .btn-modal-close {
+            background-color: #fff;
+            color: #50200C;
+            border: 1px solid #50200C;
+            transition: all 0.2s;
+        }
+        .btn-modal-close:hover {
+            background-color: #50200C;
+            color: #F7F3E4;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
     </style>
 @endsection
 @section('content')
@@ -31,16 +45,14 @@
     @php
         $types = \App\Models\Type::all();
         
-        // 1. Tentukan status hari (Weekend/Weekday) berdasarkan Check-in
         $checkInDate = request()->input('check_in') ? \Carbon\Carbon::parse(request()->input('check_in')) : \Carbon\Carbon::now();
         $isWeekend = $checkInDate->isWeekend();
         $dayLabel = $isWeekend ? 'Weekend' : 'Weekday';
 
-        // 2. Helper Hitung Harga
         function getDynamicPrice($room, $customerGroup, $isWeekend) {
             $specialPrice = \App\Models\TypePrice::where('type_id', $room->type_id)
-                                ->where('customer_group', $customerGroup)
-                                ->first();
+                                                ->where('customer_group', $customerGroup)
+                                                ->first();
             
             if ($specialPrice) {
                 if ($isWeekend) {
@@ -49,7 +61,7 @@
                     return $specialPrice->price_weekday > 0 ? $specialPrice->price_weekday : $room->price;
                 }
             }
-            return $room->price; // Harga default master room
+            return $room->price; 
         }
     @endphp
 
@@ -59,9 +71,20 @@
             <div class="col-lg-8">
                 <div class="card shadow-sm border-0 mb-4">
                     <div class="card-body p-4">
-                        {{-- Header Informasi --}}
+                        
+                        {{-- Header Informasi & Tombol Kembali --}}
                         <div class="d-flex justify-content-between align-items-center mb-3">
+                            {{-- KIRI: Tombol Kembali (Sudah pakai style baru) --}}
                             <div>
+                                <a href="{{ route('transaction.reservation.viewCountPerson', ['customer' => $customer->id]) }}" 
+                                   class="btn btn-modal-close shadow-sm px-4 fw-bold" 
+                                   id="btn-modal-close">
+                                    <i class="fas fa-arrow-left me-2"></i> Kembali
+                                </a>
+                            </div>
+
+                            {{-- KANAN: Info Ruangan Tersedia --}}
+                            <div class="text-end">
                                 <h4 class="fw-bold mb-1" style="color:#50200C">
                                     <i class="fas fa-bed me-2" style="color:#50200C"></i> {{ $roomsCount }} Ruangan Tersedia
                                 </h4>
@@ -115,7 +138,6 @@
                         <div class="d-grid gap-4">
                             @forelse ($rooms as $room)
                                 @php
-                                    // Hitung harga final berdasarkan hari & grup
                                     $finalPrice = getDynamicPrice($room, $customer->customer_group ?? 'General', $isWeekend);
                                 @endphp
 
@@ -129,7 +151,6 @@
                                                     <h5 class="mb-0 fw-bold" style="color:#50200C">{{ $room->number }} ~ {{ $room->name }}</h5>
                                                 </div>
                                                 
-                                                {{-- [UPDATE] Tampilan Harga Lebih Natural --}}
                                                 <div class="text-end">
                                                     <small class="text-muted fw-bold" style="font-size: 0.75rem;">
                                                         Harga {{ $dayLabel }}
@@ -200,16 +221,6 @@
                             {{ $rooms->onEachSide(1)->appends(request()->except('page'))->links('template.paginationlinks') }}
                         </div>
                         
-                        <hr class="my-4">
-
-                        <div class="d-flex justify-content-between align-items-center">
-                            <a href="{{ route('transaction.reservation.viewCountPerson', ['customer' => $customer->id]) }}" 
-                            class="btn btn-light border shadow-sm px-4" 
-                            id="btn-modal-close" style="color:#50200C">
-                                <i class="fas fa-arrow-left me-2"></i> Kembali
-                            </a>
-                        </div>
-
                     </div>
                 </div>
             </div>

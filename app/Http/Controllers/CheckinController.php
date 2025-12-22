@@ -41,6 +41,8 @@ class CheckinController extends Controller
             'check_in'  => 'required|date', 
             'check_out' => 'required|date|after:check_in',
             'breakfast' => 'required|in:Yes,No',
+            'extra_bed' => 'nullable|integer|min:0',
+            'extra_breakfast' => 'nullable|integer|min:0',
         ]);
 
         $transaction = Transaction::findOrFail($id);
@@ -51,12 +53,10 @@ class CheckinController extends Controller
         // ---------------------------------------------------------
         // FITUR 1: CEK BENTROK JADWAL (COLLISION CHECK)
         // ---------------------------------------------------------
-        // Pastikan perpanjangan tanggal tidak menabrak jadwal tamu lain
-        $collision = Transaction::where('room_id', $transaction->room_id) // Pakai room_id asli (karena gabisa pindah)
+        $collision = Transaction::where('room_id', $transaction->room_id)
             ->where('id', '!=', $transaction->id)
             ->whereIn('status', ['Reservation', 'Check In'])
             ->where(function ($q) use ($newCheckIn, $newCheckOut) {
-                // Rumus Tabrakan: (StartA < EndB) && (EndA > StartB)
                 $q->where('check_in', '<', $newCheckOut)
                   ->where('check_out', '>', $newCheckIn);
             })
@@ -76,62 +76,73 @@ class CheckinController extends Controller
         // ---------------------------------------------------------
         // FITUR 2: KUNCI HARGA (PRICE LOCK)
         // ---------------------------------------------------------
-        // Kita BONGKAR harga lama untuk menemukan harga per malam yang asli.
-        // Tujuannya: Agar harga tidak berubah meskipun Admin menaikkan harga di Master Data.
-        
-        // A. Hitung durasi lama
         $oldIn = Carbon::parse($transaction->check_in);
         $oldOut = Carbon::parse($transaction->check_out);
         $oldDays = $oldIn->diffInDays($oldOut) ?: 1;
 
-        // B. Reverse Engineering (Mundur dari Grand Total)
-        // Rumus: GrandTotal = (HargaKamar + BiayaSarapan) * 1.1 (Pajak)
+        // Reverse Engineering (Mundur dari Grand Total Lama)
+        $oldSubTotal = $transaction->total_price / 1.10; 
         
-        $oldSubTotal = $transaction->total_price / 1.10; // Hilangkan Pajak 10%
+        $oldBreakfastCost = ($transaction->breakfast == 'Yes') ? (100000 * $oldDays) : 0;
+        $oldExtraBedCost = ((int)$transaction->extra_bed) * 200000 * $oldDays;
+        $oldExtraBreakfastCost = ((int)$transaction->extra_breakfast) * 125000 * $oldDays;
         
-        // Hilangkan Biaya Sarapan Lama
-        $oldBreakfastCost = ($transaction->breakfast == 'Yes') ? (140000 * $oldDays) : 0;
-        
-        // Ketemu Total Harga Kamar Murni
-        $oldRoomTotalPure = $oldSubTotal - $oldBreakfastCost;
-        
-        // KETEMU! Ini harga deal per malamnya.
+        $oldRoomTotalPure = $oldSubTotal - $oldBreakfastCost - $oldExtraBedCost - $oldExtraBreakfastCost;
         $pricePerNight = $oldRoomTotalPure / $oldDays;
 
-
         // ---------------------------------------------------------
-        // 3. HITUNG ULANG DENGAN HARGA KUNCIAN
+        // 3. HITUNG ULANG (HARGA KUNCIAN + LAYANAN BARU)
         // ---------------------------------------------------------
         
-        // Hitung Durasi Baru
+        // A. Hitung Durasi Baru
         $dayDifference = $newCheckIn->diffInDays($newCheckOut);
         if ($dayDifference < 1) $dayDifference = 1;
 
-        // Total Harga Kamar Baru (Pakai Harga Kuncian $pricePerNight)
+        // B. Total Harga Kamar (Base)
         $roomPriceTotal = $pricePerNight * $dayDifference;
         
-        // Hitung Biaya Sarapan Baru
+        // C. Hitung Sarapan Utama
         $breakfastPrice = 0;
         if($request->breakfast == 'Yes') {
-            $breakfastPrice = 140000 * $dayDifference;
+            $breakfastPrice = 100000 * $dayDifference;
         }
 
-        // Hitung Pajak & Grand Total
-        $subTotal   = $roomPriceTotal + $breakfastPrice;
+        // D. Hitung Extra (Pastikan di-cast ke integer)
+        // [BARU] C. Hitung Biaya Extra Baru
+        $qtyExtraBed = (int) $request->input('extra_bed', 0);
+        $qtyExtraBreakfast = (int) $request->input('extra_breakfast', 0);
+
+        // --- PERBAIKAN DI SINI ---
+        
+        // 1. Extra Bed = FLAT (Hanya dikali Jumlah Bed, TIDAK dikali durasi hari)
+        $extraBedTotal = $qtyExtraBed * 200000; 
+
+        // 2. Extra Breakfast = PER HARI (Dikali Jumlah Porsi x Durasi Hari)
+        // (Logikanya orang makan tiap pagi)
+        $extraBreakfastTotal = ($qtyExtraBreakfast * 125000) * $dayDifference;
+
+        // E. Hitung Grand Total
+        $subTotal   = $roomPriceTotal + $breakfastPrice + $extraBedTotal + $extraBreakfastTotal;
         $tax        = $subTotal * 0.10;
         $grandTotal = $subTotal + $tax;
 
-        // 4. Update Database
+        // ---------------------------------------------------------
+        // 4. UPDATE DATABASE (CRITICAL PART)
+        // ---------------------------------------------------------
         $transaction->update([
-            // room_id TIDAK DIUPDATE karena fitur pindah kamar tidak ada
-            'check_in'    => $request->check_in,
-            'check_out'   => $request->check_out,
-            'breakfast'   => $request->breakfast,
-            'total_price' => $grandTotal
+            'check_in'        => $request->check_in,
+            'check_out'       => $request->check_out,
+            'breakfast'       => $request->breakfast,
+            
+            // Kolom ini WAJIB ada di $fillable Model Transaction
+            'extra_bed'       => $qtyExtraBed, 
+            'extra_breakfast' => $qtyExtraBreakfast,
+            
+            'total_price'     => $grandTotal
         ]);
 
         // ---------------------------------------------------------
-        // FITUR 3: CEK KEUANGAN (KURANG BAYAR)
+        // FITUR 3: CEK KEUANGAN
         // ---------------------------------------------------------
         $alreadyPaid = $transaction->paid_amount;
         $shortfall = $grandTotal - $alreadyPaid;
@@ -153,7 +164,8 @@ class CheckinController extends Controller
             'message' => $msg
         ]);
     }
-
+    
+    // ... Method destroy & checkout biarkan saja ...
     public function destroy($id)
     {
         $this->checkinRepository->delete($id);
@@ -163,7 +175,6 @@ class CheckinController extends Controller
     public function checkout($id)
     {
         $this->checkinRepository->checkoutGuest($id);
-
         return response()->json([
             'message' => 'Tamu berhasil Check-Out!',
             'redirect_url' => route('laporan.kamar.index')

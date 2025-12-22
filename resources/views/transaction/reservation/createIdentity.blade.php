@@ -56,10 +56,10 @@
                                         <select class="form-select select2 @error('customer_group') is-invalid @enderror" 
                                                 name="customer_group" id="customer_group"
                                                 style="color:#50200C; width: 100%;">
-                                            <option value="General" {{ old('customer_group') == 'General' ? 'selected' : '' }}>General (Umum)</option>
-                                            <option value="Corporate" {{ old('customer_group') == 'Corporate' ? 'selected' : '' }}>Corporate (Perusahaan)</option>
-                                            <option value="Family" {{ old('customer_group') == 'Family' ? 'selected' : '' }}>Family (Keluarga)</option>
-                                            <option value="Government" {{ old('customer_group') == 'Government' ? 'selected' : '' }}>Government (Pemerintah)</option>
+                                            <option value="WalkIn" {{ old('customer_group') == 'WalkIn' ? 'selected' : '' }}>Walk In</option>
+                                            <option value="OTA" {{ old('customer_group') == 'OTA' ? 'selected' : '' }}>OTA</option>
+                                            <option value="Corporate" {{ old('customer_group') == 'Corporate' ? 'selected' : '' }}>Corporate</option>
+                                            <option value="OwnerReferral" {{ old('customer_group') == 'OwnerReferral' ? 'selected' : '' }}>Owner Referral</option>
                                         </select>
                                         <small class="text-muted" style="color: #C49A6C;">*Menentukan harga diskon member.</small>
                                         @error('customer_group') <div class="invalid-feedback">{{ $message }}</div> @enderror

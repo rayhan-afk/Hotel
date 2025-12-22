@@ -50,7 +50,34 @@ $(function () {
                 // 5. Check Out
                 { name: "transactions.check_out", data: "check_out" },
                 
-                // 6. Sarapan
+                // 6. Extra Bed
+                { 
+                    data: "extra_bed", 
+                    name: "extra_bed", 
+                    className: "text-center",
+                    searchable: false,
+                    render: function(data) {
+                        if (data > 0) {
+                            return `<span class="badge rounded-pill bg-primary shadow-sm" style="font-size: 11px;">+${data}</span>`;
+                        }
+                        return '<span class="text-muted">-</span>';
+                    }
+                },
+                // 7. Extra Breakfast
+                { 
+                    data: "extra_breakfast", 
+                    name: "extra_breakfast", 
+                    className: "text-center",
+                    searchable: false,
+                    render: function(data) {
+                        if (data > 0) {
+                            return `<span class="badge rounded-pill bg-warning text-dark shadow-sm" style="font-size: 11px;">+${data}</span>`;
+                        }
+                        return '<span class="text-muted">-</span>';
+                    }
+                },
+
+                // 8. Sarapan (Regular)
                 { 
                     name: "transactions.breakfast", 
                     data: "breakfast",
@@ -61,7 +88,7 @@ $(function () {
                             return `<span class="badge rounded-pill" style="background-color: #A8D5BA; color: #50200C;
                             font-size: 10px; padding: 6px 12px; font-weight: 700;">
                                             <i class="fas fa-utensils me-1" style="color: #50200C; font-size: 10px;"></i>Ya
-                                    </span>`;
+                                        </span>`;
                         } else {
                             return `<span class="badge rounded-pill" style="background-color: #F2C2B8; color: #50200C; 
                             font-size: 10px; padding: 6px 12px; font-weight: 700;">Tidak</span>`;
@@ -69,7 +96,7 @@ $(function () {
                     }
                 },
 
-                // 7. Total Harga
+                // 9. Total Harga
                 { 
                     name: "rooms.price", 
                     data: "total_price",
@@ -83,7 +110,7 @@ $(function () {
                     }
                 },
 
-                // 8. Sisa Bayar (Kekurangan akibat Extend)
+                // 10. Sisa Bayar
                 { 
                     name: "transactions.paid_amount", 
                     data: "remaining_payment",
@@ -95,23 +122,21 @@ $(function () {
                             minimumFractionDigits: 0 
                         }).format(data);
 
-                        // Jika ada sisa bayar > 0 (MERAH PASTEL)
                         if (data > 0) {
                             return `<span class="badge rounded-pill" style="background-color: #F2C2B8; color: #50200C; 
-                                    font-size: 11px; padding: 6px 12px; font-weight: 800; border: 1px solid #E57373;">
-                                    ${formatted}
-                                    </span>`;
+                                            font-size: 11px; padding: 6px 12px; font-weight: 800; border: 1px solid #E57373;">
+                                            ${formatted}
+                                            </span>`;
                         }
                         
-                        // Jika 0 (HIJAU PASTEL)
                         return `<span class="badge rounded-pill" style="background-color: #A8D5BA; color: #50200C; 
-                                font-size: 11px; padding: 6px 12px; font-weight: 800; border: 1px solid #81C784;">
-                                Lunas
-                                </span>`;
+                                        font-size: 11px; padding: 6px 12px; font-weight: 800; border: 1px solid #81C784;">
+                                        Lunas
+                                        </span>`;
                     }
                 },
 
-                // 9. Status
+                // 11. Status
                 { 
                     name: "transactions.status", 
                     data: "status",
@@ -121,7 +146,7 @@ $(function () {
                         color: #50200C; font-size: 10px; padding: 6px 12px; font-weight: 700;">${data}</span>`;
                     }
                 },
-                // 10. Aksi
+                // 12. Aksi
                 {
                     data: 'id',
                     orderable: false,
@@ -130,6 +155,8 @@ $(function () {
                     render: function(id, type, row) {
                         let customerName = row.customer_name ? row.customer_name.replace(/"/g, '&quot;') : '-'; 
                         let roomNumber = row.room_info.number;
+                        // [MODIFIED] Added data-remaining attribute
+                        let remaining = row.remaining_payment; 
 
                         return `
                             <div class="d-flex justify-content-center align-items-center gap-2">
@@ -144,7 +171,8 @@ $(function () {
                                         style="min-width: 130px; letter-spacing: 0.5px;" 
                                         data-id="${id}"
                                         data-name="${customerName}"
-                                        data-room="${roomNumber}">
+                                        data-room="${roomNumber}"
+                                        data-remaining="${remaining}">
                                     <i class="fas fa-sign-out-alt me-2"></i>CHECK OUT
                                 </button>
                             </div>
@@ -166,7 +194,7 @@ $(function () {
             }
         });
 
-        // Event: Tombol Edit (Tampilkan Modal)
+        // Event: Tombol Edit
         $(document).on('click', '.btn-edit', function() {
             let id = $(this).data('id');
             let modal = new bootstrap.Modal(document.getElementById('editCheckinModal'));
@@ -181,7 +209,7 @@ $(function () {
             });
         });
 
-        // === [PERBAIKAN UTAMA] EVENT: SUBMIT FORM EDIT ===
+        // Event: Submit Form Edit
         $(document).on('submit', '#form-edit-checkin', function(e) {
             e.preventDefault(); 
 
@@ -199,32 +227,23 @@ $(function () {
                 type: 'POST', 
                 data: data,
                 success: function(response) {
-                    // 1. Tutup Modal
                     let modalEl = document.getElementById('editCheckinModal');
                     let modal = bootstrap.Modal.getInstance(modalEl);
                     if (modal) {
                         modal.hide();
                     }
                     
-                    // 2. Tentukan Warna & Pesan Alert berdasarkan Status Keuangan
-                    let iconType = response.status || 'success'; // default success
+                    let iconType = response.status || 'success';
                     let titleText = 'Berhasil Diperbarui!';
                     
-                    if (iconType === 'warning') {
-                        // Kasus Kurang Bayar
-                        titleText = 'Perhatian: Kurang Bayar!';
-                    } else if (iconType === 'info') {
-                        // Kasus Lebih Bayar
-                        titleText = 'Info Refund';
-                    }
+                    if (iconType === 'warning') titleText = 'Perhatian: Kurang Bayar!';
+                    else if (iconType === 'info') titleText = 'Info Refund';
 
-                    // 3. Tampilkan Alert
                     if (typeof Swal !== 'undefined') {
                         Swal.fire({
-                            icon: iconType, // warning, info, atau success
+                            icon: iconType,
                             title: titleText,
-                            text: response.message, // Pesan detail (Rp ...)
-                            // Styling custom kamu
+                            text: response.message,
                             iconColor: '#50200C', 
                             customClass: {
                                 title: 'swal-title-brown',
@@ -236,24 +255,19 @@ $(function () {
                         alert(titleText + "\n" + response.message); 
                     }
                     
-                    // 4. Reload tabel agar kolom 'Sisa Bayar' terupdate
                     table.ajax.reload(null, false);
                 },
                 error: function(xhr) {
                     btn.prop('disabled', false).html(originalContent);
-                    
-                    // 1. Ambil Pesan Error (Termasuk Pesan Bentrok Jadwal)
                     let msg = "Gagal menyimpan perubahan.";
                     if(xhr.responseJSON && xhr.responseJSON.message) {
                         msg = xhr.responseJSON.message;
                     }
-                    
-                    // 2. Tampilkan Error
                     if (typeof Swal !== 'undefined') {
                         Swal.fire({
                             icon: 'error',
                             title: 'Gagal Menyimpan',
-                            text: msg, // "Gagal Extend! Kamar ini sudah di-booking..."
+                            text: msg,
                             customClass: {
                                 title: 'swal-title-brown',
                                 confirmButton: 'swal-btn-blue'
@@ -266,20 +280,51 @@ $(function () {
             });
         });
 
-        // Event: Tombol Check Out (Tampilkan Modal Konfirmasi)
+        // Event: Tombol Check Out [MODIFIED LOGIC]
         $(document).on('click', '.btn-checkout', function() {
             checkoutId = $(this).data('id');
             let name = $(this).data('name');
             let room = $(this).data('room');
+            let remaining = parseFloat($(this).data('remaining')); // Get remaining balance
 
             $('#checkoutCustomerName').text(name);
             $('#checkoutRoomNumber').text(room);
+
+            // Logic to update Modal Content based on payment status
+            let warningContainer = $('#checkoutWarningContainer'); // We need to add this ID to view
+            
+            // If the element doesn't exist (first time logic or if view not updated yet), let's handle it manually or assume view has the alert div
+            // Let's modify the modal body content dynamically
+            let modalBody = $('#checkoutModal .modal-body');
+            
+            // Remove any existing dynamic alerts first to avoid duplicates
+            modalBody.find('.dynamic-alert').remove();
+
+            if (remaining > 0) {
+                let formattedRemaining = new Intl.NumberFormat('id-ID', { 
+                    style: 'currency', 
+                    currency: 'IDR', 
+                    minimumFractionDigits: 0 
+                }).format(remaining);
+
+                let alertHtml = `
+                    <div class="alert alert-danger dynamic-alert border-danger d-flex align-items-center mt-3" role="alert" style="background-color: #ffebee;">
+                        <i class="fas fa-exclamation-triangle me-3 fa-2x text-danger"></i>
+                        <div class="text-start">
+                            <strong class="d-block text-danger">BELUM LUNAS!</strong>
+                            <small style="color: #50200C">Tamu memiliki sisa tagihan sebesar <strong class="text-danger" style="font-size: 1.1em;">${formattedRemaining}</strong>.</small>
+                        </div>
+                    </div>
+                `;
+                // Insert after the room number paragraph
+                $('#checkoutRoomNumber').parent().after(alertHtml);
+            }
 
             let modal = new bootstrap.Modal(document.getElementById('checkoutModal'));
             modal.show();
         });
 
-        // Event: Konfirmasi Check Out di Modal
+        // Event: Konfirmasi Check Out
         $('#btn-confirm-checkout').on('click', function() {
             if(!checkoutId) return;
 

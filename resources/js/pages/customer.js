@@ -70,16 +70,15 @@ $(function () {
                     className: "text-center",
                     render: function (data) {
                         // Warnai badge sesuai grup
-                        let badgeColor = 'secondary'; // Default General
-                        if (data === 'Corporate') badgeColor = 'primary';
-                        if (data === 'Family') badgeColor = 'success';
-                        if (data === 'Government') badgeColor = 'warning text-dark';
+                        let badgeClass = 'badge-pending'; // Default General
+                        if (data === 'OTA') badgeClass = 'badge-reserved';
+                        if (data === 'Corporate') badgeClass = 'badge-approved';
+                        if (data === 'OwnerReferral') badgeClass = 'badge-orange';
 
-                        let text = data ? data : 'General';
-                        return `<span class="badge bg-${badgeColor}">${text}</span>`;
+                        let text = data ? data : 'WalkIn';
+                        return <span class="badge ${badgeClass}">${text}</span>;
                     }
                 },
-                // ===================================
 
                 {
                     data: "phone",

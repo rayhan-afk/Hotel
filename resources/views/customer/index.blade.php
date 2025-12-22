@@ -7,7 +7,7 @@
     <div class="row mt-4 mb-3 align-items-center">
         <div class="col-md-5" style="color: #50200C">
             <h3 class="fw-bold"><i class="fas fa-users me-2"></i>Daftar Tamu</h3>
-            <p class="mb-0 text-muted">Kelola data tamu dan status member.</p>
+            <p class="mb-0">Kelola data tamu dan status member.</p>
         </div>
 
         <div class="col-md-7">
@@ -61,7 +61,6 @@
                         </table>
                     </div>
                 </div>
-                <div class="card-footer bg-white py-3 border-0"></div>
             </div>
         </div>
     </div>

@@ -93,14 +93,11 @@ class Room extends Model
         return $this->image;
     }
 
-<<<<<<< Updated upstream
     // public function getImage()
     // {
     //     return $this->main_image_path;   //disini
     // }
 
-=======
->>>>>>> Stashed changes
     public function getImage()
     {
         return $this->image_url;
@@ -142,5 +139,14 @@ class Room extends Model
 
         // Default
         return 'Available';
+    }
+
+        public function amenities()
+    {
+        // Relasi Many-to-Many ke model Amenity
+        // withPivot('amount') artinya kita mau ambil data jumlah jatahnya juga
+        return $this->belongsToMany(Amenity::class, 'amenity_room')
+                    ->withPivot('amount')
+                    ->withTimestamps();
     }
 }

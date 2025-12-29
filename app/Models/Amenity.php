@@ -11,4 +11,12 @@ class Amenity extends Model
 
     // Izinkan semua field diisi kecuali ID
     protected $guarded = ['id'];
+
+    // Relasi kebalikannya (Opsional, tapi bagus ada)
+    public function rooms()
+    {
+        return $this->belongsToMany(Room::class, 'amenity_room')
+                    ->withPivot('amount')
+                    ->withTimestamps();
+    }
 }

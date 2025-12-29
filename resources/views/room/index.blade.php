@@ -9,11 +9,25 @@
 
     <div class="container-fluid">
         <!-- Add Room Button -->
-        <div class="row mb-4">
-            <div class="col-12">
+       <div class="row mb-4">
+            {{-- Container Flexbox: Kiri & Kanan --}}
+            <div class="col-12 d-flex justify-content-between align-items-center">
+                
+                {{-- Tombol Kiri: Tambah Kamar --}}
                 <button id="add-button" type="button" class="add-room-btn">
                     <i class="fas fa-plus me-2"></i>
                     Tambah Kamar Baru
+                </button>
+
+                {{-- Tombol Kanan: Setup Amenities Massal --}}
+                {{-- Sekarang pakai button type="button" dan data-bs-target ke Modal --}}
+                {{-- Tombol Kanan: Setup Amenities Massal --}}
+                <button type="button" 
+                        id="btn-bulk-amenities" 
+                        class="add-room-btn text-decoration-none d-flex align-items-center" 
+                        style="background-color: #17a2b8; border: none;">
+                    <i class="fas fa-boxes me-2"></i>
+                    Setup Amenities Massal
                 </button>
             </div>
         </div>

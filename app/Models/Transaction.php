@@ -25,6 +25,13 @@ class Transaction extends Model
         'extra_breakfast'
     ];
 
+    protected $casts = [
+        'check_in' => 'datetime',
+        'check_out' => 'datetime',
+        'total_price' => 'double', // Opsional: Biar aman jadi angka desimal/float
+        'paid_amount' => 'double',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);

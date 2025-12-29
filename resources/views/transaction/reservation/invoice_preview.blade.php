@@ -136,12 +136,18 @@
                     </tr>
                 @endif
 
-                {{-- Extra Breakfast (TETAP SAMA KARENA PER HARI) --}}
+                {{-- Extra Breakfast (SUDAH DIPERBAIKI JADI FLAT) --}}
                 @if(isset($transaction) && ($transaction->extra_breakfast > 0))
-                    @php $totalExtraBreakfast = $transaction->extra_breakfast * 125000 * $days; @endphp
+                    @php 
+                        // [FIX] HAPUS pengali $days. Hitung flat qty * harga.
+                        $totalExtraBreakfast = $transaction->extra_breakfast * 125000; 
+                    @endphp
                     <tr>
                         <td>Extra Breakfast Only</td>
-                        <td class="text-center">{{ $transaction->extra_breakfast }} Porsi x {{ $days }} Malam</td>
+                        
+                        {{-- [FIX] Hapus teks "x Malam" agar tidak bingung --}}
+                        <td class="text-center">{{ $transaction->extra_breakfast }} Porsi <br><small>(Flat Rate)</small></td>
+                        
                         <td class="text-right">Rp 125.000</td>
                         <td class="text-right">{{ Helper::convertToRupiah($totalExtraBreakfast) }}</td>
                     </tr>

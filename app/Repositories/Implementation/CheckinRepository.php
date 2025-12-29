@@ -11,11 +11,11 @@ class CheckinRepository implements CheckinRepositoryInterface
 {
     public function getCheckinDatatable($request)
     {
-        // ATURAN NO 6: Menampilkan tamu yang statusnya 'Check In'
+        // Tetap hanya menampilkan yang sedang 'Check In'
         $query = Transaction::with(['customer', 'room.type', 'user'])
             ->where('status', 'Check In'); 
 
-        // Filter Search
+        // Filter Search Global
         if (!empty($request->search['value'])) {
             $search = $request->search['value'];
             $query->where(function($q) use ($search) {
@@ -30,10 +30,8 @@ class CheckinRepository implements CheckinRepositoryInterface
         }
 
         $totalData = $query->count();
-        // Urutkan yang baru checkin paling atas
         $query->orderBy('updated_at', 'DESC'); 
 
-        // Pagination
         $limit = $request->length ?? 10;
         $start = $request->start ?? 0;
         $data = $query->skip($start)->take($limit)->get();
@@ -41,14 +39,16 @@ class CheckinRepository implements CheckinRepositoryInterface
         $formattedData = [];
         foreach ($data as $trx) {
             
-            // === LOGIKA SISA BAYAR (REMAINING PAYMENT) ===
-            $paid = $trx->paid_amount ?? 0;
-            $remaining = $trx->total_price - $paid;
+            // === LOGIKA SISA BAYAR (KHUSUS UNTUK RESEPSIONIS) ===
+            // total_price adalah harga setelah ditambah Extra-extra
+            $totalPrice = (float) $trx->total_price;
             
-            if ($remaining < 0) {
-                $remaining = 0;
-            }
-            // =============================================
+            // paid_amount adalah uang yang sudah dibayar tamu di awal
+            $paid = (float) ($trx->paid_amount ?? 0);
+            
+            // Selisih inilah yang harus ditagih resepsionis
+            $remaining = $totalPrice - $paid;
+            $remainingDisp = ($remaining > 0) ? $remaining : 0;
 
             $formattedData[] = [
                 'id' => $trx->id,
@@ -59,16 +59,11 @@ class CheckinRepository implements CheckinRepositoryInterface
                 ],
                 'check_in' => Helper::dateFormat($trx->check_in),
                 'check_out' => Helper::dateFormat($trx->check_out),
-                
-                // [UPDATE WAJIB] Ambil Data Extra dari Database
                 'extra_bed' => (int) $trx->extra_bed, 
                 'extra_breakfast' => (int) $trx->extra_breakfast, 
-
-                'breakfast' => $trx->breakfast ? $trx->breakfast : 'No',
-                
-                'total_price' => (float) $trx->total_price,
-                'remaining_payment' => (float) $remaining, 
-
+                'breakfast' => $trx->breakfast ?? 'No',
+                'total_price' => $totalPrice,
+                'remaining_payment' => (float) $remainingDisp, 
                 'status' => 'Check In',
                 'action' => $trx->id 
             ];
@@ -89,13 +84,9 @@ class CheckinRepository implements CheckinRepositoryInterface
 
     public function update($request, $id) 
     { 
-        $t = Transaction::findOrFail($id);
-        
-        // Update data transaksi (Biasanya Extend Tanggal & Total Harga baru)
-        // paid_amount TIDAK diupdate di sini, sehingga selisih harga akan muncul sebagai sisa bayar
-        $t->update($request->all());
-        
-        return $t;
+        // Biarkan Controller yang melakukan update() 
+        // Agar hitungan total_price hasil pajak & extra tidak tertimpa data mentah
+        return Transaction::findOrFail($id); 
     }
 
     public function delete($id) 
@@ -105,26 +96,30 @@ class CheckinRepository implements CheckinRepositoryInterface
 
     public function store($request) 
     { 
-        // Logic Store jika diperlukan di masa depan
+        // Logic Store jika diperlukan
     }
 
     /**
      * Method Menangani proses Check Out tamu.
+     * Saat Checkout, kita anggap tamu sudah melunasi semuanya.
      */
     public function checkoutGuest($id)
     {
         $transaction = Transaction::findOrFail($id);
         
-        // 1. Ubah Status Transaksi jadi Done (Selesai)
-        // 2. Set waktu checkout actual
-        // 3. [PENTING] Set paid_amount = total_price (Anggap pelunasan terjadi saat checkout)
         $transaction->update([
             'status' => 'Done',
-            'check_out' => Carbon::now(),
+            
+            // --- BAGIAN INI SAYA HAPUS ---
+            // 'check_out' => Carbon::now(),  <-- BIANG KEROKNYA DI SINI
+            // Kita hapus baris di atas, supaya tanggal checkout TETAP sesuai reservasi (misal tgl 27)
+            // -----------------------------
+            
+            // Pelunasan otomatis (Opsional, sesuai request sebelumnya)
             'paid_amount' => $transaction->total_price 
         ]);
         
-        // 4. Ubah Status Kamar jadi 'Cleaning' (Sedang Dibersihkan)
+        // Ubah Status Kamar jadi 'Cleaning'
         $transaction->room->update([
             'status' => 'Cleaning'
         ]);

@@ -3099,3 +3099,61 @@ tr.total-text {
     background-color: #F7B267 !important;
     color: #50200C !important;
 }
+
+.btn-outline-brown {
+    color: #50200C;
+    border-color: #50200C;
+    background-color: transparent;
+}
+
+.btn-outline-brown:hover,
+.btn-outline-brown:focus {
+    background-color: #50200C;
+    color: #fff;
+    border-color: #50200C;
+}
+
+.btn-outline-brown.active {
+    background-color: #50200C;
+    color: #fff;
+    border-color: #50200C;
+}
+
+.table-soft-brown > :not(caption) > * > * {
+    background-color: #F7F3E4 !important;
+    color: #50200C;
+}
+
+.modal-soft-brown .modal-content,
+.modal-soft-brown .modal-header,
+.modal-soft-brown .modal-footer {
+    background-color: #F7F3E4;
+}
+
+/* DEFAULT (belum di klik) */
+.btn-outline-secondary {
+    color: #50200C;
+    border-color: #50200C;
+    background-color: transparent;
+}
+
+/* HOVER */
+.btn-outline-secondary:hover {
+    background-color: #50200C;
+    color: #F7F3E4;
+    border-color: #50200C;
+}
+
+/* SAAT DIKLIK */
+.btn-outline-secondary:active,
+.btn-outline-secondary:focus {
+    background-color: #50200C;
+    color: #F7F3E4;
+    border-color: #50200C;
+    box-shadow: none;
+}
+
+/* ICON JUGA IKUT BERUBAH */
+.btn-outline-secondary i {
+    color: inherit;
+}

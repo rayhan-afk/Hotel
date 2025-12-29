@@ -76,7 +76,7 @@ $(function () {
                         if (data === 'OwnerReferral') badgeClass = 'badge-orange';
 
                         let text = data ? data : 'WalkIn';
-                        return <span class="badge ${badgeClass}">${text}</span>;
+                        return `<span class="badge ${badgeClass}">${text}</span>`;
                     }
                 },
 

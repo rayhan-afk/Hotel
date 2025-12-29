@@ -93,14 +93,11 @@ class Room extends Model
         return $this->image;
     }
 
-<<<<<<< Updated upstream
     // public function getImage()
     // {
     //     return $this->main_image_path;   //disini
     // }
 
-=======
->>>>>>> Stashed changes
     public function getImage()
     {
         return $this->image_url;

@@ -37,22 +37,6 @@ $(function () {
                         return `<div>Rp ${new Intl.NumberFormat('id-ID').format(price)}</div>`;
                     },
                 },
-                // Kolom Status DIHAPUS dari sini agar sesuai dengan HTML index.blade.php yang baru
-                /*
-                {
-                    name: "status",
-                    data: "status",
-                    render: function (status) {
-                        let badgeClass = 'bg-secondary';
-                        if (status === 'Available') badgeClass = 'bg-success';
-                        else if (status === 'Occupied') badgeClass = 'bg-danger';
-                        else if (status === 'Cleaning') badgeClass = 'bg-warning text-dark';
-                        else if (status === 'Reserved') badgeClass = 'bg-info text-dark';
-                        
-                        return `<span class="badge ${badgeClass}">${status}</span>`;
-                    }
-                },
-                */
                 {
                     name: "id",
                     data: "id",
@@ -60,32 +44,32 @@ $(function () {
                     searchable: false,
                     className: "text-nowrap", // Tambahkan class ini agar tidak wrap
                     render: function (roomId) {
-    return `
-        <div class="d-flex gap-1">
-            <button class="btn btn-light btn-sm rounded shadow-sm border"
-                data-action="edit-room" data-room-id="${roomId}"
-                data-bs-toggle="tooltip" data-bs-placement="top" title="Edit room">
-                <i class="fas fa-edit"></i>
-            </button>
-            <form class="d-inline delete-room" method="POST"
-                id="delete-room-form-${roomId}"
-                action="/room/${roomId}">
-                <input type="hidden" name="_method" value="DELETE"> 
-                <button type="submit" class="btn btn-light btn-sm rounded shadow-sm border delete"
-                    room-id="${roomId}" data-bs-toggle="tooltip"
-                    data-bs-placement="top" title="Delete room">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
-            </form>
-            <a class="btn btn-light btn-sm rounded shadow-sm border"
-                href="/room/${roomId}"
-                data-bs-toggle="tooltip" data-bs-placement="top"
-                title="Room detail">
-                <i class="fas fa-info-circle"></i>
-            </a>
-        </div>
-    `;
-},
+                        return `
+                        <div class="d-flex gap-1">
+                            <button class="btn btn-light btn-sm rounded shadow-sm border"
+                                data-action="edit-room" data-room-id="${roomId}"
+                                data-bs-toggle="tooltip" data-bs-placement="top" title="Edit room">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <form class="d-inline delete-room" method="POST"
+                                id="delete-room-form-${roomId}"
+                                action="/room/${roomId}">
+                                <input type="hidden" name="_method" value="DELETE"> 
+                                <button type="submit" class="btn btn-light btn-sm rounded shadow-sm border delete"
+                                    room-id="${roomId}" data-bs-toggle="tooltip"
+                                    data-bs-placement="top" title="Delete room">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                            <a class="btn btn-light btn-sm rounded shadow-sm border"
+                                href="/room/${roomId}"
+                                data-bs-toggle="tooltip" data-bs-placement="top"
+                                title="Room detail">
+                                <i class="fas fa-info-circle"></i>
+                            </a>
+                        </div>
+                    `;
+                    },
                 },
             ],
         });
@@ -120,6 +104,10 @@ $(function () {
         $("#btn-modal-save").text("Simpan").attr("disabled", true);
         $('button[data-bs-dismiss="modal"]:not(.btn-close)').text("Batal");
         $('.btn-close[data-bs-dismiss="modal"]').text('');
+        
+        // Reset ukuran modal jika sebelumnya dibesarkan oleh amenities
+        $('#main-modal .modal-dialog').removeClass('modal-xl'); 
+        $('#main-modal .modal-footer').show();
 
         $("#main-modal .modal-title").text("Tambah Kamar Baru");
         
@@ -145,14 +133,14 @@ $(function () {
         $("#form-save-room").submit();
     });
 
-    // 3. SUBMIT FORM (Ini yang penting untuk Redirect/Reload)
-    // Selector diperluas untuk menangkap form di modal index (#form-save-room) DAN form upload gambar di detail page
     // 3. SUBMIT FORM (CORE LOGIC)
-    // 3. SUBMIT FORM (CORE LOGIC)
-    $(document).on("submit", "form[enctype='multipart/form-data'], #form-save-room", async function (e) {
+    // Selector diperluas: menangkap form tambah kamar (#form-save-room), form upload gambar, DAN FORM AMENITIES (#formBulkAmenities)
+    $(document).on("submit", "form[enctype='multipart/form-data'], #form-save-room, #formBulkAmenities", async function (e) {
         
-        // Cek target form
-        if ($(this).attr('id') !== 'form-save-room' && $(this).closest('#imageModal').length === 0) {
+        // Cek target form agar tidak salah tangkap form lain
+        if ($(this).attr('id') !== 'form-save-room' && 
+            $(this).closest('#imageModal').length === 0 && 
+            $(this).attr('id') !== 'formBulkAmenities') { 
             return; 
         }
 
@@ -164,8 +152,8 @@ $(function () {
         let submitBtn = $("#btn-modal-save");
 
         // Pengecekan Tambahan:
-        // Jika tombol Master tidak terlihat (misal lagi di halaman Detail/Edit Gambar),
-        // baru kita cari tombol yang ada di dalam form.
+        // Jika tombol Master tidak terlihat (misal lagi di halaman Detail/Edit Gambar/Bulk Amenities),
+        // baru kita cari tombol yang ada di dalam form tersebut.
         if (submitBtn.length === 0 || !submitBtn.is(":visible")) {
             submitBtn = form.find('button[type="submit"]');
         }
@@ -234,6 +222,7 @@ $(function () {
             }
         }
     });
+
     // 4. Event Delete Room
     $(document).on("submit", ".delete-room", async function (e) {
         e.preventDefault(); // Mencegah refresh halaman
@@ -305,6 +294,10 @@ $(function () {
         $("#btn-modal-save").text("Simpan").attr("disabled", true);
         $('button[data-bs-dismiss="modal"]:not(.btn-close)').text("Batal");
         $('.btn-close[data-bs-dismiss="modal"]').text('');
+        
+        // Reset ukuran modal & footer
+        $('#main-modal .modal-dialog').removeClass('modal-xl'); 
+        $('#main-modal .modal-footer').show();
 
         $("#main-modal .modal-title").text("Edit Kamar");
         $("#main-modal .modal-body").html(`
@@ -344,6 +337,57 @@ $(function () {
         $('button[data-bs-dismiss="modal"]:not(.btn-close)').text("Batal");
         $('.btn-close[data-bs-dismiss="modal"]').text('');
     });
+
+    // 6. [BARU] Event Klik Tombol Setup Amenities Massal
+    $(document).on("click", "#btn-bulk-amenities", async function () {
+        const modal = getModal();
+        if (!modal) return;
+
+        modal.show();
+
+        // A. Ubah Tampilan Modal
+        $("#main-modal .modal-title").html('<i class="fas fa-boxes me-2"></i> Setup Amenities (Per Tipe)');
+        
+        // Perbesar modal jadi XL khusus fitur ini
+        $('#main-modal .modal-dialog').addClass('modal-xl'); 
+        
+        // Sembunyikan footer bawaan (karena tombol simpan ada di dalam form amenities)
+        $('#main-modal .modal-footer').hide();
+
+        // Tampilkan Loading
+        $("#main-modal .modal-body").html(`
+            <div class="d-flex justify-content-center py-5 align-items-center">
+                <div class="spinner-border text-info me-2" role="status"></div>
+                <span>Memuat data amenities...</span>
+            </div>
+        `);
+
+        // B. Ambil Data via AJAX
+        try {
+            // Panggil route yang sudah kita buat
+            const response = await $.get(`/room/setup-amenities`);
+            
+            if (response) {
+                // Masukkan HTML form ke body modal
+                $("#main-modal .modal-body").html(response);
+            } else {
+                throw new Error("Data kosong");
+            }
+        } catch (error) {
+            console.error("Error loading amenities:", error);
+            $("#main-modal .modal-body").html(`<div class="alert alert-danger">Gagal memuat data amenities.</div>`);
+        }
+    });
+
+    // 7. [PENTING] Reset Modal saat ditutup
+    // Supaya kalau habis buka Amenities (XL) terus buka Tambah Kamar, ukurannya balik normal
+    const modalEl = document.getElementById('main-modal');
+    if (modalEl) {
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            $('#main-modal .modal-dialog').removeClass('modal-xl'); // Hapus class XL
+            $('#main-modal .modal-footer').show(); // Munculkan footer lagi
+        });
+    }
 
     // Filter
     $(document).on("change", "#type", function () {

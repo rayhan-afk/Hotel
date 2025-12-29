@@ -37,6 +37,17 @@
             transform: translateY(-1px);
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
+        
+        /* [BARU] Style Badge Amenities */
+        .badge-amenity {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+            font-weight: 500;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
     </style>
 @endsection
 @section('content')
@@ -74,7 +85,7 @@
                         
                         {{-- Header Informasi & Tombol Kembali --}}
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            {{-- KIRI: Tombol Kembali (Sudah pakai style baru) --}}
+                            {{-- KIRI: Tombol Kembali --}}
                             <div>
                                 <a href="{{ route('transaction.reservation.viewCountPerson', ['customer' => $customer->id]) }}" 
                                    class="btn btn-modal-close shadow-sm px-4 fw-bold" 
@@ -172,6 +183,25 @@
                                                 @endif
                                             </div>
 
+                                            {{-- [BARU] Section Amenities (Badge Hijau) --}}
+                                            @if($room->amenities->count() > 0)
+                                                <div class="mb-2">
+                                                    <small class="fw-bold text-uppercase text-success" style="font-size: 0.7rem;">
+                                                        <i class="fas fa-box-open me-1"></i> Termasuk (Gratis):
+                                                    </small>
+                                                    <div class="d-flex flex-wrap gap-1 mt-1">
+                                                        @foreach($room->amenities as $amenity)
+                                                            {{-- Tampilkan hanya jika bukan literan (opsional) --}}
+                                                            @if($amenity->satuan != 'liter')
+                                                                <span class="badge-amenity">
+                                                                    {{ $amenity->nama_barang }} ({{ $amenity->pivot->amount }})
+                                                                </span>
+                                                            @endif
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                            @endif
+
                                             <div class="mb-2">
                                                 <small class="fw-bold text-uppercase" style="color:#50200C; font-size: 0.7rem;">
                                                     <i class="fas fa-tv me-1"></i> Fasilitas Kamar
@@ -198,7 +228,11 @@
                                         
                                         {{-- Gambar Kamar --}}
                                         <div class="col-md-4 d-none d-md-block position-relative">
-                                            <img src="{{ $room->image_url }}" 
+                                            {{-- Helper Image Fallback --}}
+                                            @php
+                                                $imageUrl = method_exists($room, 'getImage') ? $room->getImage() : asset($room->main_image_path ?? 'img/default-room.jpg');
+                                            @endphp
+                                            <img src="{{ $imageUrl }}" 
                                                  class="img-fluid w-100 h-100" 
                                                  style="object-fit: cover; min-height: 280px;" 
                                                  alt="Gambar Kamar {{ $room->number }}">
@@ -229,7 +263,10 @@
             <div class="col-lg-4">
                 <div class="card shadow-sm border-0 sticky-top" style="top: 20px; z-index: 1; background-color: #F7F3E4">
                     <div class="card-header border-0 pt-4 pb-0 text-center">
-                        <img src="{{ $customer->user->avatar_url }}"
+                        @php
+                            $avatar = method_exists($customer->user, 'getAvatar') ? $customer->user->getAvatar() : asset('img/default/default-user.jpg');
+                        @endphp
+                        <img src="{{ $avatar }}"
                             class="rounded-circle shadow-sm border mb-3" 
                             style="width: 100px; height: 100px; object-fit: cover;">
                         <h5 class="fw-bold mb-0" style="color:#50200C">{{ $customer->name }}</h5>

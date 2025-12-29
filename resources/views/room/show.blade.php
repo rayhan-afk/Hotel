@@ -178,6 +178,14 @@
             </div>
         </div>
     </div>
+
+    <div class="row mt-5 pb-4">
+        <div class="col-12">
+            <a href="{{ route('room.index') }}" class="btn btn-modal-close shadow-sm px-4">
+                <i class="fas fa-arrow-left me-2"></i> Kembali
+            </a>
+        </div>
+    </div>
 @endsection
 
 @section('footer')

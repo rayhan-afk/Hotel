@@ -13,4 +13,9 @@ class Type extends Model
         'name',
         'information',
     ];
+
+    public function rooms()
+    {
+        return $this->hasMany(Room::class);
+    }
 }

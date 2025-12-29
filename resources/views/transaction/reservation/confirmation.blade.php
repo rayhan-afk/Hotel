@@ -71,6 +71,18 @@
             border-radius: 20px;
             font-size: 0.8rem;
         }
+        /* Badge Amenities Style */
+        .amenity-badge {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-right: 4px;
+            margin-bottom: 4px;
+            display: inline-block;
+        }
 
         .btn-download-invoice {
             background: linear-gradient(135deg, #A8C9E8 0%, #8FB8E1 100%) !important;
@@ -125,6 +137,24 @@
                                 <div class="mt-2">
                                     <span class="badge bg-secondary">Rate: {{ $customer->customer_group ?? 'WalkIn' }}</span>
                                 </div>
+
+                                {{-- Info Amenities --}}
+                                @if($room->amenities->count() > 0)
+                                    <div class="mt-3">
+                                        <p class="mb-1 small text-uppercase fw-bold text-success">
+                                            <i class="fas fa-box-open me-1"></i> Termasuk Amenities:
+                                        </p>
+                                        <div>
+                                            @foreach($room->amenities as $amenity)
+                                                @if($amenity->satuan != 'liter')
+                                                    <span class="amenity-badge">
+                                                        {{ $amenity->nama_barang }} ({{ $amenity->pivot->amount }})
+                                                    </span>
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
                             <div class="col-md-6 text-md-end" style="color:#50200C">
                                 <p class="mb-1 small text-uppercase fw-bold">Tanggal Menginap</p>
@@ -176,8 +206,8 @@
                                             </td>
                                         </tr>
 
-                                        {{-- Item 2: Sarapan (Dinamis) --}}
-                                        <tr id="row_breakfast" style="display: none;">
+                                        {{-- Item 2: Sarapan (Dinamis - SEKARANG OTOMATIS MUNCUL JIKA ADA DATA) --}}
+                                        <tr id="row_breakfast" style="{{ (isset($breakfastPrice) && $breakfastPrice > 0) ? '' : 'display: none;' }}">
                                             <td>
                                                 <span class="fw-bold" style="color:#50200C">Paket Sarapan</span>
                                                 <div class="small" style="color:#50200C">
@@ -186,7 +216,9 @@
                                             </td>
                                             <td class="text-end" style="color:#50200C">Rp 100.000</td>
                                             <td class="text-center" style="color:#50200C">{{ $dayDifference }} Malam</td>
-                                            <td class="text-end fw-bold" style="color:#50200C" id="display_breakfast_total">Rp 0</td>
+                                            <td class="text-end fw-bold" style="color:#50200C" id="display_breakfast_total">
+                                                {{ (isset($breakfastPrice) && $breakfastPrice > 0) ? Helper::convertToRupiah($breakfastPrice) : 'Rp 0' }}
+                                            </td>
                                         </tr>
 
                                         {{-- Item 3: Pajak PB1 --}}
@@ -207,9 +239,10 @@
                                                     <label for="breakfast_select" class="fw-bold me-3 mb-0">
                                                         <i class="fas fa-coffee me-1"></i> Tambah Sarapan?
                                                     </label>
+                                                    {{-- [PERBAIKAN] Dropdown otomatis terpilih sesuai data dari Controller --}}
                                                     <select class="form-select w-auto border-primary" style="color:#50200C" id="breakfast_select" name="breakfast">
-                                                        <option value="No" selected>Tidak</option>
-                                                        <option value="Yes">Ya, Tambahkan (+Rp 100.000/malam)</option>
+                                                        <option value="No" {{ (!isset($breakfastPrice) || $breakfastPrice == 0) ? 'selected' : '' }}>Tidak</option>
+                                                        <option value="Yes" {{ (isset($breakfastPrice) && $breakfastPrice > 0) ? 'selected' : '' }}>Ya, Tambahkan (+Rp 100.000/malam)</option>
                                                     </select>
                                                 </div>
                                             </td>
@@ -229,7 +262,6 @@
 
                         {{-- Tombol Aksi --}}
                         <div class="d-flex justify-content-between mt-4">
-                            {{-- [MODIFIED] Tombol Kembali -> HARDCODE count_person=2 --}}
                             <a href="{{ route('transaction.reservation.chooseRoom', ['customer' => $customer->id]) }}?check_in={{$stayFrom}}&check_out={{$stayUntil}}&count_person=2" 
                                class="btn btn-modal-close px-4 py-2" id="btn-modal-close">
                                 <i class="fas fa-arrow-left me-2"></i>Kembali
@@ -253,7 +285,7 @@
                 </div>
             </div>
 
-            {{-- Kolom Kanan: Data Pelanggan --}}
+            {{-- Kolom Kanan: Data Pelanggan (SAMA SEPERTI SEBELUMNYA) --}}
             <div class="col-lg-4">
                 <div class="card invoice-card border-0 sticky-top" style="top: 20px; z-index: 1; background-color: #F7F3E4">
                     <div class="card-header text-center py-4 border-0">
@@ -301,6 +333,9 @@
     // [PENTING] KITA GUNAKAN HARGA TOTAL DARI CONTROLLER (SULTAN MODE)
     const baseRoomTotal = {{ $roomPriceTotal }}; 
     
+    // [PERBAIKAN] Cek Status Awal dari PHP (Agar sinkron dengan Controller)
+    let isBreakfastSelected = {{ (isset($breakfastPrice) && $breakfastPrice > 0) ? 'true' : 'false' }};
+    
     const dayCount = {{ $dayDifference }};
     const breakfastPricePerDay = 100000; 
 
@@ -325,12 +360,15 @@
         }).format(number);
     };
 
-    // Event Listener
-    breakfastSelect.addEventListener('change', function() {
+    // [PERBAIKAN] Logika Hitung dipisah ke Function agar bisa dipanggil manual
+    function calculateTotal() {
         let currentSubTotal = baseRoomTotal; 
         let breakfastParam = 'No';
+        
+        // Ambil nilai dari dropdown
+        const selectedValue = breakfastSelect.value;
 
-        if (this.value === 'Yes') {
+        if (selectedValue === 'Yes') {
             const breakfastTotal = breakfastPricePerDay * dayCount;
             currentSubTotal += breakfastTotal; 
             
@@ -355,6 +393,17 @@
         if (btnDownloadInvoice) {
             btnDownloadInvoice.href = `${baseInvoiceUrl}?breakfast=${breakfastParam}`;
         }
+    }
+
+    // Event Listener (Saat user mengubah dropdown)
+    breakfastSelect.addEventListener('change', function() {
+        calculateTotal();
+    });
+
+    // [PERBAIKAN] Jalankan hitungan saat halaman pertama kali dimuat
+    // Ini menjamin harga total benar, meskipun user belum klik apa-apa.
+    document.addEventListener("DOMContentLoaded", function() {
+        calculateTotal();
     });
 </script>
 @endsection

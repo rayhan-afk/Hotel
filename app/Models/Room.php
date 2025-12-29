@@ -140,4 +140,13 @@ class Room extends Model
         // Default
         return 'Available';
     }
+
+        public function amenities()
+    {
+        // Relasi Many-to-Many ke model Amenity
+        // withPivot('amount') artinya kita mau ambil data jumlah jatahnya juga
+        return $this->belongsToMany(Amenity::class, 'amenity_room')
+                    ->withPivot('amount')
+                    ->withTimestamps();
+    }
 }

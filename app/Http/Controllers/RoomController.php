@@ -6,10 +6,12 @@ use App\Http\Requests\StoreRoomRequest;
 use App\Models\Room;
 use App\Models\Type;
 use App\Models\Approval;
+use App\Models\Amenity; // [BARU] Import Model Amenity
 use App\Repositories\Interface\RoomRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log; // Jangan lupa ini
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class RoomController extends Controller
 {
@@ -27,23 +29,40 @@ class RoomController extends Controller
             return response()->json($data);
         }
 
-        return view('room.index');
+        $types = Type::with('rooms.amenities')->get(); 
+        $amenities = Amenity::all();
+
+        return view('room.index', compact('types', 'amenities'));
     }
 
     public function create()
     {
         $types = Type::all();
-        $view = view('room.create', ['types' => $types, 'room' => null])->render();
+        
+        // [BARU] Ambil Amenities (Kecuali Literan) untuk Checkbox
+        $amenities = Amenity::where('satuan', '!=', 'liter')->get();
+
+        $view = view('room.create', [
+            'types' => $types, 
+            'room' => null,
+            'amenities' => $amenities // [BARU] Kirim ke View
+        ])->render();
+
         return response()->json(['view' => $view]);
     }
 
     public function store(StoreRoomRequest $request)
     {
-        // Langsung serahkan ke repository (sudah aman)
-        $this->roomRepository->store($request);
+        // 1. Simpan Kamar via Repository
+        // Pastikan repository kamu me-return object Room yang baru dibuat
+        $room = $this->roomRepository->store($request);
+
+        // 2. [BARU] Simpan Amenities (Jatah Barang)
+        // Kita panggil fungsi private di bawah agar kodingan rapi
+        $this->syncAmenities($room, $request);
 
         return response()->json([
-            'message' => 'Kamar berhasil ditambahkan!',
+            'message' => 'Kamar dan fasilitas berhasil ditambahkan!',
         ]);
     }
 
@@ -55,23 +74,41 @@ class RoomController extends Controller
     public function edit(Room $room)
     {
         $types = Type::all();
-        $view = view('room.create', ['room' => $room, 'types' => $types])->render();
+        
+        // [BARU] Ambil Amenities untuk Checkbox di Edit
+        $amenities = Amenity::where('satuan', '!=', 'liter')->get();
+
+        $view = view('room.create', [
+            'room' => $room, 
+            'types' => $types,
+            'amenities' => $amenities // [BARU] Kirim ke View
+        ])->render();
+        
         return response()->json(['view' => $view]);
     }
 
-    // === PERBAIKAN: STRUKTUR LENGKAP TAPI PAKAI REPO ===
+    // === PERBAIKAN: INTEGRASI AMENITIES + APPROVAL ===
     public function update(Room $room, StoreRoomRequest $request)
     {
-        // 1. Validasi Data
+        // 1. Validasi Data Dasar
         $data = $request->validated();
         
-        // [PENTING] Ambil path gambar lama dengan robust (Logic Asli Kamu)
+        // [BARU] Masukkan Data Amenities ke array $data
+        // Ini penting agar data amenities ikut tersimpan di tabel Approval (JSON)
+        // jika yang edit adalah Admin biasa.
+        $data['amenities'] = $request->input('amenities', []);
+        $data['amounts']   = $request->input('amounts', []);
+
+        // Ambil path gambar lama
         $oldImage = $room->main_image_path ?? $room->image ?? null;
 
-        // 2. Persiapkan Data Lama untuk History (Logic Asli Kamu)
+        // 2. Persiapkan Data Lama untuk History
         $oldData = $room->toArray();
         
-        // Pastikan image path masuk ke oldData meskipun accessor belum di-load
+        // [BARU] Masukkan juga data amenities lama ke history (biar manager tau bedanya)
+        // Formatnya kita ambil ID-nya saja biar hemat space
+        $oldData['amenities'] = $room->amenities->pluck('id')->toArray();
+        
         if (!isset($oldData['main_image_path']) && $oldImage) {
             $oldData['main_image_path'] = $oldImage;
         }
@@ -81,13 +118,14 @@ class RoomController extends Controller
         // === SKENARIO 1: MANAGER/SUPER (Langsung Update) ===
         if ($user->role === 'Super' || $user->role === 'Manager') {
             
-            // Kita panggil Repository update.
-            // Repository ini sudah pintar: dia akan handle rename folder,
-            // hapus file lama, dan upload file baru secara otomatis.
+            // A. Update Fisik Kamar via Repository
             $this->roomRepository->update($room, $request);
 
+            // B. [BARU] Update Jatah Amenities (Sync)
+            $this->syncAmenities($room, $request);
+
             return response()->json([
-                'message' => 'Data kamar berhasil diperbarui!',
+                'message' => 'Data kamar & amenities berhasil diperbarui!',
             ]);
 
         } 
@@ -95,27 +133,16 @@ class RoomController extends Controller
         else {
             
             // Handle Upload Gambar untuk Approval
-            // Di sini kita "meminjam" method uploadImage dari repository
-            // supaya path foldernya konsisten (public_html/img/room/ID-Slug)
             if ($request->hasFile('image')) {
-                
-                // Panggil Helper Repo (Cukup 1 baris, folder otomatis dibuat)
                 $filename = $this->roomRepository->uploadImage($request->file('image'), $room);
-                
-                // Simpan nama file ke array data untuk approval
                 $data['main_image_path'] = $filename;
-                
-                // Hapus object file asli agar tidak error saat create JSON
                 unset($data['image']);
             }
 
-            // [PENTING] Log Debugging (Logic Asli Kamu Tetap Ada)
             Log::info('Room Approval Created', [
                 'room_id' => $room->id,
                 'requester' => $user->name,
-                'old_image' => $oldData['main_image_path'] ?? 'tidak ada',
-                'new_image' => $data['main_image_path'] ?? 'tidak ada',
-                'has_file'  => $request->hasFile('image')
+                'amenities_count' => count($data['amenities']), // Log amenities
             ]);
             
             // Buat Ticket Approval
@@ -123,9 +150,9 @@ class RoomController extends Controller
                 'type' => 'room',
                 'reference_id' => $room->id,
                 'requested_by' => $user->id,
-                'new_data' => $data,
+                'new_data' => $data, // Amenities & Amounts sudah masuk di sini
                 'old_data' => $oldData,
-                'status' => 'Pending' // Sesuaikan enum di DB (Pending/pending)
+                'status' => 'Pending' 
             ]);
 
             return response()->json([
@@ -141,7 +168,6 @@ class RoomController extends Controller
         }
 
         try {
-            // Panggil Repository delete (Folder fisik ikut terhapus di sana)
             $this->roomRepository->delete($room);
 
             return response()->json([
@@ -149,7 +175,6 @@ class RoomController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            // Handle Error Foreign Key (Logic Asli Kamu)
             if ($e->getCode() == "23000") {
                 return response()->json([
                     'message' => 'Data tidak dapat dihapus karena kamar ini memiliki riwayat transaksi/reservasi.'
@@ -159,6 +184,80 @@ class RoomController extends Controller
             return response()->json([
                 'message' => 'Terjadi kesalahan database: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    // === [HELPER PRIVATE] LOGIKA SYNC AMENITIES ===
+    // Fungsi ini memisahkan logika yang rumit agar controller tetap bersih
+    private function syncAmenities(Room $room, Request $request)
+    {
+        if ($request->has('amenities')) {
+            $pivotData = [];
+            
+            foreach ($request->amenities as $amenityId) {
+                // Ambil qty dari input array amounts[id]
+                // Default 1 jika tidak diisi/kosong
+                $qty = $request->amounts[$amenityId] ?? 1; 
+
+                // Siapkan format untuk sync
+                $pivotData[$amenityId] = ['amount' => $qty];
+            }
+
+            // Simpan ke database (Hapus yang tidak dicentang, update yang dicentang)
+            $room->amenities()->sync($pivotData);
+        } else {
+            // Jika tidak ada checkbox dicentang, hapus semua relasi
+            $room->amenities()->detach();
+        }
+    }
+
+    // 1. Tampilkan Tabel Matriks (Barisnya TIPE KAMAR)
+    public function bulkAmenities(Request $request)
+    {
+        $types = Type::with(['rooms.amenities'])->get();
+        $amenities = Amenity::all(); 
+
+        // Return view form terpisah (bukan index)
+        return view('room.bulk_amenities', compact('types', 'amenities'));
+    }
+
+    // 2. Simpan Perubahan (Sekali simpan update ke SEMUA kamar di tipe itu)
+  // Update Method Simpan (Versi Per Tipe Kamar)
+    public function bulkAmenitiesUpdate(Request $request)
+    {
+        $items = $request->input('items', []);
+
+        DB::beginTransaction();
+        try {
+            // Loop data berdasarkan Tipe Kamar
+            foreach ($items as $typeId => $amenityData) {
+                
+                // 1. Siapkan data yang mau di-sync (hanya yang jumlahnya > 0)
+                $syncData = [];
+                foreach ($amenityData as $amenityId => $amount) {
+                    if ($amount > 0) {
+                        $syncData[$amenityId] = ['amount' => $amount];
+                    }
+                }
+
+                // 2. Ambil semua kamar yang memiliki Tipe tersebut
+                $rooms = Room::where('type_id', $typeId)->get();
+
+                // 3. Terapkan amenities ke setiap kamar
+                foreach ($rooms as $room) {
+                    $room->amenities()->sync($syncData);
+                }
+            }
+
+            DB::commit();
+            
+            // Redirect ke Index (Modal otomatis hilang karena page reload)
+            return redirect()->route('room.index')
+                             ->with('success', 'Berhasil! Setup Amenities per Tipe telah disimpan.');
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return redirect()->route('room.index')->with('error', 'Error: ' . $e->getMessage());
         }
     }
 }

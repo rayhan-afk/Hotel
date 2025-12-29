@@ -111,10 +111,10 @@ $(function() {
 
                     html += `
                         <tr>
-                            <td class="fw-bold text-secondary bg-light ps-3 align-middle">
+                            <td class="fw-bold ps-3 align-middle" style="background-color: #F7F3E4; color: #50200C;">
                                 ${item.group}
                             </td>
-                            <td class="p-2">
+                            <td class="p-2" style="background-color: #F7F3E4">
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text text-white border-0" 
                                           style="background-color: #50200C;">Rp</span>
@@ -126,7 +126,7 @@ $(function() {
                                         placeholder="Default">
                                 </div>
                             </td>
-                            <td class="p-2">
+                            <td class="p-2" style="background-color: #F7F3E4">
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text text-white border-0" 
                                           style="background-color: #50200C;">Rp</span>
@@ -153,7 +153,7 @@ $(function() {
     };
 
     // 2. Event Listener Tombol Simpan Harga
-    $('#savePriceBtn').click(function() {
+    $('.btn-modal-save').click(function() {
         const btn = $(this);
         const originalText = btn.html();
         

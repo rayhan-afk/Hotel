@@ -19,14 +19,14 @@
     <main>
         <div class="modal fade" id="main-modal" tabindex="-1" aria-labelledby="main-modalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
-                    <div class="modal-header bg-light border-0">
+                <div class="modal-content border-0 shadow-lg" style="background-color: #F7F3E4; border-radius: 12px;">
+                    <div class="modal-header border-0">
                         <h1 class="modal-title fs-5 fw-bold" id="main-modalLabel"></h1>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                     </div>
-                    <div class="modal-footer border-0 bg-light">
+                    <div class="modal-footer border-0">
                         <button id="btn-modal-close" type="button" class="btn-modal-close"
                             data-bs-dismiss="modal">Batal</button>
                         <button id="btn-modal-save" type="button" class="btn-modal-save">Simpan</button>

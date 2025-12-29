@@ -306,21 +306,22 @@
             "#paymentModal .modal-footer"
         );
         const modalTitle = document.querySelector("#paymentModal .modal-title");
+        document.querySelector("#paymentModal")?.classList.add("modal-soft-brown");
 
         if (!modalBody || !modalFooter) return;
 
         modalTitle.innerText = "Transaksi Berhasil!";
-        modalTitle.classList.add("text-success");
+        modalTitle.classList.add("text-brown");
 
         modalBody.innerHTML = `
-            <div class="text-center py-3">
+            <div class="text-center py-3" style="background-color: #F7F3E4">
                 <div style="width: 70px; height: 70px; background: #d4edda; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
                     <i class="fas fa-check fa-3x text-success"></i>
                 </div>
-                <h5 class="mt-3 fw-bold">Pembayaran Sukses!</h5>
-                <p class="text-muted mb-3 small">Invoice: ${invoice}</p>
+                <h5 class="mt-3 fw-bold" style="color: #50200C">Pembayaran Sukses!</h5>
+                <p class="mb-3 small" style="color: #50200C">Invoice: ${invoice}</p>
 
-                <div class="card bg-light border-0 p-3 text-start small">
+                <div class="card border-0 p-3 small" style="color: #50200C">
                     <div class="d-flex justify-content-between mb-1">
                         <span>Total:</span> <span class="fw-bold">${formatRupiah(
                             total
@@ -330,8 +331,8 @@
                         <span>Bayar:</span> <span>${formatRupiah(bayar)}</span>
                     </div>
                     <div class="d-flex justify-content-between border-top pt-2 mt-2">
-                        <span class="fw-bold text-success">Kembalian:</span>
-                        <span class="fw-bold text-success">${formatRupiah(
+                        <span class="fw-bold" style="color: #F2C2B8">Kembalian:</span>
+                        <span class="fw-bold" style="color: #F2C2B8">${formatRupiah(
                             kembalian
                         )}</span>
                     </div>
@@ -340,10 +341,10 @@
         `;
 
         modalFooter.innerHTML = `
-            <button type="button" class="btn btn-outline-secondary" onclick="window.open('/pos/print/${invoice}', '_blank', 'width=400,height=600')">
+            <button type="button" class="btn btn-modal-close" onclick="window.open('/pos/print/${invoice}', '_blank', 'width=400,height=600')">
                 <i class="fas fa-print me-1"></i>Cetak
             </button>
-            <button type="button" class="btn btn-success text-white fw-bold px-4" onclick="finishTransaction()">
+            <button type="button" class="btn btn-modal-save fw-bold px-4" onclick="finishTransaction()">
                 Selesai
             </button>
         `;
@@ -409,15 +410,32 @@
         }).format(number);
     }
 
+    // ============================================
+    // INITIALIZATION & EVENT LISTENERS
+    // ============================================
+
+    // 1. Search Listener
     const searchInput = document.getElementById("searchInput");
     if (searchInput) searchInput.addEventListener("keyup", window.filterMenu);
 
-    // [FIX] Auto Reset Modal UI saat ditutup (baik via tombol Selesai maupun Close/X)
-    
+    // 2. Modal Reset Listener
     const paymentModal = document.getElementById("paymentModal");
     if (paymentModal) {
         paymentModal.addEventListener("hidden.bs.modal", function () {
             resetModalUI();
+        });
+    }
+
+    // 3. [FIXED] CATEGORY BUTTONS LISTENER (Menghidupkan Tombol Kategori)
+    const categoryButtons = document.querySelectorAll(".category-filter-btn");
+    if (categoryButtons) {
+        categoryButtons.forEach((btn) => {
+            btn.addEventListener("click", function () {
+                // Ambil data kategori dari tombol yang diklik
+                const category = this.getAttribute("data-category");
+                // Panggil fungsi setCategory
+                window.setCategory(category, this);
+            });
         });
     }
 })();

@@ -3,6 +3,9 @@
 
 @section('content')
 {{-- CSS Tambahan --}}
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <style>
     /* --- PERBAIKAN UTAMA DI SINI --- */
     .product-card { 
@@ -10,14 +13,19 @@
         border-radius: 12px; 
         background: #fff; 
         transition: all 0.2s; 
-        cursor: default; 
-        height: 100%; 
+        cursor: default;
+        width: 100%;
+ 
+        min-height: 250px; 
         position: relative;
         
         /* GANTI DARI HIDDEN JADI VISIBLE */
         /* Ini kuncinya: agar dropdown bisa 'tumpah' keluar dari kotak kartu */
         overflow: visible; 
         z-index: 1;
+
+        display: flex;
+        flex-direction: column;
     }
 
     .product-card:hover { 
@@ -87,8 +95,8 @@
     /* Style untuk kolom kanan (Editor Resep) - Tetap sama */
     .recipe-editor-container { background-color: #FDFBF7; border-left: 1px solid #e0e0e0; height: calc(100vh - 100px); display: flex; flex-direction: column; }
     .ingredient-list-scroll { flex: 1; overflow-y: auto; padding: 1rem; }
-    .ingredient-item { background: white; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 0.5rem; padding: 0.5rem; display: flex; align-items: center; justify-content: space-between; }
-    .ingredient-search-box { background: #F7F3E4; padding: 1rem; border-top: 1px solid #e0e0e0;border-bottom: 1px solid #e0e0e0; }
+    .ingredient-item { background: #F7F3E4; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 0.5rem; padding: 0.5rem; display: flex; align-items: center; justify-content: space-between; }
+    .ingredient-search-box { background: #F7F3E4; color: #50200C; padding: 1rem; border-top: 1px solid #e0e0e0;border-bottom: 1px solid #e0e0e0; }
     .available-ingredient-item { cursor: pointer; transition: all 0.2s; border: 1px solid transparent;}
     .available-ingredient-item:hover { background-color: #F7F3E4; border-color: #50200C; }
     .qty-input { width: 70px; text-align: center; border: 1px solid #50200C; color: #50200C; border-radius: 4px; }
@@ -117,8 +125,9 @@
             @endif
 
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <button class="btn btn-primary" style="background-color: #FAE8A4; border:none; color: #50200C; font-weight: bold;" data-bs-toggle="modal" data-bs-target="#modalTambahMenu">
-                    <i class="fas fa-plus me-2"></i>Tambah Menu Baru
+                <button id="add-button" type="button" class="add-room-btn" data-bs-toggle="modal" data-bs-target="#modalTambahMenu">
+                    <i class="fas fa-plus"></i>
+                    Tambah Menu Baru
                 </button>
 
                 <div class="stock-status-compact d-flex align-items-center" 
@@ -131,12 +140,12 @@
             <div class="table-header d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
                 <div>
                     <h4 style="color: #50200C;"><i class="fas fa-book-open me-2"></i>Daftar Menu Restoran</h4>
-                    <p class="mb-0 text-muted">Klik "Edit Resep" untuk bahan baku, atau tombol menu (⋮) untuk edit info/hapus.</p>
+                    <p class="mb-0" style="color: #50200C">Klik "Edit Resep" untuk bahan baku, atau tombol menu (⋮) untuk edit info/hapus.</p>
                 </div>
                 <div class="d-flex align-items-center gap-2">
                     <div class="input-group input-group-sm shadow-sm" style="width: 250px;">
-                        <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
-                        <input type="text" id="searchMenu" class="form-control border-start-0" placeholder="Cari menu...">
+                        <span class="input-group-text bg-white border-end-0"><i class="fas fa-search" style="color: #50200C"></i></span>
+                        <input type="text" id="searchMenu" class="form-control border-start-0" style="color: #50200C" placeholder="Cari menu...">
                     </div>
                 </div>
             </div>
@@ -153,19 +162,20 @@
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end shadow border-0">
                                 <li>
-                                    <h6 class="dropdown-header">Aksi Menu</h6>
+                                    <h6 class="dropdown-header" style="color: #50200C">Aksi Menu</h6>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" href="{{ route('recipes.editMenu', $menu->id) }}">
-                                        <i class="fas fa-edit me-2 text-warning"></i>Edit Info Menu
+                                    <a class="dropdown-item" href="{{ route('recipes.editMenu', $menu->id) }}" style="color: #50200C">
+                                        <i class="fas fa-edit me-2" style="color: #50200C"></i>Edit Info Menu
                                     </a>
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
-                                    <form action="{{ route('recipes.destroyMenu', $menu->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus menu {{ $menu->name }}? \nSemua resep terkait juga akan dihapus.');">
+                                    <form action="{{ route('recipes.destroyMenu', $menu->id) }}" method="POST" class="d-inline form-delete-menu">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="dropdown-item text-danger">
+                                        
+                                        <button type="button" class="dropdown-item text-danger btn-delete-menu" data-name="{{ $menu->name }}">
                                             <i class="fas fa-trash-alt me-2"></i>Hapus Menu
                                         </button>
                                     </form>
@@ -178,12 +188,12 @@
                                 <img src="{{ asset('storage/' . $menu->image) }}" alt="{{ $menu->name }}" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover; border: 2px solid #F7F3E4;">
                             @else
                                 <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; border: 2px solid #e0e0e0;">
-                                    <i class="fas fa-utensils text-muted"></i>
+                                    <i class="fas fa-utensils" style="color: #50200C"></i>
                                 </div>
                             @endif
                             <div class="ms-3 flex-grow-1" style="padding-right: 20px;">
                                 <h6 class="fw-bold mb-0 text-truncate" style="color: #50200C; max-width: 110px;">{{ $menu->name }}</h6>
-                                <small class="text-muted">{{ $menu->category }}</small>
+                                <small class="" style="color: #50200C">{{ $menu->category }}</small>
                             </div>
                         </div>
                         
@@ -191,22 +201,24 @@
 
                         <div class="px-3 pb-2 d-flex justify-content-between align-items-center">
                             @if($menu->ingredients_count > 0)
-                                <span class="badge bg-success" style="font-size: 0.7rem;"><i class="fas fa-check me-1"></i>Resep Ada</span>
+                                <span class="badge badge-approved" style="font-size: 0.7rem;"><i class="fas fa-check me-1"></i>Sudah Ada</span>
                             @else
-                                <span class="badge bg-danger" style="font-size: 0.7rem;"><i class="fas fa-times me-1"></i>Belum Ada</span>
+                                <span class="badge badge-rejected" style="font-size: 0.7rem;"><i class="fas fa-times me-1"></i>Belum Ada</span>
                             @endif
+                        </div>
 
-                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 load-recipe-btn" 
-                                    style="color: #50200C; border-color: #50200C;"
-                                    data-menu-id="{{ $menu->id }}"
-                                    data-menu-name="{{ addslashes($menu->name) }}">
+                        <div class="px-3 pb-3 mt-auto">
+                            <button type="button"
+                                class="btn btn-sm btn-outline-secondary rounded-pill px-2 w-100 load-recipe-btn"
+                                data-menu-id="{{ $menu->id }}"
+                                data-menu-name="{{ addslashes($menu->name) }}">
                                 <i class="fas fa-scroll me-1"></i> Atur Resep
                             </button>
                         </div>
                     </div>
                 </div>
                 @empty
-                <div class="col-12 text-center py-5"><h5 class="text-muted">Belum ada data menu.</h5></div>
+                <div class="col-12 text-center py-5"><h5 class="" style="color: #50200C">Belum ada data menu.</h5></div>
                 @endforelse
             </div>
         </div>
@@ -215,23 +227,23 @@
         {{-- KOLOM KANAN: EDITOR RESEP --}}
         {{-- ============================================== --}}
         <div class="col-md-4 p-0">
-            <div class="recipe-editor-container">
-                <div class="p-4 border-bottom" style="background: #F7F3E4;">
+            <div class="recipe-editor-container" style="background: #F7F3E4;">
+                <div class="p-4 border-bottom">
                     <h5 class="mb-1 fw-bold" style="color: #50200C;">
                         <i class="fas fa-scroll me-2"></i>Editor Resep
                     </h5>
-                    <h6 class="text-muted mb-0" id="editingMenuName">Silakan pilih "Atur Resep" di samping</h6>
+                    <h6 class="mb-0" id="editingMenuName" style="color: #50200C">Silakan pilih "Atur Resep" di bawah</h6>
                     <input type="hidden" id="editingMenuId" value="">
                 </div>
 
-                <div class="p-3 bg-white border-bottom d-flex justify-content-between align-items-center">
-                    <span class="fw-bold small">Bahan Baku Terpilih (<span id="selectedCount">0</span>)</span>
-                    <small class="text-muted">Atur takaran per porsi</small>
+                <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                    <span class="fw-bold small" style="color: #50200C">Bahan Baku Terpilih (<span id="selectedCount">0</span>)</span>
+                    <small class="" style="color: #50200C">Atur takaran per porsi</small>
                 </div>
                 
-                <div id="selectedIngredientsList" class="ingredient-list-scroll" style="background: #FDFBF7; max-height: 300px;">
-                    <div class="text-center text-muted mt-4">
-                        <i class="fas fa-carrot fa-3x mb-3" style="opacity: 0.3"></i>
+                <div id="selectedIngredientsList" class="ingredient-list-scroll" style="max-height: 300px;">
+                    <div class="text-center mt-4" style="color: #50200C">
+                        <i class="fas fa-carrot fa-3x mb-3"></i>
                         <p>Belum ada bahan baku ditambahkan.</p>
                         <small>Cari dan klik bahan di bawah untuk menambahkan.</small>
                     </div>
@@ -239,14 +251,15 @@
 
                 <div class="ingredient-search-box">
                     <div class="input-group input-group-sm mb-2">
-                        <span class="input-group-text bg-white"><i class="fas fa-search"></i></span>
+                        <span class="input-group-text bg-white"><i class="fas fa-search" style="color: #50200C"></i></span>
                         <input type="text" id="searchIngredient" class="form-control" placeholder="Cari bahan baku...">
                     </div>
-                    <div style="font-size: 0.8rem" class="text-muted mb-2">Klik bahan untuk menambahkan ke atas.</div>
+                    <div style="color: #50200C; font-size: 0.8rem" class="mb-2">Klik bahan untuk menambahkan ke atas.</div>
                     
                     <div class="list-group overflow-auto" style="max-height: 200px;" id="availableIngredientsList">
                         @foreach($ingredients as $ing)
                         <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center available-ingredient-item"
+                             style="background-color: #F7F3E4"
                              data-ing-id="{{ $ing->id }}"
                              data-ing-name="{{ $ing->name }}"
                              data-ing-unit="{{ $ing->unit }}"
@@ -254,9 +267,9 @@
                             <div>
                                 <span class="fw-bold" style="color: #50200C;">{{ $ing->name }}</span>
                                 <br>
-                                <small class="text-muted">Stok: {{ $ing->stock }} {{ $ing->unit }}</small>
+                                <small class="" style="color: #50200C">Stok: {{ $ing->stock }} {{ $ing->unit }}</small>
                             </div>
-                            <i class="fas fa-plus-circle text-primary"></i>
+                            <i class="fas fa-plus-circle" style="color: #50200C"></i>
                         </div>
                         @endforeach
                     </div>
@@ -277,17 +290,17 @@
     <div class="ingredient-item shadow-sm" data-ing-id="">
         <div class="d-flex align-items-center flex-grow-1">
             <div class="me-3 text-center" style="width: 40px;">
-                <i class="fas fa-box text-muted"></i>
+                <i class="fas fa-box" style="color: #50200C"></i>
             </div>
             <div>
                 <h6 class="mb-0 fw-bold ingredient-name" style="color: #50200C;">Nama Bahan</h6>
-                <small class="text-muted ingredient-unit">Satuan: Gram</small>
+                <small class="ingredient-unit" style="color: #50200C">Satuan: Gram</small>
             </div>
         </div>
         <div class="d-flex align-items-center gap-2">
             <input type="number" class="form-control form-control-sm qty-input" value="1" min="0.01" step="0.01" placeholder="Jml">
             <button class="btn btn-sm btn-outline-danger btn-remove-ing">
-                <i class="fas fa-trash-alt"></i>
+                <i class="fas fa-trash-alt" style="color: #50200C"></i>
             </button>
         </div>
     </div>
@@ -305,7 +318,7 @@
             </div>
             <form id="formTambahMenu" enctype="multipart/form-data">
                 @csrf
-                <div class="modal-body">
+                <div class="modal-body" style="background-color: #F7F3E4;">
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Nama Menu <span class="text-danger">*</span></label>
@@ -332,13 +345,13 @@
                         <div class="col-12 mb-3">
                             <label class="form-label fw-bold">Gambar Menu</label>
                             <input type="file" name="image" class="form-control" accept="image/*">
-                            <small class="text-muted">Format: JPG, PNG. Max 2MB</small>
+                            <small class="" style="color: #50200C">Format: JPG, PNG. Max 2MB</small>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn text-white" style="background-color: #50200C;">
+                <div class="modal-footer" style="background-color: #F7F3E4;">
+                    <button type="button" class="btn btn-modal-close" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-modal-save">
                         <i class="fas fa-save me-2"></i>Simpan & Atur Resep
                     </button>
                 </div>

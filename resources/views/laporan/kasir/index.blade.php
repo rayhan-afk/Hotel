@@ -65,10 +65,10 @@
                         <tbody>
                             {{-- Data diisi AJAX --}}
                         </tbody>
-                        <tfoot style="background-color: #fff8f0; font-weight: bold; border-top: 2px solid #50200C;">
+                        <tfoot style="background-color: #F7F3E4; font-weight: bold; border-top: 2px solid #50200C;">
                             <tr>
-                                <td colspan="5" class="text-end py-3" style="color: #50200C;">Total Omset Halaman Ini:</td>
-                                <td class="text-end py-3 pe-3" id="pageTotal" style="color: #50200C;">Rp 0</td>
+                                <td colspan="5" class="text-end py-3" style="background-color: #F7F3E4; color: #50200C;">Total Omset Halaman Ini:</td>
+                                <td class="text-end py-3 pe-3" id="pageTotal" style="background-color: #F7F3E4; color: #50200C;">Rp 0</td>
                             </tr>
                         </tfoot>
                     </table>

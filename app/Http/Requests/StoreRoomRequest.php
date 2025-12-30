@@ -25,6 +25,10 @@ class StoreRoomRequest extends FormRequest
             'room_facilities' => 'nullable|string',
             'bathroom_facilities' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Validasi gambar
+
+            'amenities' => 'nullable|array',
+            'amenities.*' => 'exists:amenities,id', // Pastikan ID amenity valid
+            'amounts' => 'nullable|array'
         ];
     }
 }

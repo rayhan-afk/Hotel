@@ -42,6 +42,12 @@ class Helper
         return Carbon::parse($date)->isoFormat('D MMM, hh:mm a');
     }
 
+    // Format Tanggal + Jam (Otomatis dipakai di Invoice & Laporan)
+    public static function dateTimeFormat($date)
+    {
+        return Carbon::parse($date)->isoFormat('DD/MM/YYYY HH:mm'); 
+    }
+
     public static function getDateDifference($check_in, $check_out)
     {
         $check_in = strtotime($check_in);

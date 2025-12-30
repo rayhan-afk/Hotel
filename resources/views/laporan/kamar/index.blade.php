@@ -44,17 +44,20 @@
                 {{-- TABEL --}}
                 <div class="table-responsive mt-3">
                     <table id="laporan-kamar-table" class="professional-table table table-hover" style="width: 100%;">
+                        {{-- STYLE HEADER TETAP #f7f3e8 --}}
                         <thead style="background-color: #f7f3e8;">
                             <tr>
-                                <th>Tamu</th>
-                                <th>Kamar</th>
-                                <th>Check-In</th>
-                                <th>Check-Out</th>
-                                <th class="text-center">Sarapan</th>
-                                <th class="text-end">Total Harga</th>
-                                <th class="text-center">Status</th>
-                                {{-- [UPDATE] Penambahan Kolom Aksi --}}
-                                <th class="text-center" width="15%">Aksi</th>
+                                <th class="align-middle">No</th>
+                                <th class="align-middle">Tamu & Kamar</th>
+                                
+                                {{-- KOLOM BARU (Logic Baru) --}}
+                                <th class="align-middle">Paket Menginap</th>
+                                <th class="align-middle">Masuk (Real)</th>
+                                <th class="align-middle">Keluar (Real)</th>
+                                
+                                <th class="text-end align-middle">Total Harga</th>
+                                <th class="text-center align-middle">Status</th>
+                                <th class="text-center align-middle" width="10%">Aksi</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -76,6 +79,7 @@
 
 @section('footer')
 <style>
+    /* STYLE ASLI ANDA TIDAK SAYA UBAH/HAPUS */
     .btn-brown {
         background-color: #50200C !important;
         border-color: #50200C !important;
@@ -86,5 +90,8 @@
     }
     .professional-table-container .table-header::before { display: none !important; content: none !important; }
     .table-header form { position: relative; z-index: 10; }
+    
+    /* Style tabel agar rapi vertikal */
+    .align-middle { vertical-align: middle !important; }
 </style>
 @endsection

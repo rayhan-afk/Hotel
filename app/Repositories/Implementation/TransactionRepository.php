@@ -10,14 +10,11 @@ class TransactionRepository implements TransactionRepositoryInterface
 {
     public function store($request, $customer, $room)
     {
-        // 1. Ambil data checkin/checkout sekadar untuk disimpan (bukan untuk hitung harga)
+        // 1. Ambil data checkin/checkout sekadar untuk disimpan
         $check_in = Carbon::parse($request->check_in);
         $check_out = Carbon::parse($request->check_out);
 
         // 2. SIMPAN TRANSAKSI
-        // PENTING: Kita TIDAK menghitung harga lagi disini.
-        // Kita ambil 'total_price' yang dikirim dari Controller (Controller sudah benar 880.000)
-        
         return Transaction::create([
             'user_id'     => auth()->id(), 
             'customer_id' => $customer->id,
@@ -28,10 +25,13 @@ class TransactionRepository implements TransactionRepositoryInterface
             
             'breakfast'   => $request->breakfast ?? 'No',
             
-            // [KUNCI PERBAIKAN] 
-            // Ambil langsung dari Request yang dikirim Controller.
-            // Jangan ada rumus matematika lagi disini.
-            'total_price' => $request->total_price 
+            // Simpan Total Tagihan
+            'total_price' => $request->total_price,
+
+            // [PERBAIKAN WAJIB DISINI]
+            // Simpan Total Bayar sama persis dengan Total Tagihan.
+            // Ini membuat status transaksi di database menjadi LUNAS (Sisa Bayar = 0).
+            'paid_amount' => $request->total_price 
         ]);
     }
 

@@ -2,7 +2,6 @@
 <html lang="en">
 
 <head>
-    <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -18,17 +17,16 @@
 
 <body class="sidebar-layout">
     <main>
-        <!-- Enhanced Modal -->
         <div class="modal fade" id="main-modal" tabindex="-1" aria-labelledby="main-modalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-0 shadow-lg" style="border-radius: 12px;">
-                    <div class="modal-header bg-light border-0">
+                <div class="modal-content border-0 shadow-lg" style="background-color: #F7F3E4; border-radius: 12px;">
+                    <div class="modal-header border-0">
                         <h1 class="modal-title fs-5 fw-bold" id="main-modalLabel"></h1>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                     </div>
-                    <div class="modal-footer border-0 bg-light">
+                    <div class="modal-footer border-0">
                         <button id="btn-modal-close" type="button" class="btn-modal-close"
                             data-bs-dismiss="modal">Batal</button>
                         <button id="btn-modal-save" type="button" class="btn-modal-save">Simpan</button>
@@ -37,16 +35,13 @@
             </div>
         </div>
 
-        <!-- Mobile Header -->
         @include('template.include._mobile-header')
 
         @include('template.include._navbar-desktop')
 
         <div class="d-flex vh-100" id="wrapper">
-            <!-- Desktop Sidebar -->
             @include('template.include._sidebar')
 
-            <!-- Page Content -->
             <div id="page-content-wrapper" class="flex-fill">
                 <div class="p-3 h-100">
                     @yield('content')
@@ -60,13 +55,16 @@
     @stack('scripts')
     @yield('scripts')
 
-    <!-- jQuery (Required for delete functionality) -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-    <!-- SweetAlert2 (Required for delete confirmation) -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
-    <!-- Initialize Tooltips -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/locale/id.min.js"></script>
+    <script>
+        // Set default bahasa moment.js ke Indonesia
+        moment.locale('id');
+    </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize Bootstrap tooltips

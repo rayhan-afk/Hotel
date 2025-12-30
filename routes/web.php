@@ -208,6 +208,12 @@ Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Manager']], functi
     // Route Khusus untuk Fitur Harga Dinamis (Sultan Mode)
     Route::get('/type/get-prices/{id}', [TypeController::class, 'getPrices'])->name('type.getPrices');
     Route::post('/type/store-prices', [TypeController::class, 'storePrices'])->name('type.storePrices');
+
+    // === [PASTE DISINI: SETUP AMENITIES MASSAL] ===
+    // Harus ditaruh SEBELUM Resource Room biar tidak error dianggap ID
+    Route::get('room/setup-amenities', [RoomController::class, 'bulkAmenities'])->name('room.bulk_amenities');
+    Route::post('room/setup-amenities', [RoomController::class, 'bulkAmenitiesUpdate'])->name('room.bulk_amenities.update');
+    // ==============================================
     // ========================
     Route::resource('room', RoomController::class);
     Route::resource('roomstatus', RoomStatusController::class);
@@ -323,6 +329,9 @@ Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Customer,Manager,D
         Route::put('/check-in/{transaction}', [CheckinController::class, 'update'])->name('checkin.update');
         Route::delete('/check-in/{transaction}', [CheckinController::class, 'destroy'])->name('checkin.destroy');
         Route::post('/check-in/{transaction}/checkout', [CheckinController::class, 'checkout'])->name('checkin.checkout');
+
+        // [BARU] Route Trigger Check-In & Potong Stok Amenities
+        Route::post('/check-in/{id}/process', [CheckinController::class, 'processCheckIn'])->name('checkin.process');
 
         Route::get('/check-out', [CheckoutController::class, 'index'])->name('checkout.index');
         Route::post('/check-out/{transaction}', [CheckoutController::class, 'process'])->name('checkout.process');

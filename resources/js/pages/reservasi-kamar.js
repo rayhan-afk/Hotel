@@ -116,7 +116,7 @@ $(function () {
             }
         });
 
-        // === EVENT 1: PROSES CHECK IN (DIPERBAIKI) ===
+        // === EVENT 1: PROSES CHECK IN (UPDATED UNTUK AMENITIES) ===
         $(document).on('click', '.btn-checkin', function() {
             let transactionId = $(this).data('id');
             let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -124,7 +124,7 @@ $(function () {
             Swal.fire({
                 html: `<h2 style="color: #50200C; font-weight: bold; margin-top: -10px;">Check In Tamu?</h2>
                 <p style="color: #50200C; font-size: 14px; margin-top: 5px;">
-                Pastikan tamu sudah datang. Status akan diubah menjadi 'Check In'.</p>`,
+                Stok Amenities (Sandal, dll) akan otomatis berkurang dari gudang.</p>`, // [UPDATE TEKS BIAR JELAS]
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: "#F2C2B8",
@@ -140,10 +140,14 @@ $(function () {
                 if (result.isConfirmed) {
                     
                     // Loading State
-                    Swal.fire({ title: 'Memproses...', didOpen: () => { Swal.showLoading(); }, customClass: {title: 'swal-title-process'} });
+                    Swal.fire({ title: 'Memproses Stok & Check In...', didOpen: () => { Swal.showLoading(); }, customClass: {title: 'swal-title-process'} });
 
                     $.ajax({
-                        url: `/room-info/reservation/${transactionId}/check-in`,
+                        // [PENTING] GANTI URL INI KE ROUTE BARU KITA
+                        // DULU: /room-info/reservation/${transactionId}/check-in
+                        // SEKARANG: /transaction/check-in/${transactionId}/process
+                        url: `/transaction/check-in/${transactionId}/process`, 
+                        
                         type: 'POST',
                         data: { _token: csrfToken },
                         success: function(response) {
@@ -151,7 +155,7 @@ $(function () {
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Berhasil!',
-                                text: response.message, // Pesan dari controller (Berhasil Check In)
+                                text: response.message, // Pesan: "Check In Berhasil & Stok Berkurang"
                                 customClass: {
                                     title: 'swal-title-brown',
                                     htmlContainer: 'swal-text-brown',
@@ -162,8 +166,7 @@ $(function () {
                             table.ajax.reload(null, false);
                         },
                         error: function(xhr) {
-                            // === JIKA GAGAL (TANGGAL BELUM SESUAI) ===
-                            // Ambil pesan error spesifik dari Controller
+                            // === JIKA GAGAL ===
                             let errorMessage = 'Terjadi kesalahan sistem.';
                             if (xhr.responseJSON && xhr.responseJSON.message) {
                                 errorMessage = xhr.responseJSON.message;
@@ -172,7 +175,7 @@ $(function () {
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Gagal Check In!',
-                                text: errorMessage, // "Belum waktunya Check In! Tanggal..."
+                                text: errorMessage,
                                 confirmButtonColor: '#d33',
                                 confirmButtonText: 'Tutup'
                             });

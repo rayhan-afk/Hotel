@@ -17,6 +17,8 @@ use App\Http\Controllers\KamarTersediaController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\LaporanKamarController; 
 use App\Http\Controllers\LaporanPosController;
+use App\Http\Controllers\LaporanStockopnameAmenities;
+use App\Http\Controllers\LaporanStockopnameIngredients;
 use App\Http\Controllers\NotificationsController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\POSController;
@@ -85,12 +87,17 @@ Route::group(['middleware' => 'guest'], function () {
 */
 Route::group(['middleware' => ['auth', 'checkRole:Super,Housekeeping,Manager']], function () {
     // Resource Amenities
-    Route::resource('amenity', AmenityController::class);
-    
-    // Logout untuk Housekeeping
-    Route::post('/logout', [AuthController::class, 'logout'])->name('logout.housekeeping');
-});
+   // 1. Taruh Custom Route PALING ATAS (Sebelum Resource)
+Route::post('/amenity/stock-opname', [App\Http\Controllers\AmenityController::class, 'stockOpname'])->name('amenity.stock-opname');
 
+// 2. Baru kemudian Route Resource
+Route::resource('amenity', App\Http\Controllers\AmenityController::class);
+    // Route untuk melihat halaman riwayat
+    Route::get('/amenities/history', [AmenityController::class, 'history'])->name('amenities.history');
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout.housekeeping');
+    
+    Route::get('/laporan/amenities/pdf', [LaporanStockopnameAmenities::class, 'exportPdf'])->name('laporan.amenities.pdf');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -126,9 +133,16 @@ Route::middleware(['auth'])->group(function () {
 | ROLE: SUPER + DAPUR (Bahan Baku / Ingredients)
 |--------------------------------------------------------------------------
 */
+Route::get('/ingredient/laporan/pdf', [LaporanStockopnameIngredients::class, 'exportPdf'])
+    ->name('laporan.ingredients.pdf');
+    
 Route::resource('ingredient', IngredientController::class)
     ->middleware(['auth', 'checkRole:Super,Dapur'])
     ->names('ingredient');
+Route::post('/ingredients/opname', [IngredientController::class, 'storeOpname'])->name('ingredients.opname');
+Route::get('/ingredients/opname-history', [App\Http\Controllers\IngredientController::class, 'history'])->name('ingredients.history');
+
+
 // POS Routes
 Route::get('/pos', [POSController::class, 'index'])->name('pos.index');
 Route::post('/pos/store', [POSController::class, 'store'])->name('pos.store');

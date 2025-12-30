@@ -2,6 +2,8 @@
 @section('title', 'Atur Resep Menu')
 
 @section('content')
+{{-- CDN SweetAlert2 --}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 {{-- CSS Tambahan --}}
 <style>
     /* --- PERBAIKAN UTAMA DI SINI --- */
@@ -162,10 +164,11 @@
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
-                                    <form action="{{ route('recipes.destroyMenu', $menu->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus menu {{ $menu->name }}? \nSemua resep terkait juga akan dihapus.');">
+                                    <form action="{{ route('recipes.destroyMenu', $menu->id) }}" method="POST" class="d-inline form-delete-menu">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="dropdown-item text-danger">
+                                        
+                                        <button type="button" class="dropdown-item text-danger btn-delete-menu" data-name="{{ $menu->name }}">
                                             <i class="fas fa-trash-alt me-2"></i>Hapus Menu
                                         </button>
                                     </form>
@@ -358,3 +361,5 @@
         csrfToken: "{{ csrf_token() }}"
     };
 </script>
+
+<script src="{{ asset('js/recipes.js') }}"></script>

@@ -144,12 +144,17 @@ Route::get('/ingredients/opname-history', [App\Http\Controllers\IngredientContro
 
 
 // POS Routes
-Route::get('/pos', [POSController::class, 'index'])->name('pos.index');
-Route::post('/pos/store', [POSController::class, 'store'])->name('pos.store');
-Route::get('/pos/history', [POSController::class, 'history'])->name('pos.history');
-// ... route pos yang lain ...
-Route::get('/pos/print/{invoice}', [PosController::class, 'printStruk'])->name('pos.print');
-// Route untuk Resep
+/*
+|--------------------------------------------------------------------------
+| ROLE: KASIR + SUPER + ADMIN (Operasional Kasir)
+|--------------------------------------------------------------------------
+*/
+Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Kasir']], function () {
+    Route::get('/pos', [POSController::class, 'index'])->name('pos.index');
+    Route::post('/pos/store', [POSController::class, 'store'])->name('pos.store');
+    Route::get('/pos/history', [POSController::class, 'history'])->name('pos.history');
+    Route::get('/pos/print/{invoice}', [POSController::class, 'printStruk'])->name('pos.print');
+});
 // Halaman Utama
 // Recipe Routes
 Route::get('/recipes', [RecipeController::class, 'index'])->name('recipes.index');
@@ -163,10 +168,16 @@ Route::put('/recipes/update-menu/{id}', [RecipeController::class, 'updateMenu'])
 // Route untuk Hapus Menu
 Route::delete('/recipes/delete-menu/{id}', [RecipeController::class, 'destroyMenu'])->name('recipes.destroyMenu');
 
-// Group Laporan
-Route::prefix('laporan')->name('laporan.')->group(function () {
-    Route::get('/pos', [LaporanPosController::class, 'index'])->name('pos.index');
-    Route::get('/pos/export', [LaporanPosController::class, 'exportExcel'])->name('pos.export');
+/*
+|--------------------------------------------------------------------------
+| ROLE: KASIR + MANAGER + SUPER (Laporan Kasir)
+|--------------------------------------------------------------------------
+*/
+Route::group(['middleware' => ['auth', 'checkRole:Super,Manager,Kasir']], function () {
+    Route::prefix('laporan')->name('laporan.')->group(function () {
+        Route::get('/pos', [LaporanPosController::class, 'index'])->name('pos.index');
+        Route::get('/pos/export', [LaporanPosController::class, 'exportExcel'])->name('pos.export');
+    });
 });
 /*
 |--------------------------------------------------------------------------
@@ -294,7 +305,7 @@ Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Manager']], functi
 | CATATAN: Housekeeping khusus untuk room-info.cleaning saja
 |--------------------------------------------------------------------------
 */
-Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Customer,Manager,Dapur,Housekeeping']], function () {
+Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Customer,Manager,Dapur,Housekeeping,Kasir']], function () {
 
     // Dashboard & Auth
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');

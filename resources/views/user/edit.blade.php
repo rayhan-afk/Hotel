@@ -40,21 +40,27 @@
                                 </div>
                             @enderror
                         </div>
-                        <div class=" col-md-12">
+                        <div class="col-md-12">
                             <label for="role" class="form-label">Peran</label>
-                            <select style="color: #50200C" id="role" name="role" class="form-select @error('password') is-invalid @enderror">
-                                <option selected disabled hidden>Choose...</option>
-                                @if (in_array($user->role, ['Super', 'Admin']))
-                                    <option value="Super" @if ($user->role == 'Super') selected @endif>Super</option>
-                                    <option value="Admin" @if ($user->role == 'Admin') selected @endif>Admin</option>
-                                    <option value="Manager" @if (old('role') == 'Manager') selected @endif>Manager</option>
-                                    <option value="Dapur" @if (old('role') == 'Dapur') selected @endif>Dapur</option>
-                                    <option value="Housekeeping" {{ old('role') == 'Housekeeping' ? 'selected' : '' }}>Housekeeping</option>
-                                @endif
-                                @if ($user->role == 'Customer')
-                                    <option value="Customer" @if ($user->role == 'Customer') selected @endif>Pengguna</option>
-                                @endif
+                            <select style="color: #50200C" id="role" name="role" class="form-select @error('role') is-invalid @enderror">
+                                {{-- Opsi default mati --}}
+                                <option value="" disabled>Pilih Peran...</option>
+                                
+                                {{-- Definisikan list role di sini agar pasti muncul --}}
+                                @php
+                                    $roles = ['Super', 'Admin', 'Manager', 'Dapur', 'Housekeeping', 'Kasir', 'Customer'];
+                                @endphp
+
+                                {{-- Loop otomatis membuat opsi --}}
+                                @foreach ($roles as $roleOption)
+                                    <option value="{{ $roleOption }}" 
+                                        {{-- Logic: Jika user punya role ini, atau jika admin baru memilih role ini (old input), maka tandai selected --}}
+                                        {{ (old('role', $user->role) == $roleOption) ? 'selected' : '' }}>
+                                        {{ $roleOption }}
+                                    </option>
+                                @endforeach
                             </select>
+                            
                             @error('role')
                                 <div class="text-danger mt-1">
                                     {{ $message }}

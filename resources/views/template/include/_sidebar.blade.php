@@ -46,11 +46,12 @@
                 $isManager = ($role == 'Manager');
                 $isAdmin = ($role == 'Admin');
                 $isHousekeeping = ($role == 'Housekeeping');
+                $isKasir = ($role == 'Kasir');
             @endphp
 
             {{-- 1. GAMBARAN UMUM (DASHBOARD) --}}
-            {{-- Logic: Semua KECUALI Dapur & Housekeeping --}}
-            @if(!$isDapur && !$isHousekeeping)
+            {{-- Logic: Semua KECUALI Dapur & Housekeeping & Kasir --}}
+            @if(!$isDapur && !$isHousekeeping && !$isKasir)
                 <div class="nav-section">
                     <div class="nav-section-title">Gambaran Umum</div>
                     <a href="{{ route('dashboard.index') }}"
@@ -80,7 +81,7 @@
                         <div class="nav-subtitle">Status Pembersihan</div>
                     </div>
                 </a>
-            @elseif(!$isDapur)
+            @elseif(!$isDapur && !$isKasir)
                 {{-- MENU: INFO KAMAR - Untuk role lain (Dropdown lengkap) --}}
                 <div class="nav-section-title">Pemesanan</div>
 
@@ -128,7 +129,7 @@
             
             {{-- 3. OPERATIONS (Manajemen User, Kamar, Ruang Rapat) --}}
             {{-- Logic: Header Operations tampil untuk Superadmin, Admin, Manager --}}
-            @if(!$isDapur && !$isHousekeeping)
+            @if(!$isDapur && !$isHousekeeping && !$isKasir)
                 <div class="nav-section">
                     <div class="nav-section-title">Operations</div>
                     
@@ -222,79 +223,99 @@
                 </div>
             @endif
 
-            {{-- 4. PERSEDIAAN (BAHAN BAKU & AMENITIES) --}}
-            {{-- Logic: Tampil untuk SEMUA user, tapi konten beda --}}
-            @if($isDapur || $isSuper || $isAdmin || $isManager || $isHousekeeping)
+            {{-- 4. PERSEDIAAN (BAHAN BAKU & AMENITIES & POS) --}}
+            @if($isDapur || $isSuper || $isAdmin || $isManager || $isHousekeeping || $isKasir)
                 
-                <div class="nav-section-title">{{ ($isDapur || $isHousekeeping) ? 'Persediaan' : 'Persediaan' }}</div>
+                <div class="nav-section-title">Menu Utama</div>
                 
-                {{-- A. TAMPILAN KHUSUS DAPUR (Hanya Link Bahan Baku) --}}
+                {{-- A. TAMPILAN KHUSUS DAPUR --}}
                 @if($isDapur)
                     <a href="{{ route('ingredient.index') }}" class="nav-item {{ request()->routeIs('ingredient.*') ? 'active' : '' }}">
-                        <div class="nav-icon">
-                            <i class="fas fa-carrot"></i>
-                        </div>
+                        <div class="nav-icon"><i class="fas fa-carrot"></i></div>
                         <div class="nav-content">
                             <div class="nav-title">Bahan Baku</div>
                             <div class="nav-subtitle">Stok Dapur</div>
                         </div>
                     </a>
-                {{-- B. TAMPILAN KHUSUS HOUSEKEEPING (Direct Link) --}}
+                {{-- MENU BARU: ATUR RESEP UNTUK DAPUR --}}
+                <a href="{{ route('recipes.index') }}" class="nav-item {{ request()->routeIs('recipes.*') ? 'active' : '' }}">
+                    <div class="nav-icon"><i class="fas fa-scroll"></i></div>
+                    <div class="nav-content">
+                        <div class="nav-title">Atur Resep Menu</div>
+                        <div class="nav-subtitle">Takaran Masakan</div>
+                    </div>
+                </a>
+                {{-- B. TAMPILAN KHUSUS HOUSEKEEPING --}}
                 @elseif($isHousekeeping)
                     <a href="{{ route('amenity.index') }}" class="nav-item {{ request()->routeIs('amenity.*') ? 'active' : '' }}">
-                        <div class="nav-icon">
-                            <i class="fas fa-soap"></i>
-                        </div>
+                        <div class="nav-icon"><i class="fas fa-soap"></i></div>
                         <div class="nav-content">
                             <div class="nav-title">Amenities</div>
                             <div class="nav-subtitle">Stok Kamar</div>
                         </div>
                     </a>
-                
-                {{-- C. TAMPILAN UNTUK ADMIN/MANAGER/SUPERADMIN (Dropdown) --}}
+
+                {{-- C. TAMPILAN KHUSUS KASIR (LANGSUNG LINK, BUKAN DROPDOWN) --}}
+                @elseif($isKasir)
+                    <a href="{{ route('pos.index') }}" class="nav-item {{ request()->routeIs('pos.*') ? 'active' : '' }}">
+                        <div class="nav-icon"><i class="fas fa-cash-register"></i></div>
+                        <div class="nav-content">
+                            <div class="nav-title">Kasir (POS)</div>
+                            <div class="nav-subtitle">Transaksi</div>
+                        </div>
+                    </a>
+
+                {{-- D. TAMPILAN UNTUK ADMIN/MANAGER/SUPER (Tetap Dropdown Lengkap) --}}
                 @else
-                    <div class="nav-item dropdown-nav {{ request()->routeIs(['ingredient.*', 'amenity.*']) ? 'active' : '' }} ">
+                    <div class="nav-item dropdown-nav {{ request()->routeIs(['ingredient.*', 'amenity.*', 'pos.*', 'recipes.*']) ? 'active' : '' }} ">
                         <div class="nav-toggle" data-bs-toggle="collapse" data-bs-target="#persediaanSubmenu">
-                            <div class="nav-icon">
-                                <i class="fas fa-boxes"></i>
-                            </div>
+                            <div class="nav-icon"><i class="fas fa-boxes"></i></div>
                             <div class="nav-content">
-                                <div class="nav-title">Persediaan</div>
-                                <div class="nav-subtitle">Bahan Baku & Amenities</div>
+                                <div class="nav-title">Persediaan & Menu</div>
+                                <div class="nav-subtitle">Stok & Kasir</div>
                             </div>
-                            <div class="nav-arrow">
-                                <i class="fas fa-chevron-down"></i>
-                            </div>
+                            <div class="nav-arrow"><i class="fas fa-chevron-down"></i></div>
                         </div>
                         
-                        <div class="collapse {{ request()->routeIs(['ingredient.*', 'amenity.*']) ? 'show' : '' }} w-100" id="persediaanSubmenu">
+                        <div class="collapse {{ request()->routeIs(['ingredient.*', 'amenity.*', 'pos.*', 'recipes.*']) ? 'show' : '' }} w-100" id="persediaanSubmenu">
                             <div class="nav-submenu">
-                                
-                                {{-- Bahan Baku: HANYA Superadmin yang bisa lihat di dalam Dropdown ini --}}
-                                {{-- Admin dan Manager TIDAK bisa lihat bahan baku --}}
                                 @if($isSuper) 
                                     <a href="{{ route('ingredient.index') }}" class="nav-subitem {{ request()->routeIs('ingredient.*') ? 'active' : '' }} ">
                                         <i class="fas fa-cube me-2"></i>Bahan Baku
                                     </a>
                                 @endif
-                                
-                                <a href="{{ route('pos.index') }}" class="nav-subitem {{ request()->routeIs('pos.*') ? 'active' : '' }}">
-                                    <i class="fas fa-cash-register me-2"></i>Kasir
-                                </a>
-                                
-                                <a href="{{ route('recipes.index') }}" class="nav-subitem {{ request()->routeIs('recipes.*') ? 'active' : '' }}">
-                                     <i class="fas fa-fw fa-scroll"></i> <span>Atur Resep Menu</span>
-                                </a>
-                                
-                                {{-- Amenities: Semua role di blok else ini (Super, Admin, Manager) bisa lihat --}}
+
                                 <a href="{{ route('amenity.index') }}" class="nav-subitem {{ request()->routeIs('amenity.*') ? 'active' : '' }} ">
                                     <i class="fas fa-soap me-2"></i>Amenities
                                 </a>
+                                
+                                {{-- Cuma muncul kalau BUKAN Admin --}}
+                                @if(!$isAdmin) 
+                                    <a href="{{ route('pos.index') }}" class="nav-item {{ request()->routeIs('pos.*') ? 'active' : '' }}">
+                                        <div class="nav-icon"><i class="fas fa-cash-register"></i></div>
+                                        <div class="nav-content">
+                                            <div class="nav-title">Kasir</div>
+                                        </div>
+                                    </a>
+                                @endif
+                                
+                                {{-- Admin tidak perlu tahu resep masakan --}}
+                                @if(!$isAdmin)
+                                    <a href="{{ route('recipes.index') }}" class="nav-item {{ request()->routeIs('recipes.*') ? 'active' : '' }}">
+                                        <div class="nav-icon"><i class="fas fa-scroll"></i></div>
+                                        <div class="nav-content">
+                                            <div class="nav-title">Atur Resep Menu</div>
+                                        </div>
+                                    </a>
+                                @endif
+                                
+                                
                             </div>
                         </div>
                     </div>
                 @endif
             @endif
+       
 
 
             {{-- 5. ANALYTICS & ADMINISTRASI --}}
@@ -324,16 +345,21 @@
                         
                         <div class="collapse {{ $isLaporanActive ? 'show' : '' }} w-100" id="laporanSubmenu">
                             <div class="nav-submenu">
-                                <a href="{{ route('laporan.kamar.index') }}" class="nav-subitem {{ Route::currentRouteName() == 'laporan.kamar.index' ? 'active' : '' }} ">
-                                    <i class="fas fa-bed me-2"></i>Laporan Kamar
-                                </a>
-                                <a href="{{ route('laporan.rapat.index') }}" class="nav-subitem {{ Route::currentRouteName() == 'laporan.rapat.index' ? 'active' : '' }} ">
-                                    <i class="fas fa-handshake me-2"></i>Laporan Rapat
-                                </a>
+                                {{-- Laporan Kamar & Rapat DISEMBUNYIKAN dari Kasir --}}
+                                @if(!$isKasir)
+                                    <a href="{{ route('laporan.kamar.index') }}" class="nav-subitem {{ Route::currentRouteName() == 'laporan.kamar.index' ? 'active' : '' }} ">
+                                        <i class="fas fa-bed me-2"></i>Laporan Kamar
+                                    </a>
+                                    <a href="{{ route('laporan.rapat.index') }}" class="nav-subitem {{ Route::currentRouteName() == 'laporan.rapat.index' ? 'active' : '' }} ">
+                                        <i class="fas fa-handshake me-2"></i>Laporan Rapat
+                                    </a>
+                                @endif
                                 <!-- MENU LAPORAN KASIR (Baru) -->
-                                <a href="{{ route('laporan.pos.index') }}" class="nav-subitem {{ Route::currentRouteName() == 'laporan.pos.index' ? 'active' : '' }} ">
-                                    <i class="fas fa-cash-register me-2"></i>Laporan Kasir
-                                </a>
+                                @if(!$isAdmin) 
+                                    <a href="{{ route('laporan.pos.index') }}" class="nav-subitem {{ Route::currentRouteName() == 'laporan.pos.index' ? 'active' : '' }} ">
+                                        <i class="fas fa-cash-register me-2"></i>Laporan Kasir
+                                    </a>
+                                @endif
 
                             </div>
                         </div>
@@ -345,7 +371,7 @@
 
         {{-- 6. SIDEBAR FOOTER --}}
         {{-- Logic: Semua KECUALI Dapur & Housekeeping --}}
-        @if(!$isDapur && !$isHousekeeping)
+        @if(!$isDapur && !$isHousekeeping && !$isKasir)
             <div class="sidebar-footer">
                 <a href="{{ route('transaction.reservation.createIdentity') }}" class="btn w-100 quick-action-btn" 
                 style="background-color: #8FB8E1; border-color: #8FB8E1; color: #F7F3E4;">

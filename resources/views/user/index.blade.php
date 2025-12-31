@@ -2,7 +2,7 @@
 @section('title', 'User')
 @section('content')
     <div class="row">
-        <div class="col-lg-6">
+        <div class="col-lg-12">
             <div class="row mt-2 mb-2">
                 <div class="col-lg-6 mb-2">
                     <div class="d-grid gap-2 d-md-block">
@@ -18,8 +18,6 @@
                 </div>
                 <div class="col-lg-6 mb-2">
                     <form class="d-flex" method="GET" action="{{ route('user.index') }}">
-                        <input type="hidden" name="qc" value="{{ request()->input('qc') }}">
-                        <input type="hidden" name="customers" value="{{ request()->input('customers') }}">
                         <input class="form-control me-2" type="search" placeholder="Cari User Hotel" aria-label="Search"
                             id="search-user" name="qu" value="{{ request()->input('qu') }}">
                         <button class="btn btn-search-custom" type="submit">Cari</button>
@@ -35,34 +33,60 @@
                                     <thead>
                                         <tr>
                                             <th scope="col">#</th>
-                                            <th scope="col">Nama</th>
-                                            <th scope="col">Email</th>
-                                            <th scope="col">Peran</th>
+                                            <th scope="col">User</th>
+                                            <th scope="col">Kontak</th>
+                                            <th scope="col">Role</th>
+                                            <th scope="col">Status</th>
+                                            <th scope="col">Bergabung</th>
                                             <th scope="col">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @forelse ($users as $user)
                                             <tr>
-                                                <td scope="row">
+                                                <td class="align-middle">
                                                     {{ ($users->currentpage() - 1) * $users->perpage() + $loop->index + 1 }}
                                                 </td>
-                                                <td>{{ $user->name }}</td>
-                                                <td>{{ $user->email }}</td>
-                                                <td>{{ $user->role }}</td>
-                                                <td>
+                                                <td class="align-middle">
+                                                    <div class="d-flex align-items-center">
+                                                        {{-- Avatar Placeholder dari Inisial Nama --}}
+                                                        <div class="rounded-circle d-flex justify-content-center align-items-center me-3 fw-bold shadow-sm" 
+                                                             style="width: 40px; height: 40px; background-color: #F7F3E4; color: #50200C; border: 1px solid #ddd;">
+                                                            {{ substr($user->name, 0, 2) }}
+                                                        </div>
+                                                        <span class="fw-bold text-dark">{{ $user->name }}</span>
+                                                    </div>
+                                                </td>
+                                                <td class="align-middle">{{ $user->email }}</td>
+                                                <td class="align-middle">
+                                                    <span class="badge rounded-pill" style="background-color: #50200C; color: #fff; font-weight: normal;">
+                                                        {{ $user->role }}
+                                                    </span>
+                                                </td>
+                                                <td class="align-middle">
+                                                    {{-- Simulasi Status Active --}}
+                                                    <span class="badge rounded-pill bg-success" style="font-weight: normal;">
+                                                        Active
+                                                    </span>
+                                                </td>
+                                                <td class="align-middle">
+                                                    {{-- Format Tanggal: 31 Dec 2025 --}}
+                                                    {{ $user->created_at ? $user->created_at->format('d M Y') : '-' }}
+                                                </td>
+                                                <td class="align-middle">
                                                     <a class="btn btn-sm rounded shadow-sm border p-0 m-0"
                                                         href="{{ route('user.edit', ['user' => $user->id]) }}"
                                                         data-bs-toggle="tooltip" data-bs-placement="top" title="Edit User"
                                                         style="background-color: #F7F3E4; border-color: #F7F3E4;">
-                                                        <i class="fas fa-edit" style="font-size: 20px; color: #50200C;"></i>
+                                                        <i class="fas fa-edit p-1" style="font-size: 16px; color: #50200C;"></i>
                                                     </a>
-                                                    <form class="btn btn-sm p-0 m-0" method="POST"
+                                                    
+                                                    <form class="d-inline" method="POST"
                                                         id="delete-post-form-{{ $user->id }}"
                                                         action="{{ route('user.destroy', ['user' => $user->id]) }}">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <div class="btn btn-light btn-sm rounded shadow-sm border p-0 m-0 delete"
+                                                        <button type="button" class="btn btn-sm rounded shadow-sm border p-0 m-0 delete"
                                                             user-id="{{ $user->id }}" 
                                                             user-name="{{ $user->name }}"
                                                             user-role="{{ $user->role }}"
@@ -70,20 +94,21 @@
                                                             data-bs-placement="top"
                                                             title="Delete User"
                                                             style="background-color: #F7F3E4; border-color: #F7F3E4;">
-                                                            <i class="fas fa-trash" style="font-size: 20px; color: #50200C;"></i>
-                                                        </div>
+                                                            <i class="fas fa-trash p-1" style="font-size: 16px; color: #50200C;"></i>
+                                                        </button>
                                                     </form>
+
                                                     <a class="btn btn-sm rounded shadow-sm border p-0 m-0"
                                                         href="{{ route('user.show', ['user' => $user->id]) }}"
                                                         data-bs-toggle="tooltip" data-bs-placement="top" title="Detail User"
                                                         style="background-color: #F7F3E4; border-color: #F7F3E4;">
-                                                        <i class="fas fa-info-circle" style="font-size: 20px; color: #50200C;"></i>
+                                                        <i class="fas fa-info-circle p-1" style="font-size: 16px; color: #50200C;"></i>
                                                     </a>
                                                 </td>
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="10" class="text-center" style="color: #50200C">
+                                                <td colspan="7" class="text-center" style="color: #50200C">
                                                     Tidak ada data di tabel ini
                                                 </td>
                                             </tr>
@@ -93,7 +118,7 @@
                             </div>
                         </div>
                         <div class="card-footer" style="background-color: #F7F3E4; color: #50200C;">
-                            <h3>User Hotel</h3>
+                            <h3 class="mb-0 fs-5 fw-bold">User Hotel Management</h3>
                         </div>
                     </div>
                 </div>
@@ -101,105 +126,12 @@
             <div class="row justify-content-md-center mt-3">
                 <div class="col-sm-10 d-flex mx-auto justify-content-md-center">
                     <div class="pagination-block">
-                        {{ $users->onEachSide(1)->appends(['customers' => $customers->currentPage(), 'qc' => request()->input('qc')])->links('template.paginationlinks') }}
+                        {{ $users->onEachSide(1)->appends(['qc' => request()->input('qc')])->links('template.paginationlinks') }}
                     </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-6">
-            <div class="row mt-2 mb-2">
-                <div class="col-lg-6">
-                </div>
-                <div class="col-lg-6 mb-2">
-                    <form class="d-flex" method="GET" action="{{ route('user.index') }}">
-                        <input type="hidden" name="qu" value="{{ request()->input('qu') }}">
-                        <input type="hidden" name="users" value="{{ request()->input('users') }}">
-                        <input class="form-control me-2" type="search" placeholder="Cari Customer" aria-label="Search"
-                            id="search-customer" name="qc" value="{{ request()->input('qc') }}">
-                        <button class="btn btn-search-custom" type="submit">Search</button>
-                    </form>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-lg-12">
-                    <div class="card shadow-sm border">
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-hover table-custom" style="white-space: nowrap">
-                                    <thead>
-                                        <tr>
-                                            <th scope="col">#</th>
-                                            <th scope="col">Nama</th>
-                                            <th scope="col">Email</th>
-                                            <th scope="col">Peran</th>
-                                            <th scope="col">Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse ($customers as $user)
-                                            <tr>
-                                                <td scope="row">
-                                                    {{ ($customers->currentpage() - 1) * $customers->perpage() + $loop->index + 1 }}
-                                                </td>
-                                                <td>{{ $user->name }}</td>
-                                                <td>{{ $user->email }}</td>
-                                                <td>{{ $user->role }}</td>
-                                                <td>
-                                                    <a class="btn btn-sm rounded shadow-sm border p-0 m-0"
-                                                        href="{{ route('user.edit', ['user' => $user->id]) }}"
-                                                        data-bs-toggle="tooltip" data-bs-placement="top" title="Edit User"
-                                                        style="background-color: #F7F3E4; border-color: #F7F3E4;">
-                                                        <i class="fas fa-edit" style="font-size: 20px; color: #50200C;"></i>
-                                                    </a>
-                                                    <form class="btn btn-sm p-0 m-0" method="POST"
-                                                        id="delete-post-form-customer-{{ $user->id }}"
-                                                        action="{{ route('user.destroy', ['user' => $user->id]) }}">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <div class="btn btn-sm rounded shadow-sm border p-0 m-0 delete"
-                                                            user-id="{{ $user->id }}" 
-                                                            user-name="{{ $user->name }}"
-                                                            user-role="{{ $user->role }}"
-                                                            data-bs-toggle="tooltip"
-                                                            data-bs-placement="top" 
-                                                            title="Delete User"
-                                                            style="background-color: #F7F3E4; border-color: #F7F3E4;">
-                                                            <i class="fas fa-trash" style="font-size: 20px; color: #50200C;"></i>
-                                                        </div>
-                                                    </form>
-                                                    <a class="btn btn-sm rounded shadow-sm border p-0 m-0 disabled"
-                                                        href="/user/detail/{{ $user->id }}" data-bs-toggle="tooltip"
-                                                        data-bs-placement="top" title="Detail User"
-                                                        style="background-color: #F7F3E4; border-color: #F7F3E4;">
-                                                        <i class="fas fa-info-circle" style="font-size: 20px; color: #50200C;"></i>
-                                                    </a>
-                                                </td>
-                                            </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="10" class="text-center" style="color: #50200C">
-                                                    Tidak ada data di tabel ini
-                                                </td>
-                                            </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        <div class="card-footer" style="background-color: #F7F3E4; color: #50200C;">
-                            <h3>Customer</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="row justify-content-md-center mt-3">
-                <div class="col-sm-10 d-flex justify-content-md-center">
-                    {{ $customers->onEachSide(1)->appends(['users' => $users->currentPage(), 'qu' => request()->input('qu')])->links('template.paginationlinks') }}
                 </div>
             </div>
         </div>
     </div>
-
 @endsection
 
 @section('footer')
@@ -219,7 +151,7 @@
 
             Swal.fire({
                 title: "Yakin ingin menghapus?",
-                text: "Data tidak bisa dikembalikan!",
+                text: "Data " + user_name + " tidak bisa dikembalikan!",
                 icon: "warning",
                 showCancelButton: true,
                 confirmButtonColor: "#F2C2B8",
@@ -232,15 +164,39 @@
                 },
             }).then((result) => {
                 if (result.isConfirmed) {
-                    if (user_role == "Customer") {
-                        id = '#delete-post-form-customer-' + user_id
-                        $(id).submit();
-                    } else {
-                        id = '#delete-post-form-' + user_id
-                        $(id).submit();
-                    }
+                    id = '#delete-post-form-' + user_id
+                    $(id).submit();
                 }
             })
         });
+
+        // --- TAMBAHAN: POP UP SUKSES ---
+        // Cek apakah ada session 'success' dari Controller
+        @if(session('success'))
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: '{{ session('success') }}',
+                // Styling agar sesuai tema hotel Anda
+                background: '#F7F3E4',
+                color: '#50200C',
+                confirmButtonColor: '#50200C',
+                iconColor: '#28a745',
+                timer: 2500, // Pop up hilang otomatis setelah 2.5 detik
+                showConfirmButton: false
+            });
+        @endif
+
+        // --- TAMBAHAN: POP UP GAGAL (Opsional) ---
+        @if(session('failed'))
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal!',
+                text: '{{ session('failed') }}',
+                background: '#F7F3E4',
+                color: '#50200C',
+                confirmButtonColor: '#50200C',
+            });
+        @endif
     </script>
 @endsection

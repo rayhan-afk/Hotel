@@ -57,48 +57,60 @@
     </div>
 
     {{-- Main Content --}}
-    <div class="professional-table-container" style="padding: 0; overflow: hidden;">
-        <div class="row g-0">
-            {{-- KIRI: Menu List --}}
-            <div class="col-md-8 p-4">
-                <div class="table-header d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-                    <div class="mb-2 mb-md-0">
-                        <h4><i class="fas fa-cash-register me-2"></i>Menu Restoran</h4>
-                        <p class="mb-0 text-muted">Klik menu untuk menambahkan ke pesanan</p>
-                    </div>
-                    <!-- KODE BARU: FILTER KATEGORI MODEL TOMBOL (SCROLLABLE) -->
-<div class="d-flex align-items-center gap-2 overflow-auto pb-2 mb-2" style="white-space: nowrap; max-width: 100%; -webkit-overflow-scrolling: touch;">
-    
-    <!-- PENTING: Input ini menyimpan nilai kategori yang dipilih untuk dibaca JS -->
-    <input type="hidden" id="categoryFilter" value="all">
-
-    <!-- Tombol 'Semua' -->
-    <button type="button" 
-            class="btn btn-primary px-3 rounded-pill cat-btn shadow-sm fw-bold" 
-            onclick="window.setCategory('all', this)">
-        <i class="fas fa-th-large me-1"></i> Semua
-    </button>
-
-    <!-- Tombol Manual -->
-    <button type="button" class="btn btn-outline-primary px-3 rounded-pill cat-btn shadow-sm" onclick="window.setCategory('Makanan Utama', this)">Makanan Utama</button>
-    <button type="button" class="btn btn-outline-primary px-3 rounded-pill cat-btn shadow-sm" onclick="window.setCategory('Minuman', this)">Minuman</button>
-    <button type="button" class="btn btn-outline-primary px-3 rounded-pill cat-btn shadow-sm" onclick="window.setCategory('Camilan & Pembuka', this)">Camilan</button>
-    <button type="button" class="btn btn-outline-primary px-3 rounded-pill cat-btn shadow-sm" onclick="window.setCategory('Penutup', this)">Penutup</button>
-    <button type="button" class="btn btn-outline-primary px-3 rounded-pill cat-btn shadow-sm" onclick="window.setCategory('Paket Sarapan', this)">Sarapan</button>
-    <button type="button" class="btn btn-outline-primary px-3 rounded-pill cat-btn shadow-sm" onclick="window.setCategory('Kopi & Teh', this)">Kopi & Teh</button>
-
-    <!-- Tombol dari Database (Looping) -->
-    @foreach($categories as $cat)
-        @if(!in_array($cat->category, ['Makanan Utama','Minuman','Camilan & Pembuka','Penutup','Paket Sarapan','Kopi & Teh']))
-            <button type="button" 
-                    class="btn btn-outline-primary px-3 rounded-pill cat-btn shadow-sm" 
-                    onclick="window.setCategory('{{ $cat->category }}', this)">
-                {{ $cat->category }}
-            </button>
-        @endif
-    @endforeach
-</div>
+<div class="professional-table-container" style="padding: 0; overflow: hidden; height: calc(100vh - 100px);">
+    <div class="row g-0 h-100">
+        
+        {{-- ========================================== --}}
+        {{-- KIRI: Menu List & Filter (col-md-8) --}}
+        {{-- ========================================== --}}
+        <div class="col-md-8 p-4 h-100 overflow-auto">
+            
+            {{-- HEADER: Judul & Search Bar --}}
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                <div>
+                    <h4 class="mb-1" style="color: #50200C;"><i class="fas fa-cash-register me-2"></i>Menu Restoran</h4>
+                    <p class="mb-0 text-muted small">Pilih kategori atau cari menu</p>
                 </div>
+                
+                {{-- SEARCH INPUT (PENTING: ID="searchInput") --}}
+                <div class="input-group shadow-sm" style="width: 250px;">
+                    <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" id="searchInput" class="form-control border-start-0 bg-white" placeholder="Cari menu...">
+                </div>
+            </div>
+
+            {{-- KATEGORI FILTER --}}
+            <div class="d-flex align-items-center gap-2 overflow-auto pb-3 mb-2" style="white-space: nowrap;">
+                
+                {{-- Hidden Input (PENTING: ID="categoryFilter") --}}
+                <input type="hidden" id="categoryFilter" value="all">
+
+                <button type="button" class="btn btn-outline-brown px-4 rounded-pill cat-btn category-filter-btn active shadow-sm" data-category="all">
+                    <i class="fas fa-th-large me-1"></i> Semua
+                </button>
+
+                <button type="button" class="btn btn-outline-brown px-4 rounded-pill cat-btn category-filter-btn shadow-sm" data-category="Food">
+                    <i class="fas fa-utensils me-1"></i> Makanan
+                </button>
+
+                <button type="button" class="btn btn-outline-brown px-4 rounded-pill cat-btn category-filter-btn shadow-sm" data-category="Beverage">
+                    <i class="fas fa-glass-martini-alt me-1"></i> Minuman
+                </button>
+
+                <button type="button" class="btn btn-outline-brown px-4 rounded-pill cat-btn category-filter-btn shadow-sm" data-category="Snack">
+                    <i class="fas fa-cookie-bite me-1"></i> Camilan
+                </button>
+
+                {{-- Looping Kategori Tambahan --}}
+                @foreach($categories as $cat)
+                    @php $catName = is_object($cat) ? $cat->category : $cat; @endphp
+                    @if(!in_array($catName, ['Food', 'Beverage', 'Snack']))
+                        <button type="button" class="btn btn-outline-brown px-4 rounded-pill cat-btn category-filter-btn shadow-sm" data-category="{{ $catName }}">
+                            {{ $catName }}
+                        </button>
+                    @endif
+                @endforeach
+            </div>
 
                 {{-- Grid Menu --}}
                 <div class="row g-3" id="menuContainer" style="max-height: 600px; overflow-y: auto; padding-right: 5px;">

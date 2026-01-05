@@ -30,6 +30,7 @@ use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\TransactionRoomReservationController;
 use App\Http\Controllers\TypeController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\FOCashierController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
@@ -256,6 +257,9 @@ Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Manager']], functi
         // Laporan Kamar
         Route::get('/kamar', [LaporanKamarController::class, 'index'])->name('kamar.index'); 
         Route::get('/kamar/export', [LaporanKamarController::class, 'exportExcel'])->name('kamar.export');
+
+        // [BARU] Route Export PDF Laporan Kamar (Menggunakan LaporanKamarController)
+        Route::get('/kamar/pdf', [LaporanKamarController::class, 'downloadPdf'])->name('kamar.pdf');
         
     });
 
@@ -271,6 +275,19 @@ Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Manager']], functi
 
     Route::get('/get-dialy-guest-chart-data', [ChartController::class, 'dailyGuestPerMonth']);
     Route::get('/get-dialy-guest/{year}/{month}/{day}', [ChartController::class, 'dailyGuest'])->name('chart.dailyGuest');
+
+    /*
+    |--------------------------------------------------------------------------
+    | FRONT OFFICE CASHIER (FO CASHIER)
+    |--------------------------------------------------------------------------
+    */
+    Route::prefix('fo-cashier')->group(function () {
+        Route::get('/', [FOCashierController::class, 'index'])->name('fo.cashier.index');
+        Route::get('/{id}/folio', [FOCashierController::class, 'show'])->name('fo.cashier.show');
+        Route::post('/{id}/charge', [FOCashierController::class, 'storeCharge'])->name('fo.cashier.store_charge');
+        Route::delete('/charge/{id}', [FOCashierController::class, 'destroyCharge'])->name('fo.cashier.destroy_charge');
+    });
+    // ============================================
 });
 
 

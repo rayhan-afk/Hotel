@@ -84,7 +84,7 @@
                 {{-- MENU: INFO KAMAR - Untuk role lain (Dropdown lengkap) --}}
                 <div class="nav-section-title">Pemesanan</div>
 
-                {{-- MENU: INFO KAMAR --}}
+                {{-- A. MENU INFO KAMAR --}}
                 <div class="nav-item dropdown-nav {{ request()->routeIs(['room-info.*']) ? 'active' : '' }} ">
                     <div class="nav-toggle" data-bs-toggle="collapse" data-bs-target="#roomInfoSubmenu">
                         <div class="nav-icon">
@@ -113,17 +113,47 @@
                     </div>
                 </div>
 
-                {{-- MENU: TRANSAKSI (Check-in) --}}
-                <a href="{{ route('transaction.checkin.index') }}" 
-                class="nav-item {{ request()->routeIs('transaction.checkin.*') ? 'active' : '' }}">
-                    <div class="nav-icon">
-                        <i class="fas fa-sign-in-alt"></i>
+                {{-- B. MENU PEMESANAN / TRANSAKSI (Dropdown Baru) --}}
+                {{-- Logic: Hanya Super, Manager, dan Admin --}}
+                @if($isSuper || $isManager || $isAdmin)
+                    
+                    @php
+                        // Cek aktif jika di route checkin atau fo cashier
+                        $isPemesananActive = request()->routeIs('transaction.checkin.*') || request()->routeIs('fo.cashier.*');
+                    @endphp
+
+                    <div class="nav-item dropdown-nav {{ $isPemesananActive ? 'active' : '' }}">
+                        <div class="nav-toggle" data-bs-toggle="collapse" data-bs-target="#pemesananSubmenu">
+                            <div class="nav-icon">
+                                <i class="fas fa-concierge-bell"></i>
+                            </div>
+                            <div class="nav-content">
+                                <div class="nav-title">Pemesanan</div>
+                                <div class="nav-subtitle">Transaksi & Kasir</div>
+                            </div>
+                            <div class="nav-arrow">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="collapse {{ $isPemesananActive ? 'show' : '' }} w-100" id="pemesananSubmenu">
+                            <div class="nav-submenu">
+                                {{-- SUB 1: Check-in / Out --}}
+                                <a href="{{ route('transaction.checkin.index') }}" 
+                                   class="nav-subitem {{ request()->routeIs('transaction.checkin.*') ? 'active' : '' }}">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Check-in / Out
+                                </a>
+
+                                {{-- SUB 2: FO Cashier --}}
+                                <a href="{{ route('fo.cashier.index') }}" 
+                                   class="nav-subitem {{ request()->routeIs('fo.cashier.*') ? 'active' : '' }}">
+                                    <i class="fas fa-cash-register me-2"></i>FO Cashier
+                                </a>
+                            </div>
+                        </div>
                     </div>
-                    <div class="nav-content">
-                        <div class="nav-title">Pemesanan</div>
-                        <div class="nav-subtitle">Check-in/Check-out Tamu</div>
-                    </div>
-                </a>
+                @endif
+
             @endif
             
             {{-- 3. OPERATIONS (Manajemen User, Kamar, Ruang Rapat) --}}
@@ -270,8 +300,7 @@
                         <div class="collapse {{ request()->routeIs(['ingredient.*', 'amenity.*']) ? 'show' : '' }} w-100" id="persediaanSubmenu">
                             <div class="nav-submenu">
                                 
-                                {{-- Bahan Baku: HANYA Superadmin yang bisa lihat di dalam Dropdown ini --}}
-                                {{-- Admin dan Manager TIDAK bisa lihat bahan baku --}}
+                                {{-- Bahan Baku: HANYA Superadmin yang bisa lihat --}}
                                 @if($isSuper) 
                                     <a href="{{ route('ingredient.index') }}" class="nav-subitem {{ request()->routeIs('ingredient.*') ? 'active' : '' }} ">
                                         <i class="fas fa-cube me-2"></i>Bahan Baku
@@ -286,7 +315,7 @@
                                      <i class="fas fa-fw fa-scroll"></i> <span>Atur Resep Menu</span>
                                 </a>
                                 
-                                {{-- Amenities: Semua role di blok else ini (Super, Admin, Manager) bisa lihat --}}
+                                {{-- Amenities: Semua role di blok else ini bisa lihat --}}
                                 <a href="{{ route('amenity.index') }}" class="nav-subitem {{ request()->routeIs('amenity.*') ? 'active' : '' }} ">
                                     <i class="fas fa-soap me-2"></i>Amenities
                                 </a>
@@ -304,7 +333,7 @@
                     <div class="nav-section-title">Analytics</div>
 
                     @php
-                        $laporanRoutes = ['laporan.kamar.index', 'laporan.rapat.index'];
+                        $laporanRoutes = ['laporan.kamar.index', 'laporan.rapat.index', 'laporan.pos.index'];
                         $isLaporanActive = in_array(Route::currentRouteName(), $laporanRoutes);
                     @endphp
                     
@@ -330,11 +359,9 @@
                                 <a href="{{ route('laporan.rapat.index') }}" class="nav-subitem {{ Route::currentRouteName() == 'laporan.rapat.index' ? 'active' : '' }} ">
                                     <i class="fas fa-handshake me-2"></i>Laporan Rapat
                                 </a>
-                                <!-- MENU LAPORAN KASIR (Baru) -->
                                 <a href="{{ route('laporan.pos.index') }}" class="nav-subitem {{ Route::currentRouteName() == 'laporan.pos.index' ? 'active' : '' }} ">
                                     <i class="fas fa-cash-register me-2"></i>Laporan Kasir
                                 </a>
-
                             </div>
                         </div>
                     </div>

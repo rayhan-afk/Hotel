@@ -1,5 +1,6 @@
 $(function () {
     const currentRoute = window.location.pathname;
+    // Cek apakah URL mengandung kata "customer"
     if (!currentRoute.split("/").includes("customer")) return;
 
     const tableElement = $("#customer-table");
@@ -44,7 +45,9 @@ $(function () {
                     searchable: false,
                     className: "text-center",
                     render: function (data, type, row) {
-                        return `<img src="${row.user.avatar_url}" class="rounded-circle border shadow-sm" width="45" height="45" style="object-fit: cover;" alt="Avatar">`;
+                        // Gunakan optional chaining (?.) untuk menghindari error jika user null
+                        let avatar = row.user ? row.user.avatar_url : 'https://ui-avatars.com/api/?name=' + row.name;
+                        return `<img src="${avatar}" class="rounded-circle border shadow-sm" width="45" height="45" style="object-fit: cover;" alt="Avatar">`;
                     }
                 },
                 {
@@ -63,20 +66,24 @@ $(function () {
                     }
                 },
                 
-                // === [BARU] KOLOM CUSTOMER GROUP ===
+                // === [PERBAIKAN DI SINI] KOLOM CUSTOMER GROUP ===
                 {
                     data: "customer_group",
                     name: "customer_group",
                     className: "text-center",
                     render: function (data) {
                         // Warnai badge sesuai grup
-                        let badgeClass = 'badge-pending'; // Default General
-                        if (data === 'OTA') badgeClass = 'badge-reserved';
-                        if (data === 'Corporate') badgeClass = 'badge-approved';
-                        if (data === 'OwnerReferral') badgeClass = 'badge-orange';
+                        let badgeClass = 'bg-secondary'; // Default jika tidak ada match
+                        
+                        if (data === 'OTA') badgeClass = 'bg-info text-dark';
+                        if (data === 'Corporate') badgeClass = 'bg-primary';
+                        if (data === 'OwnerReferral') badgeClass = 'bg-warning text-dark';
+                        if (!data || data === 'General') badgeClass = 'bg-light text-dark border'; // WalkIn/General
 
-                        let text = data ? data : 'WalkIn';
-                        return <span class="badge ${badgeClass}">${text}</span>;
+                        let text = data ? data : 'Walk-In';
+                        
+                        // 🔥 GUNAKAN BACKTICK (`) SUPAYA VARIABEL TERBACA
+                        return `<span class="badge ${badgeClass}">${text}</span>`;
                     }
                 },
 

@@ -1,5 +1,6 @@
 $(function () {
     const currentRoute = window.location.pathname;
+    // Pastikan script ini hanya jalan di halaman reservasi
     if (!currentRoute.includes("room-info/reservation")) return;
 
     const tableElement = $("#reservation-table");
@@ -16,7 +17,6 @@ $(function () {
                 },
             },
             columns: [
-                // 1. No
                 { 
                     data: null, 
                     sortable: false,
@@ -24,13 +24,11 @@ $(function () {
                         return meta.row + meta.settings._iDisplayStart + 1;
                     }
                 },
-                // 2. Tamu
                 { 
                     name: "customers.name", 
                     data: "customer_name",
                     className: "fw-bold text-primary"
                 },
-                // 3. Kamar
                 { 
                     name: "rooms.number", 
                     data: "room_info",
@@ -43,11 +41,8 @@ $(function () {
                         `;
                     }
                 },
-                // 4. Check In
                 { name: "transactions.check_in", data: "check_in" },
-                // 5. Check Out
                 { name: "transactions.check_out", data: "check_out" },
-                // 6. Sarapan
                 { 
                     name: "transactions.breakfast",
                     data: "breakfast",
@@ -59,7 +54,6 @@ $(function () {
                             : `<span class="badge rounded-pill" style="background-color: #F2C2B8; color: #50200C; font-size: 10px; padding: 6px 12px; font-weight: 700;">Tidak</span>`;
                     }
                 },
-                // 7. Total Harga
                 { 
                     name: "rooms.price", 
                     data: "total_price",
@@ -68,7 +62,6 @@ $(function () {
                         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(data);
                     }
                 },
-                // 8. Status
                 { 
                     name: "transactions.status", 
                     data: "status",
@@ -77,7 +70,6 @@ $(function () {
                         return `<span class="badge rounded-pill" style="background-color: #FAE8A4; color: #50200C; font-size: 10px; padding: 6px 12px; font-weight: 700;">${data}</span>`;
                     }
                 },
-                // 9. Aksi
                 {
                     data: 'raw_id',
                     orderable: false,
@@ -116,7 +108,9 @@ $(function () {
             }
         });
 
-        // === EVENT 1: PROSES CHECK IN (UPDATED UNTUK AMENITIES) ===
+        // =======================================================
+        // EVENT 1: PROSES CHECK IN (TETAP SAMA SEPERTI SEBELUMNYA)
+        // =======================================================
         $(document).on('click', '.btn-checkin', function() {
             let transactionId = $(this).data('id');
             let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -124,7 +118,7 @@ $(function () {
             Swal.fire({
                 html: `<h2 style="color: #50200C; font-weight: bold; margin-top: -10px;">Check In Tamu?</h2>
                 <p style="color: #50200C; font-size: 14px; margin-top: 5px;">
-                Stok Amenities (Sandal, dll) akan otomatis berkurang dari gudang.</p>`, // [UPDATE TEKS BIAR JELAS]
+                Stok Amenities (Sandal, dll) akan otomatis berkurang dari gudang.</p>`,
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: "#F2C2B8",
@@ -138,97 +132,80 @@ $(function () {
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
-                    
-                    // Loading State
                     Swal.fire({ title: 'Memproses Stok & Check In...', didOpen: () => { Swal.showLoading(); }, customClass: {title: 'swal-title-process'} });
 
                     $.ajax({
-                        // [PENTING] GANTI URL INI KE ROUTE BARU KITA
-                        // DULU: /room-info/reservation/${transactionId}/check-in
-                        // SEKARANG: /transaction/check-in/${transactionId}/process
                         url: `/transaction/check-in/${transactionId}/process`, 
-                        
                         type: 'POST',
                         data: { _token: csrfToken },
                         success: function(response) {
-                            // === JIKA SUKSES ===
                             Swal.fire({
-                                icon: 'success',
-                                title: 'Berhasil!',
-                                text: response.message, // Pesan: "Check In Berhasil & Stok Berkurang"
-                                customClass: {
-                                    title: 'swal-title-brown',
-                                    htmlContainer: 'swal-text-brown',
-                                    confirmButton: 'swal-btn-blue',
-                                    icon: 'swal-icon-custom'
-                                }
+                                icon: 'success', title: 'Berhasil!', text: response.message,
+                                customClass: { title: 'swal-title-brown', htmlContainer: 'swal-text-brown', confirmButton: 'swal-btn-blue', icon: 'swal-icon-custom' }
                             });
                             table.ajax.reload(null, false);
                         },
                         error: function(xhr) {
-                            // === JIKA GAGAL ===
-                            let errorMessage = 'Terjadi kesalahan sistem.';
-                            if (xhr.responseJSON && xhr.responseJSON.message) {
-                                errorMessage = xhr.responseJSON.message;
-                            }
-
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Gagal Check In!',
-                                text: errorMessage,
-                                confirmButtonColor: '#d33',
-                                confirmButtonText: 'Tutup'
-                            });
+                            let errorMessage = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Terjadi kesalahan sistem.';
+                            Swal.fire({ icon: 'error', title: 'Gagal Check In!', text: errorMessage, confirmButtonColor: '#d33', confirmButtonText: 'Tutup' });
                         }
                     });
                 }
             });
         });
 
-        // === EVENT 2: CANCEL RESERVASI (TETAP SAMA) ===
+        // =======================================================
+        // [BARU] EVENT 2: KLIK TOMBOL CANCEL (BUKA MODAL)
+        // =======================================================
         $(document).on('click', '.btn-cancel', function() {
             let transactionId = $(this).data('id');
-            let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            let url = `/room-info/reservation/${transactionId}/cancel`;
+            
+            // Set URL Action pada Form Modal
+            $('#cancelReservationForm').attr('action', url);
+            
+            // Reset Form (kosongkan inputan sebelumnya)
+            $('#cancelReservationForm')[0].reset();
 
-            Swal.fire({
-                title: "Yakin ingin menghapus?",
-                text: "Data tidak bisa dikembalikan!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#F2C2B8",
-                cancelButtonColor: "#8FB8E1",
-                confirmButtonText: "Ya, Hapus!",
-                cancelButtonText: "Batal",
-                customClass: {
-                    confirmButton: "text-50200C",
-                    cancelButton: "text-50200C",
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire({ title: 'Memproses...', didOpen: () => { Swal.showLoading(); } });
+            // Tampilkan Modal
+            let modal = new bootstrap.Modal(document.getElementById('cancelReservationModal'));
+            modal.show();
+        });
 
-                    $.ajax({
-                        url: `/room-info/reservation/${transactionId}/cancel`,
-                        type: 'POST',
-                        data: { _token: csrfToken },
-                        success: function(response) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Berhasil!',
-                                text: 'Reservasi berhasil dibatalkan.',
-                                customClass: {
-                                    title: 'swal-title-brown',
-                                    htmlContainer: 'swal-text-brown',
-                                    confirmButton: 'swal-btn-blue',
-                                    icon: 'swal-icon-custom'
-                                }
-                            });
-                            table.ajax.reload(null, false);
-                        },
-                        error: function(xhr) {
-                            Swal.fire('Gagal!', 'Terjadi kesalahan.', 'error');
-                        }
+        // =======================================================
+        // [BARU] EVENT 3: SUBMIT FORM CANCEL
+        // =======================================================
+        $('#cancelReservationForm').on('submit', function(e) {
+            e.preventDefault(); // Mencegah reload halaman
+            
+            let form = $(this);
+            let url = form.attr('action');
+            let formData = form.serialize(); // Ambil data form (Reason & Notes)
+
+            // Tutup Modal Dulu
+            let modalElement = document.getElementById('cancelReservationModal');
+            let modal = bootstrap.Modal.getInstance(modalElement);
+            modal.hide();
+
+            // Tampilkan Loading
+            Swal.fire({ title: 'Membatalkan Reservasi...', didOpen: () => { Swal.showLoading(); } });
+
+            // Kirim AJAX
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: formData,
+                success: function(response) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil Dibatalkan!',
+                        text: 'Reservasi telah dibatalkan dan alasan tersimpan.',
+                        customClass: { title: 'swal-title-brown', htmlContainer: 'swal-text-brown', confirmButton: 'swal-btn-blue', icon: 'swal-icon-custom' }
                     });
+                    table.ajax.reload(null, false);
+                },
+                error: function(xhr) {
+                    Swal.fire('Gagal!', 'Terjadi kesalahan saat membatalkan.', 'error');
                 }
             });
         });

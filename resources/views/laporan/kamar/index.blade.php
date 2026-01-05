@@ -44,14 +44,12 @@
                 {{-- TABEL --}}
                 <div class="table-responsive mt-3">
                     <table id="laporan-kamar-table" class="professional-table table table-hover" style="width: 100%;">
-                        {{-- STYLE HEADER TETAP #f7f3e8 --}}
                         <thead style="background-color: #f7f3e8;">
                             <tr>
                                 <th class="align-middle">No</th>
                                 <th class="align-middle">Tamu & Kamar</th>
                                 
-                                {{-- KOLOM BARU (Logic Baru) --}}
-                                <th class="align-middle">Paket Menginap</th>
+                                <th class="align-middle">Paket Menginap (Rencana)</th>
                                 <th class="align-middle">Masuk (Real)</th>
                                 <th class="align-middle">Keluar (Real)</th>
                                 
@@ -64,11 +62,19 @@
                     </table>
                 </div>
                 
-                {{-- FOOTER --}}
+                {{-- FOOTER (BUTTONS) --}}
                 <div class="table-footer d-flex justify-content-end align-items-center p-4">
-                   <button type="button" id="btn-export-kamar" class="btn btn-lg text-white shadow-sm btn-brown px-4">
-                       <i class="fas fa-file-excel me-2"></i> Export Excel
-                   </button>
+                    {{-- Tombol Export Excel --}}
+                    <button type="button" id="btn-export-kamar" class="btn btn-lg text-white shadow-sm btn-brown px-4">
+                        <i class="fas fa-file-excel me-2"></i> Export Excel
+                    </button>
+
+                    {{-- Tombol Export PDF (MERAH) --}}
+                    <button type="button" id="btn-export-pdf" 
+                            class="btn btn-lg text-white shadow-sm px-4 ms-2"
+                            style="background-color: #dc3545 !important; border-color: #dc3545 !important;">
+                        <i class="fas fa-file-pdf me-2"></i> Export PDF
+                    </button>
                 </div>
 
             </div>
@@ -79,7 +85,6 @@
 
 @section('footer')
 <style>
-    /* STYLE ASLI ANDA TIDAK SAYA UBAH/HAPUS */
     .btn-brown {
         background-color: #50200C !important;
         border-color: #50200C !important;
@@ -91,7 +96,7 @@
     .professional-table-container .table-header::before { display: none !important; content: none !important; }
     .table-header form { position: relative; z-index: 10; }
     
-    /* Style tabel agar rapi vertikal */
     .align-middle { vertical-align: middle !important; }
 </style>
+{{-- JS ada di file public/js/pages/laporan-kamar.js --}}
 @endsection

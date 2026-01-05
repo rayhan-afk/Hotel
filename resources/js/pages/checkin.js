@@ -45,39 +45,41 @@ $(function () {
                         `;
                     }
                 },
-                // 4. Check In
-                { name: "transactions.check_in", data: "check_in" },
-                // 5. Check Out
-                { name: "transactions.check_out", data: "check_out" },
                 
-                // 6. Extra Bed
+                // 4. CHECK IN (DENGAN JAM)
                 { 
-                    data: "extra_bed", 
-                    name: "extra_bed", 
-                    className: "text-center",
-                    searchable: false,
-                    render: function(data) {
-                        if (data > 0) {
-                            return `<span class="badge rounded-pill bg-primary shadow-sm" style="font-size: 11px;">+${data}</span>`;
-                        }
-                        return '<span class="text-muted">-</span>';
-                    }
-                },
-                // 7. Extra Breakfast
-                { 
-                    data: "extra_breakfast", 
-                    name: "extra_breakfast", 
-                    className: "text-center",
-                    searchable: false,
-                    render: function(data) {
-                        if (data > 0) {
-                            return `<span class="badge rounded-pill bg-warning text-dark shadow-sm" style="font-size: 11px;">+${data}</span>`;
-                        }
-                        return '<span class="text-muted">-</span>';
+                    name: "transactions.check_in", 
+                    data: "check_in",
+                    render: function(data, type, row) {
+                        if (!data) return '-';
+                        let dateObj = new Date(data);
+                        let dateStr = dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+                        let timeStr = dateObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+                        return `
+                            <div class="fw-bold" style="color: #50200C;">${dateStr}</div>
+                            <small class="text-muted" style="font-size: 0.85em;">
+                                <i class="fas fa-clock me-1 text-primary"></i>${timeStr}
+                            </small>
+                        `;
                     }
                 },
 
-                // 8. Sarapan (Regular)
+                // 5. Check Out
+                { 
+                    name: "transactions.check_out", 
+                    data: "check_out",
+                    render: function(data, type, row) {
+                        if (!data) return '-';
+                        let dateObj = new Date(data);
+                        return dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+                    }
+                },
+                
+                // [DELETED] Extra Bed
+                // [DELETED] Extra Breakfast
+
+                // 6. Sarapan (Regular)
                 { 
                     name: "transactions.breakfast", 
                     data: "breakfast",
@@ -85,68 +87,50 @@ $(function () {
                     orderable: false,
                     render: function(data) {
                         if (data === 'Yes') {
-                            return `<span class="badge rounded-pill" style="background-color: #A8D5BA; color: #50200C;
-                            font-size: 10px; padding: 6px 12px; font-weight: 700;">
-                                            <i class="fas fa-utensils me-1" style="color: #50200C; font-size: 10px;"></i>Ya
-                                        </span>`;
+                            return `<span class="badge rounded-pill" style="background-color: #A8D5BA; color: #50200C; font-size: 10px; padding: 6px 12px; font-weight: 700;">
+                                        <i class="fas fa-utensils me-1" style="color: #50200C; font-size: 10px;"></i>Ya
+                                    </span>`;
                         } else {
-                            return `<span class="badge rounded-pill" style="background-color: #F2C2B8; color: #50200C; 
-                            font-size: 10px; padding: 6px 12px; font-weight: 700;">Tidak</span>`;
+                            return `<span class="badge rounded-pill" style="background-color: #F2C2B8; color: #50200C; font-size: 10px; padding: 6px 12px; font-weight: 700;">Tidak</span>`;
                         }
                     }
                 },
 
-                // 9. Total Harga
+                // 7. Total Harga
                 { 
                     name: "rooms.price", 
                     data: "total_price",
                     className: "text-end fw-bold",
                     render: function(data) {
-                        return new Intl.NumberFormat('id-ID', { 
-                            style: 'currency', 
-                            currency: 'IDR', 
-                            minimumFractionDigits: 0 
-                        }).format(data);
+                        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(data);
                     }
                 },
 
-                // 10. Sisa Bayar
+                // 8. Sisa Bayar
                 { 
                     name: "transactions.paid_amount", 
                     data: "remaining_payment",
                     className: "text-center",
                     render: function(data) {
-                        let formatted = new Intl.NumberFormat('id-ID', { 
-                            style: 'currency', 
-                            currency: 'IDR', 
-                            minimumFractionDigits: 0 
-                        }).format(data);
-
+                        let formatted = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(data);
                         if (data > 0) {
-                            return `<span class="badge rounded-pill" style="background-color: #F2C2B8; color: #50200C; 
-                                            font-size: 11px; padding: 6px 12px; font-weight: 800; border: 1px solid #E57373;">
-                                            ${formatted}
-                                            </span>`;
+                            return `<span class="badge rounded-pill" style="background-color: #F2C2B8; color: #50200C; font-size: 11px; padding: 6px 12px; font-weight: 800; border: 1px solid #E57373;">${formatted}</span>`;
                         }
-                        
-                        return `<span class="badge rounded-pill" style="background-color: #A8D5BA; color: #50200C; 
-                                        font-size: 11px; padding: 6px 12px; font-weight: 800; border: 1px solid #81C784;">
-                                        Lunas
-                                        </span>`;
+                        return `<span class="badge rounded-pill" style="background-color: #A8D5BA; color: #50200C; font-size: 11px; padding: 6px 12px; font-weight: 800; border: 1px solid #81C784;">Lunas</span>`;
                     }
                 },
 
-                // 11. Status
+                // 9. Status
                 { 
                     name: "transactions.status", 
                     data: "status",
                     className: "text-center",
                     render: function(data) {
-                        return `<span class="badge px-3 py-1 rounded-pill" style="background-color: #8FB8E1;
-                        color: #50200C; font-size: 10px; padding: 6px 12px; font-weight: 700;">${data}</span>`;
+                        return `<span class="badge px-3 py-1 rounded-pill" style="background-color: #8FB8E1; color: #50200C; font-size: 10px; padding: 6px 12px; font-weight: 700;">${data}</span>`;
                     }
                 },
-                // 12. Aksi
+                
+                // 10. AKSI (UPDATE: Tambah data-checkout-plan)
                 {
                     data: 'id',
                     orderable: false,
@@ -155,8 +139,10 @@ $(function () {
                     render: function(id, type, row) {
                         let customerName = row.customer_name ? row.customer_name.replace(/"/g, '&quot;') : '-'; 
                         let roomNumber = row.room_info.number;
-                        // [MODIFIED] Added data-remaining attribute
                         let remaining = row.remaining_payment; 
+                        
+                        // [MODIFIKASI] Ambil rencana checkout untuk validasi tanggal
+                        let planCheckout = row.check_out; 
 
                         return `
                             <div class="d-flex justify-content-center align-items-center gap-2">
@@ -172,8 +158,8 @@ $(function () {
                                         data-id="${id}"
                                         data-name="${customerName}"
                                         data-room="${roomNumber}"
-                                        data-remaining="${remaining}">
-                                    <i class="fas fa-sign-out-alt me-2"></i>CHECK OUT
+                                        data-remaining="${remaining}"
+                                        data-checkout-plan="${planCheckout}"> <i class="fas fa-sign-out-alt me-2"></i>CHECK OUT
                                 </button>
                             </div>
                         `;
@@ -280,34 +266,54 @@ $(function () {
             });
         });
 
-        // Event: Tombol Check Out [MODIFIED LOGIC]
+        // Event: Tombol Check Out [MODIFIED LOGIC: Early Checkout & Debt]
         $(document).on('click', '.btn-checkout', function() {
             checkoutId = $(this).data('id');
             let name = $(this).data('name');
             let room = $(this).data('room');
-            let remaining = parseFloat($(this).data('remaining')); // Get remaining balance
+            let remaining = parseFloat($(this).data('remaining'));
+            
+            // [MODIFIKASI] Ambil rencana checkout
+            let planDateStr = $(this).data('checkout-plan');
 
             $('#checkoutCustomerName').text(name);
             $('#checkoutRoomNumber').text(room);
 
-            // Logic to update Modal Content based on payment status
-            let warningContainer = $('#checkoutWarningContainer'); // We need to add this ID to view
-            
-            // If the element doesn't exist (first time logic or if view not updated yet), let's handle it manually or assume view has the alert div
-            // Let's modify the modal body content dynamically
             let modalBody = $('#checkoutModal .modal-body');
-            
-            // Remove any existing dynamic alerts first to avoid duplicates
-            modalBody.find('.dynamic-alert').remove();
+            modalBody.find('.dynamic-alert').remove(); // Bersihkan alert lama
 
+            // === 1. LOGIKA EARLY CHECKOUT (Peringatan Kepencet) ===
+            let today = new Date();
+            today.setHours(0,0,0,0); 
+
+            let planDate = new Date(planDateStr);
+            planDate.setHours(0,0,0,0);
+
+            if (today < planDate) {
+                let formattedPlan = planDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+                
+                let earlyAlert = `
+                    <div class="alert alert-warning dynamic-alert border-warning d-flex align-items-center mt-3" role="alert" style="background-color: #fff3cd;">
+                        <i class="fas fa-clock me-3 fa-2x text-warning"></i>
+                        <div class="text-start">
+                            <strong class="d-block text-dark">EARLY CHECK-OUT</strong>
+                            <small style="color: #856404">
+                                Tamu ini seharusnya checkout tanggal <strong>${formattedPlan}</strong>.<br>
+                                Anda akan memproses checkout <b>LEBIH AWAL</b>.
+                            </small>
+                        </div>
+                    </div>
+                `;
+                $('#checkoutRoomNumber').parent().after(earlyAlert);
+            }
+
+            // === 2. LOGIKA KURANG BAYAR ===
             if (remaining > 0) {
                 let formattedRemaining = new Intl.NumberFormat('id-ID', { 
-                    style: 'currency', 
-                    currency: 'IDR', 
-                    minimumFractionDigits: 0 
+                    style: 'currency', currency: 'IDR', minimumFractionDigits: 0 
                 }).format(remaining);
 
-                let alertHtml = `
+                let debtAlert = `
                     <div class="alert alert-danger dynamic-alert border-danger d-flex align-items-center mt-3" role="alert" style="background-color: #ffebee;">
                         <i class="fas fa-exclamation-triangle me-3 fa-2x text-danger"></i>
                         <div class="text-start">
@@ -316,8 +322,8 @@ $(function () {
                         </div>
                     </div>
                 `;
-                // Insert after the room number paragraph
-                $('#checkoutRoomNumber').parent().after(alertHtml);
+                // Tampilkan setelah room number (akan menumpuk dgn early alert jika ada)
+                $('#checkoutRoomNumber').parent().after(debtAlert);
             }
 
             let modal = new bootstrap.Modal(document.getElementById('checkoutModal'));

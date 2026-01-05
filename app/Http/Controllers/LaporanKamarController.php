@@ -7,6 +7,7 @@ use App\Models\Transaction;
 use Illuminate\Http\Request;
 use App\Repositories\Interface\LaporanKamarRepositoryInterface;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf; // Pastikan library DomPDF sudah terinstall
 
 class LaporanKamarController extends Controller
 {
@@ -90,13 +91,11 @@ class LaporanKamarController extends Controller
 
                 if ($realCheckOut) {
                     // 2. Late Check-out (Setelah jam 12:00)
-                    // Menggunakan >= 12 artinya jam 12:00 pas atau lebih (misal 13:00) dianggap late
                     if ($realCheckOut->format('H') >= 12) {
                         $notes[] = 'Late Check-out (' . $realCheckOut->format('H:i') . ')';
                     }
 
                     // 3. Pulang Awal (Beda Hari)
-                    // Jika tanggal keluar < tanggal rencana
                     if ($realCheckOut->startOfDay()->lt($planCheckOut->copy()->startOfDay())) {
                         $notes[] = 'Pulang Lebih Awal (Sisa Hari)';
                     }
@@ -142,5 +141,47 @@ class LaporanKamarController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+        public function downloadPdf(Request $request)
+    {
+        // 1. Ambil Query
+        $query = $this->laporanKamarRepository->getLaporanKamarQuery($request);
+        
+        // Ambil Data
+        $transactions = $query->with(['customer.user', 'room.type'])
+                            ->orderBy('check_in', 'desc')
+                            ->limit(300) 
+                            ->get();
+
+        // 2. Siapkan Data untuk View (Termasuk start/end date untuk Judul)
+        $data = [
+            'title'        => 'Laporan Riwayat Kamar',
+            'date'         => \Carbon\Carbon::now()->format('d F Y H:i'),
+            'transactions' => $transactions,
+            'start_date'   => $request->start_date, // Kirim ke View
+            'end_date'     => $request->end_date,   // Kirim ke View
+        ];
+
+        // 3. Load View PDF
+        $pdf = Pdf::loadView('laporan.kamar.pdf', $data);
+        $pdf->setPaper('a4', 'landscape');
+
+        // 4. Generate Nama File Dinamis
+        $filename = 'Laporan_Riwayat_Kamar';
+
+        if ($request->start_date && $request->end_date) {
+            // Format: d-m-Y (Tanggal-Bulan-Tahun)
+            $tglAwal  = date('d-m-Y', strtotime($request->start_date));
+            $tglAkhir = date('d-m-Y', strtotime($request->end_date));
+            $filename .= '_' . $tglAwal . '_sd_' . $tglAkhir;
+        } else {
+            $filename .= '_Semua_Waktu_' . date('d-m-Y');
+        }
+
+        $filename .= '.pdf';
+
+        // 5. Stream Download
+        return $pdf->stream($filename);
     }
 }

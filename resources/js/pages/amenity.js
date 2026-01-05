@@ -245,7 +245,8 @@ $(function () {
                         return '<span class="badge fs-6" style="background-color: #FAE8A4; color: #50200C !important;"><i class="fas fa-exclamation-triangle me-1" style="color: #50200C !important;"></i>KRITIS!</span>';
                     if (stok < 20)
                         return '<span class="badge" style="background-color: #F7B267; color: #50200C; font-weight: bold;">Menipis</span>';
-                    if (stok > 21) // Note: Changed to match ingredient logic > 21 vs > 50 in previous amenity
+                    if (stok > 21)
+                        // Note: Changed to match ingredient logic > 21 vs > 50 in previous amenity
                         return '<span class="badge" style="background-color: #A8D5BA; color: #50200C; font-weight: bold;">Tersedia</span>';
                     return '<span class="badge" style="background-color: #8FB8E1; color: #50200C; font-weight: bold;">Cukup</span>';
                 },
@@ -278,7 +279,9 @@ $(function () {
                         </button>
 
                         <form id="delete-form-${id}" action="/amenity/${id}" method="POST" style="display:none;">
-                            <input type="hidden" name="_token" value="${$('meta[name="csrf-token"]').attr("content")}">
+                            <input type="hidden" name="_token" value="${$(
+                                'meta[name="csrf-token"]'
+                            ).attr("content")}">
                             <input type="hidden" name="_method" value="DELETE">
                         </form>
                     `;
@@ -291,7 +294,7 @@ $(function () {
                 $(row)
                     .find("td:eq(1)")
                     .prepend(
-                       '<i class="fas fa-exclamation-triangle me-2 low-stock-icon" style="background-color: red !important;"></i>'
+                        '<i class="fas fa-exclamation-triangle me-2 low-stock-icon" style="background-color: red !important;"></i>'
                     );
                 $(row).attr(
                     "title",
@@ -307,8 +310,8 @@ $(function () {
         language: {
             emptyTable: "Tidak ada data amenities saat ini.",
             processing: "Memuat data...",
-            zeroRecords: "Data tidak ditemukan"
-        }
+            zeroRecords: "Data tidak ditemukan",
+        },
     });
 
     // --- LOGIKA MODAL & BUTTONS ---
@@ -320,17 +323,17 @@ $(function () {
     });
 
     $('button[data-bs-dismiss="modal"]:not(.btn-close)').text("Batal");
-    $('.btn-close[data-bs-dismiss="modal"]').text('');
+    $('.btn-close[data-bs-dismiss="modal"]').text("");
 
-    $("#main-modal").on('hidden.bs.modal', function () {
+    $("#main-modal").on("hidden.bs.modal", function () {
         $("#btn-modal-save").text("Simpan").attr("disabled", false);
         $("button[data-bs-dismiss=modal]").text("Batal");
-        $(".btn-close[data-bs-dismiss=modal]").text('');
+        $(".btn-close[data-bs-dismiss=modal]").text("");
         $("#main-modal .modal-body").html("");
     });
 
     $("#main-modal").on("show.bs.modal", function () {
-        $("#main-modal .modal-title").text("");              
+        $("#main-modal .modal-title").text("");
         $("#main-modal .modal-body").html("Fetching data...");
     });
 
@@ -358,17 +361,17 @@ $(function () {
                         method: "POST", // Form sudah mengandung _method=DELETE
                         data: $(`#delete-form-${id}`).serialize(),
                     });
-                    
+
                     // === PERBAIKAN DISINI: HAPUS CONFIG LAMA, GANTI YG SIMPLE ===
                     // Ini akan memunculkan tombol OK, dan tidak hilang otomatis
                     Swal.fire({
                         title: "Terhapus!",
                         text: "Data amenities berhasil dihapus.",
                         icon: "success",
-                        iconColor: '#50200C', // Warna icon
+                        iconColor: "#50200C", // Warna icon
                         customClass: {
-                            title: 'swal-title-brown' // Custom warna title
-                        }
+                            title: "swal-title-brown", // Custom warna title
+                        },
                     });
 
                     hasPlayedWarningSound = false;
@@ -378,10 +381,10 @@ $(function () {
                         title: "Gagal",
                         text: "Gagal menghapus data.",
                         icon: "error",
-                        iconColor: '#50200C', // Warna icon
+                        iconColor: "#50200C", // Warna icon
                         customClass: {
-                            title: 'swal-title-brown' // Custom warna title
-                        }
+                            title: "swal-title-brown", // Custom warna title
+                        },
                     });
                 }
             }
@@ -394,7 +397,7 @@ $(function () {
             modal.show();
             $("#btn-modal-save").text("Simpan").attr("disabled", true);
             $('button[data-bs-dismiss="modal"]:not(.btn-close)').text("Batal");
-            $('.btn-close[data-bs-dismiss="modal"]').text('');
+            $('.btn-close[data-bs-dismiss="modal"]').text("");
 
             $("#main-modal .modal-body").html(`Fetching data...`);
 
@@ -404,13 +407,13 @@ $(function () {
 
             $("#btn-modal-save").text("Simpan").attr("disabled", false);
             $('button[data-bs-dismiss="modal"]:not(.btn-close)').text("Batal");
-            $('.btn-close[data-bs-dismiss="modal"]').text('');
+            $('.btn-close[data-bs-dismiss="modal"]').text("");
         })
         .on("click", '[data-action="edit-amenity"]', async function () {
             modal.show();
             $("#btn-modal-save").text("Simpan").attr("disabled", true);
             $('button[data-bs-dismiss="modal"]:not(.btn-close)').text("Batal");
-            $('.btn-close[data-bs-dismiss="modal"]').text('');
+            $('.btn-close[data-bs-dismiss="modal"]').text("");
 
             $("#main-modal .modal-body").html(`Fetching data...`);
 
@@ -422,7 +425,7 @@ $(function () {
 
             $("#btn-modal-save").text("Simpan").attr("disabled", false);
             $('button[data-bs-dismiss="modal"]:not(.btn-close)').text("Batal");
-            $('.btn-close[data-bs-dismiss="modal"]').text('');
+            $('.btn-close[data-bs-dismiss="modal"]').text("");
         })
         .on("click", "#btn-modal-save", function () {
             $("#form-save-amenity").submit();
@@ -450,10 +453,10 @@ $(function () {
                     title: response.message,
                     showConfirmButton: false,
                     timer: 1500,
-                    iconColor: '#50200C', // ✅ Warna icon success
+                    iconColor: "#50200C", // ✅ Warna icon success
                     customClass: {
-                        title: 'swal-title-brown' // ✅ Custom warna title
-                    }
+                        title: "swal-title-brown", // ✅ Custom warna title
+                    },
                 });
                 modal.hide();
                 hasPlayedWarningSound = false;
@@ -462,18 +465,98 @@ $(function () {
                 if (e.status === 422 && typeof CustomHelper !== "undefined") {
                     CustomHelper.errorHandlerForm(e);
                 } else {
-                   Swal.fire({
+                    Swal.fire({
                         icon: "error",
                         title: "Error",
                         text: "Terjadi kesalahan!",
-                        iconColor: '#50200C', // ✅ Warna icon success
+                        iconColor: "#50200C", // ✅ Warna icon success
                         customClass: {
-                            title: 'swal-title-brown' // ✅ Custom warna title
-                        }
+                            title: "swal-title-brown", // ✅ Custom warna title
+                        },
                     });
                 }
             } finally {
                 $("#btn-modal-save").attr("disabled", false).text("Simpan");
             }
         });
+    // ============================================================
+    //  LOGIKA BARU: HANDLE FORM STOCK OPNAME (MASSAL)
+    // ============================================================
+    $(document).on("submit", "#form-opname-amenity", async function (e) {
+        e.preventDefault(); // Mencegah refresh halaman
+
+        // 1. Ambil elemen tombol untuk efek loading
+        const btnSave = $("#btn-save-opname");
+        const originalText = btnSave.html();
+
+        // 2. Ubah tombol jadi Loading
+        btnSave
+            .prop("disabled", true)
+            .html('<i class="fas fa-spinner fa-spin me-2"></i> Menyimpan...');
+
+        try {
+            // 3. Kirim Data via AJAX
+            // Kita pakai FormData agar array stocks[] dan notes[] terkirim rapi
+            const formData = new FormData(this);
+
+            const response = await $.ajax({
+                url: "/amenity/stock-opname", // Pastikan route ini ada di web.php
+                method: "POST",
+                data: formData,
+                processData: false, // Wajib false untuk FormData
+                contentType: false, // Wajib false untuk FormData
+                headers: {
+                    "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr(
+                        "content"
+                    ),
+                },
+            });
+
+            // 4. Berhasil
+            // Tutup Modal
+            const modalOpname = bootstrap.Modal.getInstance(
+                document.getElementById("modalStockOpnameAmenity")
+            );
+            modalOpname.hide();
+
+            // Tampilkan Alert Sukses (Style sesuai tema kamu)
+            Swal.fire({
+                icon: "success",
+                title: "Berhasil!",
+                text: response.message, // Pesan dari Controller
+                showConfirmButton: false,
+                timer: 2000,
+                iconColor: "#50200C",
+                customClass: { title: "swal-title-brown" },
+            });
+
+            // Reset Form (kosongkan inputan manual)
+            $("#form-opname-amenity")[0].reset();
+
+            // Refresh Tabel agar stok terupdate
+            datatable.ajax.reload();
+
+            // Reset status warning sound agar bunyi lagi kalau masih ada yg kritis
+            hasPlayedWarningSound = false;
+        } catch (error) {
+            // 5. Gagal / Error Validasi
+            console.error(error);
+
+            let errorMessage = "Terjadi kesalahan sistem.";
+            if (error.responseJSON && error.responseJSON.message) {
+                errorMessage = error.responseJSON.message;
+            }
+
+            Swal.fire({
+                icon: "error",
+                title: "Gagal",
+                text: errorMessage,
+                iconColor: "#50200C",
+                customClass: { title: "swal-title-brown" },
+            });
+        } finally {
+            // 6. Kembalikan Tombol seperti semula
+            btnSave.prop("disabled", false).html(originalText);
+        }
+    });
 });

@@ -31,10 +31,14 @@ class UpdateCustomerRequest extends FormRequest
             ];
         }
 
+        // UNTUK USER LAIN (Admin/Staff):
+        // Tambahkan semua role baru ke dalam daftar "in:..." di bawah ini
         return [
             'name' => 'required',
             'email' => 'required|unique:users,email,'.$this->user->id,
-            'role' => 'required|in:Super,Admin',
+            
+            // PERBAIKAN DI SINI:
+            'role' => 'required|in:Super,Admin,Manager,Kasir,Housekeeping,Dapur', 
         ];
     }
 }

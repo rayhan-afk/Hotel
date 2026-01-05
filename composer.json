@@ -9,6 +9,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "barryvdh/laravel-dompdf": "^3.1",
         "doctrine/dbal": "^4.2",
         "guzzlehttp/guzzle": "^7.4.5",
         "intervention/image": "^2.5",
@@ -66,6 +67,6 @@
         "preferred-install": "dist",
         "sort-packages": true
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "prefer-stable": true
 }

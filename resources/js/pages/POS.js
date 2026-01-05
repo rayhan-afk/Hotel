@@ -1,13 +1,13 @@
 /**
  * POS Logic - Point of Sales
- * File: public/js/pos.js
- * Status: FINAL FIXED (Auto Reset Cart & Modal)
+ * File: resources/js/pages/POS.js
+ * Status: FIXED (Category Filter Added)
  */
 
 (function () {
     ("use strict");
 
-    console.log("🛒 POS System Loaded - Final Version");
+    console.log("🛒 POS System Loaded - Fixed Version");
 
     let cart = [];
     let currentTotal = 0;
@@ -142,8 +142,7 @@
     // ============================================
     // 5. FILTER MENU
     // ============================================
-    // ============================================
-    window.filterMenu = function() {
+    window.filterMenu = function () {
         const searchInput = document.getElementById("searchInput");
         const categoryFilter = document.getElementById("categoryFilter");
 
@@ -158,16 +157,19 @@
         items.forEach((item) => {
             // Ambil data atribut (Lowercase & Trim juga)
             const name = (item.getAttribute("data-name") || "").toLowerCase();
-            const category = (item.getAttribute("data-category") || "").toLowerCase().trim();
+            const category = (item.getAttribute("data-category") || "")
+                .toLowerCase()
+                .trim();
 
             // Cek Pencocokan
             const matchSearch = name.includes(searchValue);
             // Bandingkan 'all' ATAU nilai string yang sudah disamakan formatnya
-            const matchCategory = (categoryValue === "all") || (category === categoryValue);
+            const matchCategory =
+                categoryValue === "all" || category === categoryValue;
 
             if (matchSearch && matchCategory) {
                 // Gunakan string kosong agar kembali ke display default CSS (biar grid tidak rusak)
-                item.style.display = ""; 
+                item.style.display = "";
             } else {
                 item.style.display = "none";
             }
@@ -177,31 +179,32 @@
     // ============================================
     // 5.5. SET KATEGORI (Fungsi Baru untuk Tombol Kategori)
     // ============================================
-    window.setCategory = function(category, btnElement) {
+    window.setCategory = function (category, btnElement) {
         // 1. Reset style semua tombol agar tidak aktif (outline)
-        const buttons = document.querySelectorAll('.cat-btn');
-        buttons.forEach(btn => {
-            btn.classList.remove('btn-primary', 'active'); // Hapus warna solid
-            btn.classList.add('btn-outline-primary');      // Tambah outline
+        const buttons = document.querySelectorAll(".cat-btn");
+        buttons.forEach((btn) => {
+            btn.classList.remove("btn-primary", "active"); // Hapus warna solid
+            btn.classList.add("btn-outline-primary"); // Tambah outline
         });
 
         // 2. Set style tombol yang diklik jadi aktif (solid)
-        if(btnElement) {
-            btnElement.classList.remove('btn-outline-primary');
-            btnElement.classList.add('btn-primary', 'active');
+        if (btnElement) {
+            btnElement.classList.remove("btn-outline-primary");
+            btnElement.classList.add("btn-primary", "active");
         }
 
         // 3. Update nilai hidden input dengan kategori yang dipilih
         const filterInput = document.getElementById("categoryFilter");
-        if(filterInput) {
+        if (filterInput) {
             filterInput.value = category;
-            
+
             // 4. Panggil fungsi filter utama untuk memperbarui tampilan
             window.filterMenu();
         } else {
             console.error("Input hidden 'categoryFilter' tidak ditemukan!");
         }
     };
+
     // ============================================
     // 6. LOGIKA BAYAR & KEMBALIAN
     // ============================================
@@ -268,13 +271,12 @@
             .then((data) => {
                 if (data.status === "success") {
                     // [FIX] Reset Keranjang LANGSUNG saat server bilang sukses
-                    // Ini mencegah bug "transaksi lama nyangkut" jika modal ditutup paksa
                     cart = [];
                     renderCart();
                     document.getElementById("payAmount").value = "";
                     document.getElementById("changeDisplay").innerText = "Rp 0";
 
-                    // Tampilkan Modal Sukses (Gunakan savedTotal karena currentTotal sudah 0)
+                    // Tampilkan Modal Sukses
                     showSuccessState(
                         data.invoice,
                         savedTotal,
@@ -361,8 +363,6 @@
             const closeBtn = document.querySelector("#paymentModal .btn-close");
             if (closeBtn) closeBtn.click();
         }
-
-        // Reset Cart sudah dilakukan di processPayment, jadi aman.
     };
 
     // Helper: Reset tampilan modal ke form awal

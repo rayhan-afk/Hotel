@@ -4,7 +4,7 @@
  */
 
 (function () {
-    "use strict";
+    ("use strict");
 
     console.log("🍳 Recipe Editor Loaded!");
 
@@ -14,7 +14,7 @@
     const recipeContainer = document.getElementById("modalTambahMenu");
     if (!recipeContainer) return;
 
-   // ============================================
+    // ============================================
     // 1. FORM TAMBAH MENU BARU (SUDAH DIPERBAIKI)
     // ============================================
     const formTambahMenu = document.getElementById("formTambahMenu");
@@ -24,22 +24,23 @@
 
             // 1. Ambil data form
             const formData = new FormData(this);
-            
+
             // CEK DEBUG: Lihat di Console browser (F12) apakah file terdeteksi?
-            const fileGambar = formData.get('image');
-            console.log("📸 File yang dikirim:", fileGambar); 
+            const fileGambar = formData.get("image");
+            console.log("📸 File yang dikirim:", fileGambar);
 
             const submitBtn = this.querySelector('button[type="submit"]');
 
             // 2. Ubah tombol jadi loading
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Menyimpan...';
+            submitBtn.innerHTML =
+                '<i class="fas fa-spinner fa-spin me-2"></i>Menyimpan...';
 
             fetch(window.recipeConfig.createMenuRoute, {
                 method: "POST",
                 headers: {
                     // WAJIB ADA: Agar Laravel merespon dengan JSON jika ada error validasi
-                    "Accept": "application/json", 
+                    Accept: "application/json",
                     "X-CSRF-TOKEN": window.recipeConfig.csrfToken,
                 },
                 body: formData, // Fetch otomatis mengatur Content-Type untuk FormData
@@ -48,37 +49,54 @@
                 .then((data) => {
                     // Tangani jika validasi Laravel gagal (Error 422)
                     if (data.errors) {
-                         let errorMsg = '';
-                         for (const [key, value] of Object.entries(data.errors)) {
-                             errorMsg += `• ${value}<br>`;
-                         }
-                         toastr.error(errorMsg, "Gagal Validasi");
-                         throw new Error("Validasi Gagal"); // Stop proses
+                        let errorMsg = "";
+                        for (const [key, value] of Object.entries(
+                            data.errors
+                        )) {
+                            errorMsg += `• ${value}<br>`;
+                        }
+                        toastr.error(errorMsg, "Gagal Validasi");
+                        throw new Error("Validasi Gagal"); // Stop proses
                     }
 
-                    if (data.success || data.message === "Menu berhasil ditambahkan") { // Sesuaikan dengan response controller kamu
-                        toastr.success("Menu berhasil ditambahkan! Sekarang Anda bisa atur resepnya.");
+                    if (
+                        data.success ||
+                        data.message === "Menu berhasil ditambahkan"
+                    ) {
+                        // Sesuaikan dengan response controller kamu
+                        toastr.success(
+                            "Menu berhasil ditambahkan! Sekarang Anda bisa atur resepnya."
+                        );
 
                         // Close modal
-                        const modal = bootstrap.Modal.getInstance(document.getElementById("modalTambahMenu"));
+                        const modal = bootstrap.Modal.getInstance(
+                            document.getElementById("modalTambahMenu")
+                        );
                         if (modal) modal.hide();
 
                         // Reload
                         setTimeout(() => location.reload(), 1000);
                     } else {
                         // Jika success: false
-                        toastr.error("Gagal: " + (data.message || "Terjadi kesalahan server"));
+                        toastr.error(
+                            "Gagal: " +
+                                (data.message || "Terjadi kesalahan server")
+                        );
                         submitBtn.disabled = false;
-                        submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>Simpan & Atur Resep';
+                        submitBtn.innerHTML =
+                            '<i class="fas fa-save me-2"></i>Simpan & Atur Resep';
                     }
                 })
                 .catch((error) => {
-                    if(error.message !== "Validasi Gagal") {
+                    if (error.message !== "Validasi Gagal") {
                         console.error("❌ Error:", error);
-                        toastr.error("Terjadi kesalahan sistem / File terlalu besar (Max 2MB).");
+                        toastr.error(
+                            "Terjadi kesalahan sistem / File terlalu besar (Max 2MB)."
+                        );
                     }
                     submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>Simpan & Atur Resep';
+                    submitBtn.innerHTML =
+                        '<i class="fas fa-save me-2"></i>Simpan & Atur Resep';
                 });
         });
     }
@@ -352,6 +370,40 @@
                 });
         });
     }
+    // ============================================
+    // 8. DELETE MENU (SWEETALERT2) - NEW FEATURE!
+    // ============================================
+    const deleteButtons = document.querySelectorAll(".btn-delete-menu");
+
+    deleteButtons.forEach((button) => {
+        button.addEventListener("click", function (e) {
+            e.preventDefault(); // Mencegah form submit langsung
+
+            // 1. Ambil elemen form pembungkusnya
+            const form = this.closest(".form-delete-menu");
+
+            // 2. Ambil nama menu
+            const menuName = this.getAttribute("data-name");
+
+            // 3. Tampilkan SweetAlert
+            Swal.fire({
+                title: "Hapus Menu?",
+                html: `Yakin ingin menghapus <b>${menuName}</b>?<br><small class="text-danger">Semua resep terkait juga akan dihapus permanen!</small>`,
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33", // Merah
+                cancelButtonColor: "#50200C", // Coklat Tema Kamu
+                confirmButtonText: "Ya, Hapus!",
+                cancelButtonText: "Batal",
+                reverseButtons: true,
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // 4. Submit form jika user bilang YES
+                    form.submit();
+                }
+            });
+        });
+    });
 
     // ============================================
     // 8. DELETE MENU (SWEETALERT2) - NEW FEATURE!

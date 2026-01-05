@@ -49,6 +49,13 @@ class LoginController extends Controller
             return redirect()->route('ingredient.index');
         }
 
+        // 3. Cek Role Kasir (BARU DITAMBAHKAN)
+        // Pastikan route 'pos.index' sudah ada di web.php
+        if ($user->role === 'Kasir' || (method_exists($user, 'isKasir') && $user->isKasir())) {
+            return redirect()->route('pos.index');
+        }
+        
+
         // 3. Sisanya (Super, Admin, Manager) ke Dashboard
         return redirect()->route('dashboard.index');
     }

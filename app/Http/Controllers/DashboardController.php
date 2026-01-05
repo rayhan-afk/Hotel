@@ -16,6 +16,10 @@ class DashboardController extends Controller
         if (Auth::user()->role === 'Dapur') {
             return redirect()->route('ingredient.index');
         }
+         // 1. CEK ROLE Kasir
+        if (Auth::user()->role === 'Kasir') {
+            return redirect()->route('pos.index');
+        }
 
         // === [STATS CARD] ===
         

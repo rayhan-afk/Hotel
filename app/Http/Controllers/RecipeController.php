@@ -107,6 +107,7 @@ class RecipeController extends Controller
             // Handle Upload Gambar
             if ($request->hasFile('image')) {
                 // Simpan ke storage/app/public/menus
+                // Format: store('NAMA_FOLDER', 'NAMA_DISK')
                 $imagePath = $request->file('image')->store('menus', 'public');
                 $menu->image = $imagePath;
             }

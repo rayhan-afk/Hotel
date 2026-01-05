@@ -49,6 +49,7 @@
                                 <option value="Manager" @if (old('role') == 'Manager') selected @endif>Manager</option>
                                 <option value="Dapur" @if (old('role') == 'Dapur') selected @endif>Dapur</option>
                                 <option value="Housekeeping" {{ old('role') == 'Housekeeping' ? 'selected' : '' }}>Housekeeping</option>
+                                <option value="Kasir" {{ old('role') == 'Kasir' ? 'selected' : '' }}>Kasir</option>
                             </select>
                             @error('role')
                                 <div class="text-danger mt-1">

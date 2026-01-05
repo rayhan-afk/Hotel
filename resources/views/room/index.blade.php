@@ -25,7 +25,7 @@
                 <button type="button" 
                         id="btn-bulk-amenities" 
                         class="add-room-btn text-decoration-none d-flex align-items-center" 
-                        style="background-color: #17a2b8; border: none;">
+                        style="background-color: #8FB8E1; color: #50200C; border: none;">
                     <i class="fas fa-boxes me-2"></i>
                     Setup Amenities Massal
                 </button>

@@ -2,6 +2,8 @@
 @section('title', 'Atur Resep Menu')
 
 @section('content')
+{{-- CDN SweetAlert2 --}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 {{-- CSS Tambahan --}}
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -371,3 +373,5 @@
         csrfToken: "{{ csrf_token() }}"
     };
 </script>
+
+<script src="{{ asset('js/recipes.js') }}"></script>

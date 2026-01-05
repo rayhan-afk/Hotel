@@ -1,7 +1,7 @@
-import { defineConfig } from 'vite';
-import laravel from 'laravel-vite-plugin';
-import path from 'path';
-import viteCompression from 'vite-plugin-compression';
+import { defineConfig } from "vite";
+import laravel from "laravel-vite-plugin";
+import path from "path";
+import viteCompression from "vite-plugin-compression";
 
 export default defineConfig({
     resolve: {
@@ -21,4 +21,19 @@ export default defineConfig({
         }),
         viteCompression(),
     ],
+    // --- PENGATURAN TAMBAHAN UNTUK MEMBISUKAN WARNING ---
+    css: {
+        preprocessorOptions: {
+            scss: {
+                api: "modern-compiler", // Menggunakan compiler modern
+                silenceDeprecations: [
+                    "mixed-decls",
+                    "color-functions",
+                    "global-builtin",
+                    "import",
+                    "legacy-js-api",
+                ],
+            },
+        },
+    },
 });

@@ -67,9 +67,25 @@ class RoomController extends Controller
     }
 
     public function show(Room $room)
-    {
-        return view('room.show', ['room' => $room]);
-    }
+{
+    // 1. Cari Transaksi Aktif (Status 'Check In') di kamar ini
+    // Menggunakan relasi 'transactions' dari model Room
+    $transaction = $room->transactions()
+                        ->where('status', 'Check In')
+                        ->with('customer.user') // Load sekalian customer & user biar ringan
+                        ->latest()
+                        ->first();
+
+    // 2. Ambil data customer dari transaksi (jika ada)
+    // Jika tidak ada transaksi Check In, maka customer = null
+    $customer = $transaction ? $transaction->customer : null;
+
+    // 3. Kirim data room DAN customer ke View
+    return view('room.show', [
+        'room'     => $room,
+        'customer' => $customer 
+    ]);
+}
 
     public function edit(Room $room)
     {

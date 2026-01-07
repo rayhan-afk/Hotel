@@ -6,10 +6,10 @@ use Illuminate\Http\Request;
 use App\Repositories\Interface\CheckinRepositoryInterface;
 use App\Models\Room;
 use App\Models\Transaction;
-use App\Models\Amenity; // [BARU] Jangan lupa import ini
+use App\Models\Amenity; 
 use Carbon\Carbon;
 use App\Helpers\Helper; 
-use Illuminate\Support\Facades\DB; // [BARU] Untuk Transaction DB
+use Illuminate\Support\Facades\DB; 
 
 class CheckinController extends Controller
 {
@@ -35,14 +35,13 @@ class CheckinController extends Controller
     }
 
     // === [METHOD UTAMA: TRIGGER CHECK-IN & POTONG STOK] ===
-   // === [METHOD UTAMA: TRIGGER CHECK-IN & POTONG STOK] ===
     public function processCheckIn($id)
     {
-        DB::beginTransaction(); // Pakai DB Transaction biar aman
+        DB::beginTransaction(); 
         try {
             $transaction = Transaction::findOrFail($id);
 
-            // 1. Validasi Status: Hanya boleh Check In jika statusnya Reservation
+            // 1. Validasi Status
             if ($transaction->status !== 'Reservation') {
                 return response()->json([
                     'status' => 'error', 
@@ -50,42 +49,28 @@ class CheckinController extends Controller
                 ], 400);
             }
 
-            // === [VALIDASI TANGGAL (SATPAM) DITAMBAHKAN DISINI] ===
-            // Ambil tanggal rencana checkin (jam diabaikan, fokus tanggal saja)
+            // 2. Validasi Tanggal (Satpam)
             $reservationDate = Carbon::parse($transaction->check_in)->startOfDay();
-            $today = Carbon::now()->startOfDay(); // Tanggal hari ini (00:00)
+            $today = Carbon::now()->startOfDay(); 
 
-            // Cek: Apakah Tanggal Reservasi LEBIH BESAR (Masa Depan) dari Hari Ini?
-            // Contoh: Rencana tgl 25, Hari ini tgl 23 -> DITOLAK
             if ($reservationDate->gt($today)) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Gagal! Belum waktunya Check In. Jadwal tamu ini tanggal: ' . $reservationDate->format('d/m/Y')
-                ], 400); // Pesan ini akan muncul sebagai Popup Error di layar
+                ], 400); 
             }
-            // ========================================================
 
-            // 2. UPDATE STATUS & JAM CHECK IN REAL-TIME
+            // 3. Update Status
             $transaction->update([
                 'status' => 'Check In',
-                
-                // Update jam check_in menjadi DETIK INI JUGA.
-                // (Hanya dieksekusi jika lolos dari satpam tanggal di atas)
                 'check_in' => Carbon::now(), 
             ]);
 
-            // 3. LOGIKA PENGURANGAN STOK AMENITIES (Tetap Sama/Tidak Dihapus)
+            // 4. Logika Pengurangan Stok Amenities
             $room = $transaction->room;
-            
-            // Loop semua amenities yang terhubung dengan kamar ini
             foreach ($room->amenities as $amenity) {
-                // Pastikan tipe barang bukan literan
                 if ($amenity->satuan != 'liter') {
-                    
-                    // Ambil jatah per kamar dari tabel pivot
                     $qtyNeeded = $amenity->pivot->amount; 
-
-                    // Kurangi stok di tabel amenities
                     $amenity->decrement('stok', $qtyNeeded);
                 }
             }
@@ -106,37 +91,57 @@ class CheckinController extends Controller
         }
     }
 
-   public function update(Request $request, $id)
+    // === [METHOD UPDATE: EXTEND/EDIT TRANSAKSI (BERSIH DARI EXTRA BED/BK)] ===
+    public function update(Request $request, $id)
     {
         $request->validate([
-            'check_in'  => 'required|date', 
-            'check_out' => 'required|date|after:check_in',
-            'breakfast' => 'required|in:Yes,No',
-            'extra_bed' => 'nullable|integer|min:0',
-            'extra_breakfast' => 'nullable|integer|min:0',
+            'check_in'      => 'required|date', 
+            'check_out'     => 'required|date|after:check_in',
+            'breakfast'     => 'required|in:Yes,No',
+            // 'extra_bed' & 'extra_breakfast' dihapus
         ]);
 
         DB::beginTransaction();
         
         try {
-            $transaction = Transaction::findOrFail($id);
+            $transaction = Transaction::with(['room', 'charges'])->findOrFail($id);
 
             // =========================================================
-            // 1. SIAPKAN WAKTU (JANGAN DI-HARDCODE)
+            // A. CARI TAHU HARGA PER MALAM "ASLI" (LOCK RATE)
             // =========================================================
-            // Kita ambil jam asli yang tersimpan di database.
-            // Contoh: Kalau tamu checkin jam 20:15, ya biarkan 20:15.
             
+            // 1. Hitung durasi LAMA
+            $oldIn  = \Carbon\Carbon::parse($transaction->check_in)->startOfDay();
+            $oldOut = \Carbon\Carbon::parse($transaction->check_out)->startOfDay();
+            $oldDays = $oldIn->diffInDays($oldOut) ?: 1;
+
+            // 2. Hitung komponen biaya LAMA (Hanya Charges & Breakfast Utama)
+            $oldCharges   = $transaction->charges->sum('total');
+            // Extra bed & bk lama diabaikan/dihapus dari logika hitung
+            $oldBreakfastMain = ($transaction->breakfast == 'Yes') ? (100000 * $oldDays) : 0; 
+
+            // 3. Dapatkan Harga Kamar Murni LAMA
+            $oldGrandTotal = $transaction->total_price;
+            
+            // LOGIKA NETT: GrandTotal - Charges - Sarapan = Harga Kamar Murni
+            // (Asumsi: Data lama extra bed/bk di DB transaksi dianggap 0 atau sudah dipindah ke charges)
+            // Jika masih ada data lama di kolom extra_bed DB, ini mungkin sedikit bias, tapi karena fitur dihapus, kita anggap 0.
+            $oldRoomPure = $oldGrandTotal - $oldCharges - $oldBreakfastMain;
+
+            // 4. DAPATKAN RATE PER MALAM YANG DISEPAKATI
+            $lockedPricePerNight = round($oldRoomPure / $oldDays); 
+
+            // =========================================================
+            // B. PROSES UPDATE SEPERTI BIASA (PAKAI LOCKED PRICE)
+            // =========================================================
+            
+            // 1. Siapkan Waktu Baru
             $jamMasukAsli  = \Carbon\Carbon::parse($transaction->check_in)->format('H:i:s');
             $jamKeluarAsli = \Carbon\Carbon::parse($transaction->check_out)->format('H:i:s');
-
-            // Gabungkan Tanggal Baru (dari Form) + Jam Asli (dari DB)
             $dbCheckInString  = $request->check_in . ' ' . $jamMasukAsli;
             $dbCheckOutString = $request->check_out . ' ' . $jamKeluarAsli;
 
-            // =======================================================
-            // 2. CEK BENTROK
-            // =======================================================
+            // 2. Cek Bentrok
             $newStart = \Carbon\Carbon::parse($dbCheckInString);
             $newEnd   = \Carbon\Carbon::parse($dbCheckOutString);
 
@@ -149,7 +154,6 @@ class CheckinController extends Controller
             foreach ($existingReservations as $res) {
                 $existingStart = \Carbon\Carbon::parse($res->check_in);
                 $existingEnd   = \Carbon\Carbon::parse($res->check_out);
-
                 if ($newStart->lt($existingEnd) && $newEnd->gt($existingStart)) {
                     DB::rollback();
                     $tamu = $res->customer ? $res->customer->name : 'Tamu Lain';
@@ -157,54 +161,42 @@ class CheckinController extends Controller
                 }
             }
 
-            // =======================================================
-            // 3. HITUNG HARGA (LOGIKA HARI MURNI)
-            // =======================================================
-            // Hitung durasi berdasarkan TANGGAL SAJA (Start of Day).
-            // Ini biar harganya gak jadi Rp 0 kalau jamnya deketan.
-            
-            $dateInNoTime  = \Carbon\Carbon::parse($request->check_in)->startOfDay();
-            $dateOutNoTime = \Carbon\Carbon::parse($request->check_out)->startOfDay();
-            
-            $days = $dateInNoTime->diffInDays($dateOutNoTime) ?: 1;
+            // 3. Hitung Durasi BARU
+            $newDateIn  = \Carbon\Carbon::parse($request->check_in)->startOfDay();
+            $newDateOut = \Carbon\Carbon::parse($request->check_out)->startOfDay();
+            $newDays = $newDateIn->diffInDays($newDateOut) ?: 1;
 
-            $pricePerNight = (float) $transaction->room->price; 
+            // 4. Hitung Ulang Total (Menggunakan $lockedPricePerNight)
+            $roomPriceTotal = $lockedPricePerNight * $newDays;
+            $mainBreakfastPrice = ($request->breakfast == 'Yes') ? (100000 * $newDays) : 0;
             
-            // Hitung Duit
-            $roomPriceTotal = $pricePerNight * $days;
-            $mainBreakfastPrice = ($request->breakfast == 'Yes') ? (100000 * $days) : 0;
+            // HARGA TOTAL KAMAR & SARAPAN UTAMA
             $taxableAmount = $roomPriceTotal + $mainBreakfastPrice;
-            $tax = $taxableAmount * 0.10; 
 
-            // Extra Items
-            $qtyExtraBed = (int) $request->input('extra_bed', 0);
-            $qtyExtraBreakfast = (int) $request->input('extra_breakfast', 0);
-            $totalExtraBed = $qtyExtraBed * 200000;
-            $totalExtraBreakfast = $qtyExtraBreakfast * 125000;
+            // 5. Total Baru (Plus Jajanan Lama/Charges)
+            // Extra Bed & Breakfast dihapus dari sini
+            $newGrandTotal = $taxableAmount + $oldCharges; 
 
-            $newGrandTotal = $taxableAmount + $tax + $totalExtraBed + $totalExtraBreakfast;
-            $alreadyPaid = (float) $transaction->paid_amount;
-            $shortfall = $newGrandTotal - $alreadyPaid;
-
-            // =========================================================
-            // 4. UPDATE DATABASE
-            // =========================================================
+            // 6. Simpan
             $transaction->update([
-                'check_in'        => $dbCheckInString,  // Tgl Baru + Jam Lama
-                'check_out'       => $dbCheckOutString, // Tgl Baru + Jam Lama
+                'check_in'        => $dbCheckInString,  
+                'check_out'       => $dbCheckOutString, 
                 'breakfast'       => $request->breakfast,
-                'extra_bed'       => $qtyExtraBed, 
-                'extra_breakfast' => $qtyExtraBreakfast,
+                // Kolom extra_bed & extra_breakfast tidak diupdate lagi
                 'total_price'     => $newGrandTotal
             ]);
 
             DB::commit();
+            
+            // Info Kurang/Lebih Bayar
+            $alreadyPaid = (float) $transaction->paid_amount;
+            $shortfall = $newGrandTotal - $alreadyPaid;
 
             if ($shortfall > 100) {
-                $msg = 'Simpan Berhasil. SISA BAYAR: ' . Helper::convertToRupiah($shortfall);
+                $msg = 'Update Berhasil. Kurang Bayar: ' . Helper::convertToRupiah($shortfall);
                 $status = 'warning';
             } elseif ($shortfall < -100) {
-                $msg = 'Simpan Berhasil. LEBIH BAYAR: ' . Helper::convertToRupiah(abs($shortfall));
+                $msg = 'Update Berhasil. Lebih Bayar: ' . Helper::convertToRupiah(abs($shortfall));
                 $status = 'info';
             } else {
                 $msg = 'Data berhasil diperbarui!';
@@ -219,35 +211,22 @@ class CheckinController extends Controller
         }
     }
     
-    // Method destroy & checkout (Biarkan Saja)
     // Method untuk Menghapus / Cancel Transaksi
     public function destroy($id)
     {
-        // 1. Ambil data transaksi dulu sebelum dihapus
         $transaction = Transaction::with('room.amenities')->findOrFail($id);
 
-        // 2. CEK LOGIKA PENGEMBALIAN STOK (RESTORE STOCK)
-        // Kita hanya balikin stok JIKA statusnya sudah 'Check In'.
-        // (Kalau masih 'Reservation', stok belum dipotong, jadi gak perlu dibalikin).
         if ($transaction->status == 'Check In') {
-            
             $room = $transaction->room;
-            
-            // Loop amenities kamar tersebut
             foreach ($room->amenities as $amenity) {
                 if ($amenity->satuan != 'liter') {
                     $qtyBalik = $amenity->pivot->amount;
-                    
-                    // KEMBALIKAN STOK (Increment)
                     $amenity->increment('stok', $qtyBalik);
                 }
             }
         }
 
-        // 3. Baru setelah stok aman, data dihapus dari database
-        // (Bisa pakai repository atau langsung model)
         $this->checkinRepository->delete($id); 
-        
         return response()->json(['message' => 'Data berhasil dihapus & Stok Amenities telah dikembalikan.']);
     }
 
@@ -256,7 +235,7 @@ class CheckinController extends Controller
         $this->checkinRepository->checkoutGuest($id);
         return response()->json([
             'message' => 'Tamu berhasil Check-Out!',
-            'redirect_url' => route('laporan.kamar.index') // Ganti sesuai route kamu
+            'redirect_url' => route('laporan.kamar.index')
         ]);
     }
 }

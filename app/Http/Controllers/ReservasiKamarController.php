@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Transaction; 
 use App\Repositories\Interface\ReservasiKamarRepositoryInterface;
-use Illuminate\Http\Request;
+use Illuminate\Http\Request; // Pastikan Request di-import
 use Carbon\Carbon; 
 
 class ReservasiKamarController extends Controller
@@ -19,12 +19,14 @@ class ReservasiKamarController extends Controller
     public function index(Request $request)
     {
         // === [FITUR ANTI ZOMBIE] ===
-        // Cari semua Reservasi yang tanggal check-in nya SUDAH LEWAT (kurang dari hari ini)
-        // Contoh: Booking tgl 24, sekarang tgl 25. Berarti dia "No Show".
+        // Cari reservasi lewat tanggal Check-in, ubah jadi 'Canceled' (No Show)
         Transaction::where('status', 'Reservation')
             ->whereDate('check_in', '<', Carbon::today()) 
-            ->update(['status' => 'Cancel']); 
-        // Status bisa diubah jadi 'Cancel' atau 'No Show' (sesuai selera)
+            ->update([
+                'status' => 'Canceled', // Samakan statusnya jadi 'Canceled'
+                'cancel_reason' => 'No Show', // Alasan otomatis
+                'cancel_notes' => 'Dibatalkan sistem karena tamu tidak datang pada tanggal check-in.'
+            ]); 
         // ===========================
 
         if ($request->ajax()) {
@@ -35,28 +37,31 @@ class ReservasiKamarController extends Controller
         return view('room-info.reservation');
     }
 
-    public function cancel($id)
+    // === [METHOD CANCEL YANG DIPERBAIKI] ===
+    public function cancel(Request $request, $id)
     {
         $transaction = Transaction::findOrFail($id);
         
+        // Update Status & Simpan Alasan
         $transaction->update([
-            'status' => 'Cancel'
+            'status'        => 'Canceled', // Gunakan 'Canceled' agar badge merah
+            'cancel_reason' => $request->cancel_reason, // Dari Dropdown Modal
+            'cancel_notes'  => $request->cancel_notes   // Dari Textarea Modal
         ]);
 
         return response()->json(['message' => 'Reservasi berhasil dibatalkan']);
     }
 
-    // === [METHOD UTAMA YANG DIPERBAIKI: AUTO JAM MASUK] ===
+    // === [METHOD CHECK IN] ===
     public function checkIn($id)
     {
-        
         $transaction = Transaction::findOrFail($id);
 
         // 1. VALIDASI TANGGAL (SATPAM)
         $checkInDate = Carbon::parse($transaction->check_in)->startOfDay();
         $today = Carbon::today();
 
-        // Jika Check In > Hari Ini (Artinya belum waktunya)
+        // Jika Check In > Hari Ini (Belum waktunya)
         if ($checkInDate->gt($today)) {
             return response()->json([
                 'status' => 'failed',
@@ -70,8 +75,7 @@ class ReservasiKamarController extends Controller
             $transaction->update([
                 'status' => 'Check In',
                 
-                // [PENTING] Update jam check_in menjadi SEKARANG (Real-time)
-                // Agar tercatat tamu masuk jam berapa.
+                // Update jam check_in menjadi SEKARANG (Real-time)
                 'check_in' => Carbon::now(),
                 
                 // Pastikan Lunas (Sisa Bayar 0)

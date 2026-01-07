@@ -187,7 +187,7 @@ $(function () {
                 submitBtn.removeClass('btn-primary').addClass('btn-success').html('<i class="fas fa-check"></i> Berhasil!');
 
                 Swal.fire({
-                    position: "center", icon: "success", title: response.message || "Success",
+                    position: "center", icon: "success", title: response.message || "Berhasil",
                     showConfirmButton: false, timer: 1500, iconColor: "#50200C",
                     customClass: { title: "swal-title-brown" }
                 });

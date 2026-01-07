@@ -29,23 +29,20 @@
                     <table id="checkin-table" class="professional-table table table-hover" style="width: 100%;">
                         <thead>
                             <tr>
-                                {{-- Penyesuaian Lebar Kolom agar Total 100% --}}
-                                <th scope="col" style="width: 4%;"><i class="fas fa-hashtag me-1"></i>No</th>
-                                <th scope="col" style="width: 13%;"><i class="fas fa-user me-1"></i>Tamu</th>
-                                <th scope="col" style="width: 8%;"><i class="fas fa-bed me-1"></i>Kamar</th>
-                                <th scope="col" style="width: 9%;"><i class="fas fa-calendar-check me-1"></i>Check-In</th>
-                                <th scope="col" style="width: 9%;"><i class="fas fa-calendar-times me-1"></i>Check-Out</th>
+                                {{-- Penyesuaian Lebar Kolom (Total 100%) --}}
+                                <th scope="col" style="width: 5%;"><i class="fas fa-hashtag me-1"></i>No</th>
+                                <th scope="col" style="width: 17%;"><i class="fas fa-user me-1"></i>Tamu</th>
+                                <th scope="col" style="width: 10%;"><i class="fas fa-bed me-1"></i>Kamar</th>
+                                <th scope="col" style="width: 12%;"><i class="fas fa-calendar-check me-1"></i>Check-In</th>
+                                <th scope="col" style="width: 12%;"><i class="fas fa-calendar-times me-1"></i>Check-Out</th>
                                 
-                                {{-- [BARU] Tambahan Kolom Extra --}}
-                                <th scope="col" style="width: 5%;" class="text-center" title="Extra Bed"><i class="fas fa-plus me-1"></i>Bed</th>
-                                <th scope="col" style="width: 5%;" class="text-center" title="Extra Sarapan"><i class="fas fa-coffee me-1"></i>Bfast</th>
-                                {{-- [END BARU] --}}
+                                {{-- Extra Bed & Breakfast DIHAPUS --}}
 
-                                <th scope="col" style="width: 5%;" class="text-center"><i class="fas fa-utensils me-1"></i>Srp</th> 
-                                <th scope="col" style="width: 11%;" class="text-end"><i class="fas fa-dollar-sign me-1"></i>Total</th>
-                                <th scope="col" style="width: 11%;" class="text-end text-danger"><i class="fas fa-hand-holding-usd me-1"></i>Sisa</th>
-                                <th scope="col" style="width: 8%;" class="text-center"><i class="fas fa-info-circle me-1"></i>Status</th>
-                                <th scope="col" style="width: 12%;" class="text-center"><i class="fas fa-cogs me-1"></i>Aksi</th>
+                                <th scope="col" style="width: 8%;" class="text-center"><i class="fas fa-utensils me-1"></i>Srp</th> 
+                                <th scope="col" style="width: 12%;" class="text-end"><i class="fas fa-dollar-sign me-1"></i>Total</th>
+                                <th scope="col" style="width: 12%;" class="text-end text-danger"><i class="fas fa-hand-holding-usd me-1"></i>Sisa</th>
+                                <th scope="col" style="width: 12%;" class="text-center"><i class="fas fa-info-circle me-1"></i>Status</th>
+                                <th scope="col" style="width: 10%;" class="text-center"><i class="fas fa-cogs me-1"></i>Aksi</th>
                             </tr>
                         </thead>
                         <tbody></tbody>

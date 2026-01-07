@@ -2,14 +2,12 @@ $(function () {
     const currentRoute = window.location.pathname;
     if (!currentRoute.includes("laporan/kamar")) return;
 
-    console.log("Laporan Kamar JS Loaded (Time Logic Added)");
+    console.log("Laporan Kamar JS Loaded (Fixed Plan vs Actual)");
 
-    // --- STYLE DEFINITIONS (Sesuai Style Asli Anda) ---
+    // --- STYLE DEFINITIONS (Tetap) ---
     const styleGreen = 'background-color: #A8D5BA; color: #50200C; font-size: 10px; padding: 6px 12px; font-weight: 700;';
     const styleRed = 'background-color: #F2C2B8; color: #50200C; font-size: 10px; padding: 6px 12px; font-weight: 700;';
     const styleBlue = 'background-color: #D6EAF8; color: #50200C; font-size: 10px; padding: 6px 12px; font-weight: 700;';
-    
-    // Style Baru untuk Peringatan Waktu (Kuning/Orange Lembut)
     const styleWarning = 'background-color: #FFE6CC; color: #50200C; font-size: 9px; padding: 4px 8px; font-weight: 700;';
 
     const datatable = $("#laporan-kamar-table").DataTable({
@@ -52,31 +50,28 @@ $(function () {
                 }
             },
 
-            // 2. PAKET MENGINAP (LOGIKANYA DIPERBAIKI)
+            // 2. PAKET MENGINAP (RENCANA)
             {
-                data: null,
+                data: "check_in", 
+                name: "transactions.check_in",
                 className: "align-middle",
                 searchable: false,
                 render: function (data, type, row) {
-                    let pricePerNight = row.room_price ? row.room_price : (row.room ? row.room.price : 1);
-                    if(pricePerNight <= 0) pricePerNight = 1;
+                    let planIn = moment(row.check_in);
+                    let planOut = moment(row.check_out);
                     
-                    let duration = Math.round(row.total_price / pricePerNight);
-                    if (duration < 1) duration = 1;
-
-                    // [UBAH DISINI] Gunakan 'original_date' untuk menghitung paket rencana
-                    let planCheckIn = moment(row.check_in); 
-                    let planOut = planCheckIn.clone().add(duration, 'days');
+                    let duration = planOut.diff(planIn, 'days');
+                    if (duration < 1) duration = 1; 
 
                     return `<div class="small" style="color: #50200C;">
-                                <div>In: ${planCheckIn.format('DD/MM/YYYY')}</div>
+                                <div>In: ${planIn.format('DD/MM/YYYY')}</div>
                                 <div class="fw-bold">Durasi: ${duration} Malam</div>
                                 <div class="text-muted border-top mt-1 pt-1">Out: ${planOut.format('DD/MM/YYYY')}</div>
                             </div>`;
                 }
             },
 
-            // 3. MASUK REAL (+ Logic Early Check-in < 14:00)
+            // 3. MASUK REAL
             {
                 data: "check_in",
                 name: "transactions.check_in",
@@ -84,7 +79,6 @@ $(function () {
                 render: function (data) {
                     let date = moment(data);
                     
-                    // Logic Early Checkin (Sebelum jam 14)
                     let isEarlyIn = date.hour() < 14; 
                     let badgeEarly = isEarlyIn 
                         ? `<br><span class="badge rounded-pill mt-1" style="${styleWarning}">Early Check-in</span>` 
@@ -100,43 +94,33 @@ $(function () {
                 }
             },
 
-            // 4. KELUAR REAL (+ Logic Late Check-out > 12:00)
+            // 4. KELUAR REAL
             {
-                data: "check_out",
-                name: "transactions.check_out",
+                data: "updated_at",
+                name: "transactions.updated_at",
                 className: "align-middle",
                 render: function (data, type, row) {
-                    if (row.status === 'Check In' || !data) {
+                    if (row.status === 'Check In' || row.status === 'Reservation') {
                         return `<span class="badge rounded-pill" style="${styleBlue}">Belum Keluar</span>`;
                     }
 
-                    let actualOut = moment(data);
-                    
-                    // A. Logic Late Check-out (Lewat jam 12 siang)
-                    // Jika jam >= 12, maka Late (misal 12:01 atau 13:00)
+                    let actualOut = moment(data); 
+                    let planOut = moment(row.check_out);
+
                     let isLateOut = actualOut.hour() >= 12;
                     
-                    // B. Logic Early Checkout (Pulang sebelum tanggal kontrak selesai)
-                    let pricePerNight = row.room_price ? row.room_price : (row.room ? row.room.price : 1);
-                    if(pricePerNight <= 0) pricePerNight = 1;
-                    let duration = Math.round(row.total_price / pricePerNight);
-                    if (duration < 1) duration = 1;
-                    let planOutDate = moment(row.check_in).add(duration, 'days').startOf('day');
-                    let actualOutDate = moment(data).startOf('day');
-                    let isEarlyDate = actualOutDate.isBefore(planOutDate);
+                    let actualDateOnly = actualOut.clone().startOf('day');
+                    let planDateOnly = planOut.clone().startOf('day');
+                    let isEarlyDate = actualDateOnly.isBefore(planDateOnly);
 
-                    // Badge Waktu
                     let timeBadge = `<span class="badge rounded-pill" style="${styleRed}">
-                                        <i class="fas fa-clock me-1"></i>${actualOut.format('HH:mm')}
+                                            <i class="fas fa-clock me-1"></i>${actualOut.format('HH:mm')}
                                      </span>`;
                     
-                    // Badge Peringatan
                     let alertBadge = '';
                     if (isEarlyDate) {
-                        // Pulang beda hari (lebih cepat)
-                        alertBadge = `<br><span class="badge rounded-pill mt-1" style="background-color: #50200C; color: #fff; font-size: 9px; padding: 4px 8px;">Pulang Awal (Early)</span>`;
+                        alertBadge = `<br><span class="badge rounded-pill mt-1" style="background-color: #E67E22; color: #fff; font-size: 9px; padding: 4px 8px;">Early Check-out</span>`;
                     } else if (isLateOut) {
-                        // Pulang hari yang sama, tapi telat jam
                         alertBadge = `<br><span class="badge rounded-pill mt-1" style="${styleWarning}">Late Check-out</span>`;
                     }
 
@@ -165,7 +149,7 @@ $(function () {
                 className: "text-center align-middle",
                 render: function (data) {
                     let text = data ? data.replace(/<[^>]*>?/gm, '') : '';
-                    if (text === 'Done' || text === 'Payment Done' || text === 'Selesai') {
+                    if (text === 'Done' || text === 'Payment Done' || text === 'Selesai' || text === 'Cleaning') {
                         return `<span class="badge rounded-pill" style="${styleGreen}">${text}</span>`;
                     }
                     if (text === 'Check In') {
@@ -196,6 +180,8 @@ $(function () {
     // --- EVENT LISTENERS ---
     $("#btn-filter").on("click", function (e) { e.preventDefault(); datatable.ajax.reload(); });
     $("#btn-reset").on("click", function (e) { e.preventDefault(); $("#start_date").val(''); $("#end_date").val(''); datatable.ajax.reload(); });
+    
+    // EXPORT EXCEL
     $("#btn-export-kamar").on("click", function (e) {
         e.preventDefault();
         const startDate = $("#start_date").val();
@@ -204,5 +190,22 @@ $(function () {
         if(startDate) url += `start_date=${startDate}&`;
         if(endDate) url += `end_date=${endDate}`;
         window.location.href = url;
+    });
+
+    // === [BARU] EXPORT PDF ===
+    $("#btn-export-pdf").on("click", function (e) {
+        e.preventDefault();
+        
+        // 1. Ambil Tanggal Filter
+        const startDate = $("#start_date").val();
+        const endDate = $("#end_date").val();
+        
+        // 2. Susun URL
+        let url = "/laporan/kamar/pdf?";
+        if(startDate) url += `start_date=${startDate}&`;
+        if(endDate) url += `end_date=${endDate}`;
+        
+        // 3. Buka di Tab Baru
+        window.open(url, '_blank');
     });
 });

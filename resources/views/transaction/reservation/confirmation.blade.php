@@ -206,7 +206,7 @@
                                             </td>
                                         </tr>
 
-                                        {{-- Item 2: Sarapan (Dinamis - SEKARANG OTOMATIS MUNCUL JIKA ADA DATA) --}}
+                                        {{-- Item 2: Sarapan (Dinamis) --}}
                                         <tr id="row_breakfast" style="{{ (isset($breakfastPrice) && $breakfastPrice > 0) ? '' : 'display: none;' }}">
                                             <td>
                                                 <span class="fw-bold" style="color:#50200C">Paket Sarapan</span>
@@ -218,16 +218,6 @@
                                             <td class="text-center" style="color:#50200C">{{ $dayDifference }} Malam</td>
                                             <td class="text-end fw-bold" style="color:#50200C" id="display_breakfast_total">
                                                 {{ (isset($breakfastPrice) && $breakfastPrice > 0) ? Helper::convertToRupiah($breakfastPrice) : 'Rp 0' }}
-                                            </td>
-                                        </tr>
-
-                                        {{-- Item 3: Pajak PB1 --}}
-                                        <tr>
-                                            <td colspan="3" class="text-end fw-bold" style="color:#50200C">
-                                                Pajak PB1 (10%)
-                                            </td>
-                                            <td class="text-end fw-bold" style="color:#50200C" id="display_tax">
-                                                {{ Helper::convertToRupiah($minimumTax) }}
                                             </td>
                                         </tr>
                                     </tbody>
@@ -343,7 +333,7 @@
     const breakfastSelect = document.getElementById('breakfast_select');
     const rowBreakfast = document.getElementById('row_breakfast');
     const displayBreakfastTotal = document.getElementById('display_breakfast_total');
-    const displayTax = document.getElementById('display_tax');
+    // const displayTax = document.getElementById('display_tax'); <--- DIHAPUS
     const displayTotalPrice = document.getElementById('display_total_price');
     const inputTotalPrice = document.getElementById('input_total_price');
     const btnDownloadInvoice = document.getElementById('btn-download-invoice');
@@ -360,7 +350,7 @@
         }).format(number);
     };
 
-    // [PERBAIKAN] Logika Hitung dipisah ke Function agar bisa dipanggil manual
+    // [PERBAIKAN] Logika Hitung (TANPA PAJAK)
     function calculateTotal() {
         let currentSubTotal = baseRoomTotal; 
         let breakfastParam = 'No';
@@ -380,10 +370,12 @@
             rowBreakfast.style.display = 'none';
         }
 
-        const taxAmount = currentSubTotal * 0.10; 
-        const finalTotal = currentSubTotal + taxAmount;
+        // const taxAmount = currentSubTotal * 0.10; <--- DIHAPUS
+        // const finalTotal = currentSubTotal + taxAmount; <--- DIHAPUS
 
-        displayTax.innerText = formatRupiah(taxAmount);
+        const finalTotal = currentSubTotal; // Langsung Subtotal
+
+        // displayTax.innerText = formatRupiah(taxAmount); <--- DIHAPUS
         displayTotalPrice.innerText = formatRupiah(finalTotal);
         
         if(inputTotalPrice) {
@@ -400,8 +392,7 @@
         calculateTotal();
     });
 
-    // [PERBAIKAN] Jalankan hitungan saat halaman pertama kali dimuat
-    // Ini menjamin harga total benar, meskipun user belum klik apa-apa.
+    // Jalankan hitungan saat halaman pertama kali dimuat
     document.addEventListener("DOMContentLoaded", function() {
         calculateTotal();
     });

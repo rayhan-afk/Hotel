@@ -39,14 +39,10 @@ class CheckinRepository implements CheckinRepositoryInterface
         $formattedData = [];
         foreach ($data as $trx) {
             
-            // === LOGIKA SISA BAYAR (KHUSUS UNTUK RESEPSIONIS) ===
-            // total_price adalah harga setelah ditambah Extra-extra
+            // === LOGIKA SISA BAYAR ===
             $totalPrice = (float) $trx->total_price;
-            
-            // paid_amount adalah uang yang sudah dibayar tamu di awal
             $paid = (float) ($trx->paid_amount ?? 0);
             
-            // Selisih inilah yang harus ditagih resepsionis
             $remaining = $totalPrice - $paid;
             $remainingDisp = ($remaining > 0) ? $remaining : 0;
 
@@ -57,10 +53,13 @@ class CheckinRepository implements CheckinRepositoryInterface
                     'number' => $trx->room->number,
                     'type' => $trx->room->type->name
                 ],
-                'check_in' => Helper::dateFormat($trx->check_in),
-                'check_out' => Helper::dateFormat($trx->check_out),
-                'extra_bed' => (int) $trx->extra_bed, 
-                'extra_breakfast' => (int) $trx->extra_breakfast, 
+                
+                // Kirim data mentah (DateTime) agar JavaScript bisa ambil Jam-nya.
+                'check_in' => $trx->check_in,   
+                'check_out' => $trx->check_out, 
+
+                // [DIHAPUS] extra_bed dan extra_breakfast sudah dibuang dari sini
+                
                 'breakfast' => $trx->breakfast ?? 'No',
                 'total_price' => $totalPrice,
                 'remaining_payment' => (float) $remainingDisp, 
@@ -84,8 +83,6 @@ class CheckinRepository implements CheckinRepositoryInterface
 
     public function update($request, $id) 
     { 
-        // Biarkan Controller yang melakukan update() 
-        // Agar hitungan total_price hasil pajak & extra tidak tertimpa data mentah
         return Transaction::findOrFail($id); 
     }
 
@@ -96,30 +93,26 @@ class CheckinRepository implements CheckinRepositoryInterface
 
     public function store($request) 
     { 
-        // Logic Store jika diperlukan
+        // Logic Store
     }
 
     /**
      * Method Menangani proses Check Out tamu.
-     * Saat Checkout, kita anggap tamu sudah melunasi semuanya.
      */
     public function checkoutGuest($id)
     {
         $transaction = Transaction::findOrFail($id);
         
+        // === SOLUSI FINAL: JANGAN UBAH KOLOM CHECK_OUT ===
+        // Biarkan 'check_out' tetap tanggal masa depan (Rencana).
+        // Waktu keluar asli akan kita ambil dari 'updated_at' (Waktu status berubah jadi Done).
+
         $transaction->update([
-            'status' => 'Done',
-            
-            // --- BAGIAN INI SAYA HAPUS ---
-            // 'check_out' => Carbon::now(),  <-- BIANG KEROKNYA DI SINI
-            // Kita hapus baris di atas, supaya tanggal checkout TETAP sesuai reservasi (misal tgl 27)
-            // -----------------------------
-            
-            // Pelunasan otomatis (Opsional, sesuai request sebelumnya)
+            'status'      => 'Done', 
+            // 'check_out' => ... (JANGAN DIUBAH SAMA SEKALI)
             'paid_amount' => $transaction->total_price 
         ]);
         
-        // Ubah Status Kamar jadi 'Cleaning'
         $transaction->room->update([
             'status' => 'Cleaning'
         ]);

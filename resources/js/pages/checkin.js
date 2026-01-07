@@ -313,7 +313,7 @@ $(function () {
                     style: 'currency', currency: 'IDR', minimumFractionDigits: 0 
                 }).format(remaining);
 
-                let alertHtml = `
+                let debtAlert = `
                     <div class="alert alert-light dynamic-alert border-danger d-flex align-items-center mt-3" role="alert">
                         <i class="fas fa-exclamation-triangle me-3 fa-2x" style="color: #A94442"></i>
                         <div class="text-start">

@@ -55,47 +55,8 @@
                 Ya (Dengan Sarapan)
             </option>
         </select>
-    </div>
-
-    {{-- [BARU] 5. LAYANAN TAMBAHAN (EXTRA) --}}
-    <div class="card bg-light border-0 mb-4">
-        <div class="card-body p-3">
-            <h6 class="fw-bold mb-3" style="color: #50200C; font-size: 14px;">
-                <i class="fas fa-plus-circle me-1"></i> Layanan Tambahan (Optional)
-            </h6>
-            
-            <div class="row">
-                {{-- Input Extra Bed --}}
-                <div class="col-md-6 mb-2">
-                    <label for="extra_bed" class="form-label fw-bold small">Extra Bed (+Breakfast)</label>
-                    <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-white"><i class="fas fa-bed text-secondary"></i></span>
-                        <input type="number" min="0" 
-                               class="form-control" 
-                               name="extra_bed" 
-                               id="extra_bed" 
-                               value="{{ $transaction->extra_bed ?? 0 }}">
-                    </div>
-                    <div class="form-text fw-bold" style="color: #A94442; font-size: 10px;">Rp 200.000 / unit</div>
-                </div>
-
-                {{-- Input Extra Breakfast --}}
-                <div class="col-md-6 mb-2">
-                    <label for="extra_breakfast" class="form-label fw-bold small">Extra Breakfast Only</label>
-                    <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-white"><i class="fas fa-utensils text-secondary"></i></span>
-                        <input type="number" min="0" 
-                               class="form-control" 
-                               name="extra_breakfast" 
-                               id="extra_breakfast" 
-                               value="{{ $transaction->extra_breakfast ?? 0 }}">
-                    </div>
-                    <div class="form-tex fw-bold" style="color: #A94442; font-size: 10px;">Rp 125.000 / porsi</div>
-                </div>
-            </div>
-            <small class="d-block mt-2 fst-italic" style="color: #50200C; font-size: 11px;">
-                *Total harga akan dihitung otomatis saat disimpan.
-            </small>
+        <div class="form-text text-muted small">
+            Pengaturan ini berlaku untuk setiap malam menginap.
         </div>
     </div>
 

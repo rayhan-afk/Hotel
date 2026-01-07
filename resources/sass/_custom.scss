@@ -36,6 +36,11 @@ body {
     line-height: 1.6;
     color: #334155;
     overflow-x: hidden;
+    
+    /* === UBAH INI === */
+    /* 140px adalah titik mulai Sidebar. 
+       Jadi konten akan sejajar garis atasnya dengan Sidebar */
+    padding-top: 140px; 
 }
 
 body.sidebar-layout {

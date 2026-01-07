@@ -29,7 +29,7 @@
                     <div class="card shadow-sm border">
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table class="table table-hover table-custom" style="white-space: nowrap">
+                                <table class="table table-hover table-custom">
                                     <thead>
                                         <tr>
                                             <th scope="col">#</th>
@@ -44,36 +44,36 @@
                                     <tbody>
                                         @forelse ($users as $user)
                                             <tr>
-                                                <td class="align-middle">
+                                                <td class="align-middle" style="background-color: #F7F3E4;">
                                                     {{ ($users->currentpage() - 1) * $users->perpage() + $loop->index + 1 }}
                                                 </td>
-                                                <td class="align-middle">
+                                                <td class="align-middle" style="background-color: #F7F3E4;">
                                                     <div class="d-flex align-items-center">
                                                         {{-- Avatar Placeholder dari Inisial Nama --}}
                                                         <div class="rounded-circle d-flex justify-content-center align-items-center me-3 fw-bold shadow-sm" 
                                                              style="width: 40px; height: 40px; background-color: #F7F3E4; color: #50200C; border: 1px solid #ddd;">
                                                             {{ substr($user->name, 0, 2) }}
                                                         </div>
-                                                        <span class="fw-bold text-dark">{{ $user->name }}</span>
+                                                        <span class="fw-bold">{{ $user->name }}</span>
                                                     </div>
                                                 </td>
-                                                <td class="align-middle">{{ $user->email }}</td>
-                                                <td class="align-middle">
+                                                <td class="align-middle" style="background-color: #F7F3E4;">{{ $user->email }}</td>
+                                                <td class="align-middle" style="background-color: #F7F3E4;">
                                                     <span class="badge rounded-pill" style="background-color: #50200C; color: #fff; font-weight: normal;">
                                                         {{ $user->role }}
                                                     </span>
                                                 </td>
-                                                <td class="align-middle">
+                                                <td class="align-middle" style="background-color: #F7F3E4;">
                                                     {{-- Simulasi Status Active --}}
                                                     <span class="badge rounded-pill bg-success" style="font-weight: normal;">
                                                         Active
                                                     </span>
                                                 </td>
-                                                <td class="align-middle">
+                                                <td class="align-middle" style="background-color: #F7F3E4;">
                                                     {{-- Format Tanggal: 31 Dec 2025 --}}
                                                     {{ $user->created_at ? $user->created_at->format('d M Y') : '-' }}
                                                 </td>
-                                                <td class="align-middle">
+                                                <td class="align-middle" style="background-color: #F7F3E4;">
                                                     <a class="btn btn-sm rounded shadow-sm border p-0 m-0"
                                                         href="{{ route('user.edit', ['user' => $user->id]) }}"
                                                         data-bs-toggle="tooltip" data-bs-placement="top" title="Edit User"

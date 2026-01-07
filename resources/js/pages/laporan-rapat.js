@@ -23,7 +23,7 @@ $(function () {
             { 
                 data: "instansi", 
                 name: "rapat_customers.instansi", 
-                className: "fw-bold text-dark align-middle" 
+                className: "fw-bold align-middle" 
             },
             // 1. Tanggal
             { 

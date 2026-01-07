@@ -85,9 +85,9 @@
     {{-- [NEW] Amenities Section (Consumables) --}}
     <div class="col-md-12 mt-4">
         <div class="card border shadow-sm">
-            <div class="card-header bg-light fw-bold">
+            <div class="card-header fw-bold" style="background-color: #F7F3E4; color: #50200C;">
                 <i class="fas fa-box-open me-1"></i> Setup Amenities & Jatah Barang (Logistik)
-                <small class="d-block text-muted fw-normal mt-1">Pilih barang habis pakai (Consumable) yang disediakan untuk kamar ini. Stok akan berkurang otomatis saat Check-In.</small>
+                <small class="d-block fw-normal mt-1" style="color: #50200C">Pilih barang habis pakai (Consumable) yang disediakan untuk kamar ini. Stok akan berkurang otomatis saat Check-In.</small>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -166,7 +166,7 @@
         {{-- File Input --}}
         <input type="file" class="form-control" id="image" name="image" accept="image/*">
         <div id="error_image" class="text-danger error"></div>
-        <small class="text-muted">Format: JPG, PNG. Maks: 2MB.</small>
+        <small class="" style="color: #50200C">Format: JPG, PNG. Maks: 2MB.</small>
 
         {{-- Preview Old Image (Only in Edit mode if image exists) --}}
         @if($room)

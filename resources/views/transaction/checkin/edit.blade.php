@@ -60,7 +60,7 @@
     {{-- [BARU] 5. LAYANAN TAMBAHAN (EXTRA) --}}
     <div class="card bg-light border-0 mb-4">
         <div class="card-body p-3">
-            <h6 class="fw-bold mb-3 text-primary" style="font-size: 14px;">
+            <h6 class="fw-bold mb-3" style="color: #50200C; font-size: 14px;">
                 <i class="fas fa-plus-circle me-1"></i> Layanan Tambahan (Optional)
             </h6>
             
@@ -76,7 +76,7 @@
                                id="extra_bed" 
                                value="{{ $transaction->extra_bed ?? 0 }}">
                     </div>
-                    <div class="form-text text-danger fw-bold" style="font-size: 10px;">Rp 200.000 / unit</div>
+                    <div class="form-text fw-bold" style="color: #A94442; font-size: 10px;">Rp 200.000 / unit</div>
                 </div>
 
                 {{-- Input Extra Breakfast --}}
@@ -90,10 +90,10 @@
                                id="extra_breakfast" 
                                value="{{ $transaction->extra_breakfast ?? 0 }}">
                     </div>
-                    <div class="form-text text-danger fw-bold" style="font-size: 10px;">Rp 125.000 / porsi</div>
+                    <div class="form-tex fw-bold" style="color: #A94442; font-size: 10px;">Rp 125.000 / porsi</div>
                 </div>
             </div>
-            <small class="text-muted d-block mt-2 fst-italic" style="font-size: 11px;">
+            <small class="d-block mt-2 fst-italic" style="color: #50200C; font-size: 11px;">
                 *Total harga akan dihitung otomatis saat disimpan.
             </small>
         </div>

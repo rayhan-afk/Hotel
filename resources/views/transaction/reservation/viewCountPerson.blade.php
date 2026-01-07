@@ -47,9 +47,9 @@
             {{-- Kolom Kiri: Form Input --}}
             <div class="col-md-8 mt-2">
                 <div class="card shadow-sm border-0" style="border: 1px solid #e0e0e0;">
-                    <div class="card-header bg-white border-0 pt-4 px-4">
+                    <div class="card-header border-0 pt-4 px-4" style="background-color: #f7f3e4; color: #50200C;">
                         <h4 class="fw-bold" style="color: #50200C">Detail Reservasi</h4>
-                        <p class="text-muted small">Tentukan tanggal menginap dan jumlah tamu.</p>
+                        <p class="small">Tentukan tanggal menginap dan jumlah tamu.</p>
                     </div>
                     <div class="card-body p-4">
                         <form class="row g-3" method="GET" action="{{ route('transaction.reservation.chooseRoom', ['customer' => $customer->id]) }}">
@@ -65,7 +65,7 @@
                                            id="count_person" name="count_person" value="2" readonly>
                                     <span class="input-group-text bg-white" style="color:#50200C; border-color: #C49A6C;">Orang</span>
                                 </div>
-                                <small class="text-muted">*Kapasitas standar kamar adalah 2 orang.</small>
+                                <small class="" style="color: #50200C">*Kapasitas standar kamar adalah 2 orang.</small>
                             </div>
 
                             {{-- Check In --}}

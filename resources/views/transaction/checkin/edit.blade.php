@@ -100,7 +100,7 @@
     </div>
 
     {{-- TOMBOL AKSI --}}
-    <div class="d-flex justify-content-end gap-2">
+    <div class="d-flex justify-content-end gap-2 mt-4">
         <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Batal</button>
         <button type="submit" class="btn btn-primary fw-bold px-4" id="btn-save-edit">
             <i class="fas fa-save me-1"></i> Simpan Perubahan

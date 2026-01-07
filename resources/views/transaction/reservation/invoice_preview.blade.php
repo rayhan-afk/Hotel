@@ -26,7 +26,7 @@
                 Kota Bandung, Jawa Barat | Telp. 081917044390</small>
             </div>
             <div class="col-5 text-right">
-                <h2 class="invoice-title">INVOICE RESERVASI</h2>
+                <h2 class="invoice-title">GUEST INVOICE</h2>
                 <br><br>
                 <strong>No: {{ $transaction_code }}</strong><br>
                 Tanggal: {{ Helper::dateFormat($date) }}
@@ -65,12 +65,10 @@
                 
                 {{-- A. SEWA KAMAR (Logic Weekday & Weekend) --}}
                 @php
-                    // Cek apakah data breakdown tersedia dan valid (jumlahnya > 0)
                     $hasBreakdown = isset($weekday_count) && isset($weekend_count) && (($weekday_count + $weekend_count) > 0);
                 @endphp
 
                 @if($hasBreakdown)
-                    
                     {{-- 1. Baris Weekday --}}
                     @if($weekday_count > 0)
                     <tr>
@@ -98,7 +96,7 @@
                     @endif
 
                 @else
-                    {{-- FALLBACK: Jika breakdown 0 atau error, TAMPILKAN STANDAR (Biar gak kosong) --}}
+                    {{-- FALLBACK --}}
                     <tr>
                         <td>Sewa Kamar Tipe {{ $room->type->name }} (No. {{ $room->number }})</td>
                         <td class="text-center">{{ $days }} Malam</td>
@@ -110,7 +108,7 @@
 
                 {{-- B. ITEM LAINNYA --}}
                 
-                {{-- Sarapan Utama --}}
+                {{-- Sarapan Utama (Masih bagian dari paket kamar) --}}
                 @if($breakfast_status == 'Yes')
                 <tr>
                     <td>Paket Sarapan (Tamu Utama)</td>
@@ -119,51 +117,34 @@
                     <td class="text-right">{{ Helper::convertToRupiah($breakfast_price_total) }}</td>
                 </tr>
                 @endif
-{{-- Extra Bed --}}
-                @if(isset($transaction) && ($transaction->extra_bed > 0))
-                    @php 
-                        // [FIX] Hapus pengali $days di sini juga
-                        $totalExtraBed = $transaction->extra_bed * 200000; 
-                    @endphp
-                    <tr>
-                        <td>Extra Bed (Termasuk Sarapan)</td>
-                        
-                        {{-- [FIX] Tampilan Qty beda dengan breakfast --}}
-                        <td class="text-center">{{ $transaction->extra_bed }} Unit <br><small>(Flat Rate)</small></td>
-                        
-                        <td class="text-right">Rp 200.000</td>
-                        <td class="text-right">{{ Helper::convertToRupiah($totalExtraBed) }}</td>
-                    </tr>
-                @endif
 
-                {{-- Extra Breakfast (SUDAH DIPERBAIKI JADI FLAT) --}}
-                @if(isset($transaction) && ($transaction->extra_breakfast > 0))
-                    @php 
-                        // [FIX] HAPUS pengali $days. Hitung flat qty * harga.
-                        $totalExtraBreakfast = $transaction->extra_breakfast * 125000; 
-                    @endphp
+                {{-- [HAPUS] Extra Bed & Extra Breakfast Lama sudah dihapus dari sini --}}
+
+                {{-- === C. BIAYA TAMBAHAN (CHARGES / FO CASHIER) === --}}
+                {{-- Extra Bed & Breakfast baru akan muncul otomatis di sini --}}
+                @if(isset($transaction) && $transaction->charges->count() > 0)
                     <tr>
-                        <td>Extra Breakfast Only</td>
-                        
-                        {{-- [FIX] Hapus teks "x Malam" agar tidak bingung --}}
-                        <td class="text-center">{{ $transaction->extra_breakfast }} Porsi <br><small>(Flat Rate)</small></td>
-                        
-                        <td class="text-right">Rp 125.000</td>
-                        <td class="text-right">{{ Helper::convertToRupiah($totalExtraBreakfast) }}</td>
+                        <td colspan="4" class="font-weight-bold" style="background-color: #f8f9fa; font-size: 0.9em; padding: 5px 10px;">
+                            BIAYA TAMBAHAN (Layanan & Services)
+                        </td>
                     </tr>
+                    @foreach($transaction->charges as $charge)
+                    <tr>
+                        <td>
+                            {{ $charge->item_name }}
+                            <br><small class="text-muted"><i>{{ $charge->type }}</i></small>
+                        </td>
+                        <td class="text-center">{{ $charge->qty }}</td>
+                        <td class="text-right">{{ Helper::convertToRupiah($charge->amount) }}</td>
+                        <td class="text-right">{{ Helper::convertToRupiah($charge->total) }}</td>
+                    </tr>
+                    @endforeach
                 @endif
+                {{-- ======================================================== --}}
 
             </tbody>
             <tfoot>
-                <tr>
-                    {{-- Subtotal dihitung mundur dari Grand Total dikurangi Pajak --}}
-                    <td colspan="3" class="text-right font-weight-bold">Subtotal</td>
-                    <td class="text-right">{{ Helper::convertToRupiah($grand_total - $tax) }}</td>
-                </tr>
-                <tr>
-                    <td colspan="3" class="text-right font-weight-bold">Pajak PB1 (10%)</td>
-                    <td class="text-right">{{ Helper::convertToRupiah($tax) }}</td>
-                </tr>
+                {{-- FOOTER BERSIH: LANGSUNG TOTAL --}}
                 <tr class="bg-light">
                     <td colspan="3" class="text-right font-weight-bold" style="font-size: 1.2em;">TOTAL BAYAR</td>
                     <td class="text-right font-weight-bold" style="font-size: 1.2em;">{{ Helper::convertToRupiah($grand_total) }}</td>

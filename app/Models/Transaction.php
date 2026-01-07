@@ -21,8 +21,10 @@ class Transaction extends Model
         'total_price',
         'breakfast',
         'paid_amount',
-        'extra_bed',
-        'extra_breakfast'
+        // 'extra_bed',
+        // 'extra_breakfast'
+        'cancel_reason', 
+        'cancel_notes',
     ];
 
     protected $casts = [
@@ -73,4 +75,21 @@ class Transaction extends Model
 
     // getTotalPayment() DIHAPUS karena tabel payment tidak ada
     // getMinimumDownPayment() DIHAPUS
+        public function charges()
+    {
+        return $this->hasMany(TransactionCharge::class);
+    }
+
+    // Helper untuk hitung total tagihan tambahan
+    public function getTotalChargesAttribute()
+    {
+        return $this->charges->sum('total');
+    }
+
+    // Helper Total Grand Total (Kamar + Charges)
+    public function getGrandTotalAllAttribute()
+    {
+        // total_price (Harga Kamar + Extra Bed dari logic sebelumnya) + total charges
+        return $this->total_price + $this->total_charges; 
+    }
 }

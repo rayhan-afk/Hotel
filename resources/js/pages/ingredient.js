@@ -3,7 +3,7 @@ $(function () {
     if (!currentRoute.includes("ingredient")) return;
 
     // === TAMBAH CSS ANIMASI UNTUK WARNING ===
-    const style = document.createElement('style');
+    const style = document.createElement("style");
     style.textContent = `
         @keyframes pulseWarning {
             0%, 100% {
@@ -81,74 +81,90 @@ $(function () {
     // === FUNGSI UNTUK MEMUTAR SUARA WARNING (Multiple Methods) ===
     let hasPlayedWarningSound = false;
     let audioContext = null;
-    
+
     function playWarningSound() {
         console.log("🔊 Attempting to play warning sound...");
-        
+
         // Method 1: Web Audio API (Beep Sound)
         try {
             if (!audioContext) {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                audioContext = new (window.AudioContext ||
+                    window.webkitAudioContext)();
             }
-            
+
             // Unlock audio context (required for some browsers)
-            if (audioContext.state === 'suspended') {
+            if (audioContext.state === "suspended") {
                 audioContext.resume();
             }
-            
+
             // Create beep sequence
             const beeps = [
                 { freq: 900, start: 0, duration: 0.15 },
                 { freq: 700, start: 0.25, duration: 0.15 },
-                { freq: 900, start: 0.5, duration: 0.2 }
+                { freq: 900, start: 0.5, duration: 0.2 },
             ];
-            
-            beeps.forEach(beep => {
+
+            beeps.forEach((beep) => {
                 const oscillator = audioContext.createOscillator();
                 const gainNode = audioContext.createGain();
-                
+
                 oscillator.connect(gainNode);
                 gainNode.connect(audioContext.destination);
-                
+
                 oscillator.frequency.value = beep.freq;
-                gainNode.gain.setValueAtTime(0, audioContext.currentTime + beep.start);
-                gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + beep.start + 0.01);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + beep.start + beep.duration);
-                
+                gainNode.gain.setValueAtTime(
+                    0,
+                    audioContext.currentTime + beep.start
+                );
+                gainNode.gain.linearRampToValueAtTime(
+                    0.3,
+                    audioContext.currentTime + beep.start + 0.01
+                );
+                gainNode.gain.exponentialRampToValueAtTime(
+                    0.01,
+                    audioContext.currentTime + beep.start + beep.duration
+                );
+
                 oscillator.start(audioContext.currentTime + beep.start);
-                oscillator.stop(audioContext.currentTime + beep.start + beep.duration);
+                oscillator.stop(
+                    audioContext.currentTime + beep.start + beep.duration
+                );
             });
-            
+
             console.log("✅ Web Audio API sound played!");
         } catch (error) {
             console.error("❌ Web Audio API failed:", error);
         }
-        
+
         // Method 2: Fallback HTML5 Audio dengan online sound
         setTimeout(() => {
             try {
-                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTUIGGS56+mdTQ0OTKXh8LJnGwU7k9nyw3QpBSh+zPDijz8KElyw6OyrWBELTKDd8sFuJAUqg87y2ok0CAdefObsqlUSCk+m4e+xaBsFOpPY8sN1KwUofs3w34pBCw9dtunxrV4PDE+h3/K7bycFKYPM8tmJNAgZZrjq6J5QDA5Kp+HwtmocBjiR2PLEeCwGI3fH8N2RQAoVXrTp66hUFQtHnt/yvnAiBSl/zfHaiTQIF2O56+idUAwOTKTh77VpHAU6k9jzxHYtBSh+zPDfjj8LEV6w6e+sWBELTKHe8sBwJQYof8zw24k0CRdkveLpnlUPDkum4PCxaBwFO5PZ88N2LQUmfszw34s/CBNY');
+                const audio = new Audio(
+                    "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTUIGGS56+mdTQ0OTKXh8LJnGwU7k9nyw3QpBSh+zPDijz8KElyw6OyrWBELTKDd8sFuJAUqg87y2ok0CAdefObsqlUSCk+m4e+xaBsFOpPY8sN1KwUofs3w34pBCw9dtunxrV4PDE+h3/K7bycFKYPM8tmJNAgZZrjq6J5QDA5Kp+HwtmocBjiR2PLEeCwGI3fH8N2RQAoVXrTp66hUFQtHnt/yvnAiBSl/zfHaiTQIF2O56+idUAwOTKTh77VpHAU6k9jzxHYtBSh+zPDfjj8LEV6w6e+sWBELTKHe8sBwJQYof8zw24k0CRdkveLpnlUPDkum4PCxaBwFO5PZ88N2LQUmfszw34s/CBNY"
+                );
                 audio.volume = 0.5;
-                audio.play().catch(e => console.log("HTML5 Audio blocked:", e));
+                audio
+                    .play()
+                    .catch((e) => console.log("HTML5 Audio blocked:", e));
                 console.log("✅ Fallback audio attempted!");
             } catch (error) {
                 console.error("❌ Fallback audio failed:", error);
             }
         }, 100);
     }
-    
+
     // Unlock audio on first user interaction
     function unlockAudio() {
-        if (audioContext && audioContext.state === 'suspended') {
+        if (audioContext && audioContext.state === "suspended") {
             audioContext.resume();
         }
-        document.removeEventListener('click', unlockAudio);
-        document.removeEventListener('touchstart', unlockAudio);
+        document.removeEventListener("click", unlockAudio);
+        document.removeEventListener("touchstart", unlockAudio);
         console.log("🔓 Audio context unlocked!");
     }
-    
-    document.addEventListener('click', unlockAudio);
-    document.addEventListener('touchstart', unlockAudio);
+
+    document.addEventListener("click", unlockAudio);
+    document.addEventListener("touchstart", unlockAudio);
 
     const datatable = $("#ingredient-table").DataTable({
         processing: true,
@@ -165,37 +181,41 @@ $(function () {
             },
             dataSrc: function (json) {
                 // Cek apakah ada bahan dengan stok kritis
-                const lowStockItems = json.aaData.filter(item => item.is_low_stock);
+                const lowStockItems = json.aaData.filter(
+                    (item) => item.is_low_stock
+                );
                 const hasLowStock = lowStockItems.length > 0;
-                
+
                 console.log("📊 Low stock items found:", lowStockItems.length);
-                
+
                 // Main suara warning jika ada stok kritis
                 if (hasLowStock && !hasPlayedWarningSound) {
                     console.log("🚨 Playing warning sound...");
                     playWarningSound();
                     hasPlayedWarningSound = true;
-                    
+
                     // Show toast notification
-                    if (typeof Swal !== 'undefined') {
-                        const itemNames = lowStockItems.map(item => item.name).join(', ');
+                    if (typeof Swal !== "undefined") {
+                        const itemNames = lowStockItems
+                            .map((item) => item.name)
+                            .join(", ");
                         Swal.fire({
                             toast: true,
-                            position: 'top-end',
-                            icon: 'warning',
-                            title: '🚨 STOK KRITIS!',
+                            position: "top-end",
+                            icon: "warning",
+                            title: "🚨 STOK KRITIS!",
                             html: `<strong>${lowStockItems.length} bahan</strong> hampir habis:<br><small>${itemNames}</small>`,
                             showConfirmButton: false,
                             timer: 5000,
                             timerProgressBar: true,
-                            background: '#ff6b6b',
-                            color: '#fff',
+                            background: "#ff6b6b",
+                            color: "#fff",
                         });
                     }
                 }
-                
+
                 return json.aaData;
-            }
+            },
         },
         columns: [
             {
@@ -260,7 +280,9 @@ $(function () {
                         <button class="btn btn-sm btn-light border text-danger shadow-sm delete-btn" 
                             data-id="${id}" title="Hapus"><i class="fas fa-trash-alt"></i></button>
                         <form id="delete-form-${id}" action="/ingredient/${id}" method="POST" style="display:none;">
-                            <input type="hidden" name="_token" value="${$('meta[name="csrf-token"]').attr("content")}">
+                            <input type="hidden" name="_token" value="${$(
+                                'meta[name="csrf-token"]'
+                            ).attr("content")}">
                             <input type="hidden" name="_method" value="DELETE">
                         </form>
                     `;
@@ -269,24 +291,29 @@ $(function () {
         ],
         createdRow: function (row, data, dataIndex) {
             if (data.is_low_stock) {
-                $(row).addClass('low-stock-row');
-                $(row).find('td:eq(1)').prepend(
-                    '<i class="fas fa-exclamation-triangle me-2 low-stock-icon" style="background-color: red !important;"></i>'
+                $(row).addClass("low-stock-row");
+                $(row)
+                    .find("td:eq(1)")
+                    .prepend(
+                        '<i class="fas fa-exclamation-triangle me-2 low-stock-icon" style="background-color: red !important;"></i>'
+                    );
+                $(row).attr(
+                    "title",
+                    "🚨 PERINGATAN KRITIS: Stok hampir habis! Segera lakukan pembelian ulang."
                 );
-                $(row).attr('title', '🚨 PERINGATAN KRITIS: Stok hampir habis! Segera lakukan pembelian ulang.');
             }
         },
-        drawCallback: function() {
+        drawCallback: function () {
             // Force apply styles after draw
-            $('.low-stock-row').each(function() {
-                $(this).css('background-color', '#ff6b6b');
+            $(".low-stock-row").each(function () {
+                $(this).css("background-color", "#ff6b6b");
             });
         },
         language: {
             emptyTable: "Tidak ada data bahan baku saat ini.",
             processing: "Memuat data...",
-            zeroRecords: "Data tidak ditemukan"
-        }
+            zeroRecords: "Data tidak ditemukan",
+        },
     });
 
     $("#category_filter").on("change", function () {
@@ -294,48 +321,201 @@ $(function () {
         datatable.ajax.reload();
     });
 
-    const modal = new bootstrap.Modal(document.getElementById("main-modal"));
+    // ✅ PERUBAHAN UTAMA: Fungsi helper untuk get/create modal instance
+    function getMainModal() {
+        const modalEl = document.getElementById("main-modal");
+        let modal = bootstrap.Modal.getInstance(modalEl);
+
+        // Jika belum ada instance, buat baru
+        if (!modal) {
+            modal = new bootstrap.Modal(modalEl);
+            console.log("✅ Main modal instance created");
+        }
+
+        return modal;
+    }
+
+    // ✅ FIX 1: Reset modal ketika ditutup
+    $("#main-modal").on("hidden.bs.modal", function () {
+        $(".modal-body").html("");
+        $("#main-modal .modal-title").text("");
+        $(".is-invalid").removeClass("is-invalid");
+        $(".error").text("");
+        console.log("✅ Modal #main-modal direset");
+    });
 
     $("#add-button").on("click", async function () {
+        // ✅ FIX 2: Tutup modal lain + cleanup
+        $("#modalStockOpname").modal("hide");
+        $("#modalHistory").modal("hide");
+        $("#modalLaporanIngredients").modal("hide");
+
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        $(".modal-backdrop").remove();
+        $("body").removeClass("modal-open").css("overflow", "");
+
         $("#btn-modal-save").text("Simpan").attr("disabled", true);
         $('button[data-bs-dismiss="modal"]:not(.btn-close)').text("Batal");
-        $('.btn-close[data-bs-dismiss="modal"]').text('');
+        $('.btn-close[data-bs-dismiss="modal"]').text("");
 
         $("#main-modal .modal-title").text("Tambah Bahan Baku");
-        $(".modal-body").html('<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>');
-        modal.show();
+        $(".modal-body").html(
+            '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>'
+        );
+
+        // ✅ GUNAKAN getMainModal() bukan modal.show()
+        getMainModal().show();
+
         try {
             const response = await $.get("/ingredient/create");
             $(".modal-body").html(response.view);
         } catch (e) {
-            $(".modal-body").html('<div class="text-danger">Gagal memuat form.</div>');
+            $(".modal-body").html(
+                '<div class="text-danger">Gagal memuat form.</div>'
+            );
         }
 
         $("#btn-modal-save").text("Simpan").attr("disabled", false);
         $('button[data-bs-dismiss="modal"]:not(.btn-close)').text("Batal");
-        $('.btn-close[data-bs-dismiss="modal"]').text('');
+        $('.btn-close[data-bs-dismiss="modal"]').text("");
     });
 
-     $(document).on("click", '[data-action="edit"]', async function () {
+    $(document).on("click", '[data-action="edit"]', async function () {
+        // ✅ FIX 3: Tutup modal lain + cleanup
+        $("#modalStockOpname").modal("hide");
+        $("#modalHistory").modal("hide");
+        $("#modalLaporanIngredients").modal("hide");
+
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        $(".modal-backdrop").remove();
+        $("body").removeClass("modal-open").css("overflow", "");
+
         $("#btn-modal-save").text("Simpan").attr("disabled", true);
         $('button[data-bs-dismiss="modal"]:not(.btn-close)').text("Batal");
-        $('.btn-close[data-bs-dismiss="modal"]').text('');
+        $('.btn-close[data-bs-dismiss="modal"]').text("");
 
         const id = $(this).data("id");
         $("#main-modal .modal-title").text("Edit Bahan Baku");
-        $(".modal-body").html('<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>');
-        modal.show();
+        $(".modal-body").html(
+            '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>'
+        );
+
+        // ✅ GUNAKAN getMainModal()
+        getMainModal().show();
+
         try {
             const response = await $.get(`/ingredient/${id}/edit`);
             $(".modal-body").html(response.view);
         } catch (e) {
-            $(".modal-body").html('<div class="text-danger">Gagal memuat data.</div>');
+            $(".modal-body").html(
+                '<div class="text-danger">Gagal memuat data.</div>'
+            );
         }
 
         $("#btn-modal-save").text("Simpan").attr("disabled", false);
         $('button[data-bs-dismiss="modal"]:not(.btn-close)').text("Batal");
-        $('.btn-close[data-bs-dismiss="modal"]').text('');
+        $('.btn-close[data-bs-dismiss="modal"]').text("");
     });
+
+    // ✅ FIX 4 (FINAL): DESTROY main modal instance sebelum buka Stock Opname
+    $("#modalStockOpname").on("show.bs.modal", function () {
+        console.log("🔄 Preparing to open Stock Opname modal...");
+
+        const mainModalEl = document.getElementById("main-modal");
+        const mainModal = bootstrap.Modal.getInstance(mainModalEl);
+
+        // DESTROY instance jika ada (KUNCI UTAMA!)
+        if (mainModal) {
+            mainModal.dispose();
+            console.log("🗑️ Main modal instance DESTROYED");
+        }
+
+        // Force cleanup DOM
+        $(mainModalEl).removeClass("show").css("display", "none");
+        $(".modal-backdrop").remove();
+        $("body").removeClass("modal-open").css({
+            overflow: "",
+            "padding-right": "",
+        });
+
+        console.log("✅ Stock Opname modal ready to open");
+    });
+
+    // ✅ FIX 5 (FINAL): DESTROY untuk History
+    $("#modalHistory").on("show.bs.modal", function () {
+        const mainModalEl = document.getElementById("main-modal");
+        const mainModal = bootstrap.Modal.getInstance(mainModalEl);
+
+        if (mainModal) {
+            mainModal.dispose();
+            console.log("🗑️ Main modal instance DESTROYED");
+        }
+
+        $(mainModalEl).removeClass("show").css("display", "none");
+        $(".modal-backdrop").remove();
+        $("body").removeClass("modal-open").css({
+            overflow: "",
+            "padding-right": "",
+        });
+
+        console.log("✅ History modal ready to open");
+    });
+
+    // ✅ FIX 6 (FINAL): DESTROY untuk Laporan
+    $("#modalLaporanIngredients").on("show.bs.modal", function () {
+        const mainModalEl = document.getElementById("main-modal");
+        const mainModal = bootstrap.Modal.getInstance(mainModalEl);
+
+        if (mainModal) {
+            mainModal.dispose();
+            console.log("🗑️ Main modal instance DESTROYED");
+        }
+
+        $(mainModalEl).removeClass("show").css("display", "none");
+        $(".modal-backdrop").remove();
+        $("body").removeClass("modal-open").css({
+            overflow: "",
+            "padding-right": "",
+        });
+
+        console.log("✅ Laporan modal ready to open");
+    });
+
+    // ✅ FIX 7: Force refresh konten modal
+    $("#modalStockOpname").on("shown.bs.modal", function () {
+        $(this).find(".table-responsive").hide().show(0);
+        const table = $(this).find("table")[0];
+        if (table) {
+            void table.offsetHeight;
+        }
+        console.log("✅ Modal Stock Opname content di-refresh");
+    });
+
+    $("#modalLaporanIngredients").on("shown.bs.modal", function () {
+        $(this).find(".modal-body").hide().show(0);
+        const form = $(this).find("form")[0];
+        if (form) {
+            void form.offsetHeight;
+        }
+        console.log("✅ Modal Laporan content di-refresh");
+    });
+
+    $("#modalHistory").on("shown.bs.modal", function () {
+        console.log("✅ Modal History (AJAX) siap");
+    });
+
+    // ✅ Cleanup saat modal ditutup
+    $("#modalStockOpname, #modalHistory, #modalLaporanIngredients").on(
+        "hidden.bs.modal",
+        function () {
+            $(".modal-backdrop").remove();
+            $("body").removeClass("modal-open").css({
+                overflow: "",
+                "padding-right": "",
+            });
+            console.log("✅ Modal secondary ditutup, cleanup backdrop");
+        }
+    );
 
     $("#btn-modal-save").on("click", function () {
         $("#form-save-ingredient").submit();
@@ -348,7 +528,9 @@ $(function () {
 
         let btnSave = $("#btn-modal-save");
         let originalText = btnSave.text();
-        btnSave.attr("disabled", true).html('<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...');
+        btnSave
+            .attr("disabled", true)
+            .html('<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...');
 
         try {
             const response = await $.ajax({
@@ -357,17 +539,19 @@ $(function () {
                 data: $(this).serialize(),
             });
 
-            modal.hide();
+            // ✅ GUNAKAN getMainModal()
+            getMainModal().hide();
+
             Swal.fire({
                 icon: "success",
                 title: "Berhasil!",
                 text: response.message,
                 timer: 1500,
                 showConfirmButton: false,
-                iconColor: '#50200C', // ✅ Warna icon success
+                iconColor: "#50200C",
                 customClass: {
-                    title: 'swal-title-brown' // ✅ Custom warna title
-                }
+                    title: "swal-title-brown",
+                },
             });
             hasPlayedWarningSound = false;
             datatable.ajax.reload();
@@ -379,14 +563,14 @@ $(function () {
                     $(`[name="${field}"]`).addClass("is-invalid");
                 }
             } else {
-               Swal.fire({
+                Swal.fire({
                     icon: "error",
                     title: "Error",
                     text: "Terjadi kesalahan!",
-                    iconColor: '#50200C', // ✅ Warna icon success
+                    iconColor: "#50200C",
                     customClass: {
-                        title: 'swal-title-brown' // ✅ Custom warna title
-                    }
+                        title: "swal-title-brown",
+                    },
                 });
             }
         } finally {
@@ -417,30 +601,29 @@ $(function () {
                         method: "POST",
                         data: $(`#delete-form-${id}`).serialize(),
                     });
-                   Swal.fire({
+                    Swal.fire({
                         title: "Terhapus!",
                         text: "Data bahan baku berhasil dihapus.",
                         icon: "success",
-                        iconColor: '#50200C', // Warna icon
+                        iconColor: "#50200C",
                         customClass: {
-                            title: 'swal-title-brown' // Custom warna title
-                        }
+                            title: "swal-title-brown",
+                        },
                     });
                     hasPlayedWarningSound = false;
                     datatable.ajax.reload();
                 } catch (e) {
-                   Swal.fire({
+                    Swal.fire({
                         title: "Gagal",
                         text: "Gagal menghapus data.",
                         icon: "error",
-                        iconColor: '#50200C', // Warna icon
+                        iconColor: "#50200C",
                         customClass: {
-                            title: 'swal-title-brown' // Custom warna title
-                        }
+                            title: "swal-title-brown",
+                        },
                     });
                 }
             }
         });
     });
 });
-

@@ -165,15 +165,25 @@ Route::middleware(['auth'])->group(function () {
 | ROLE: SUPER + DAPUR (Bahan Baku / Ingredients)
 |--------------------------------------------------------------------------
 */
-Route::get('/ingredient/laporan/pdf', [LaporanStockopnameIngredients::class, 'exportPdf'])
-    ->name('laporan.ingredients.pdf');
+// === INGREDIENT ROUTES (Semuanya dalam satu group) ===
+Route::group(['middleware' => ['auth', 'checkRole:Super,Dapur']], function () {
     
-Route::resource('ingredient', IngredientController::class)
-    ->middleware(['auth', 'checkRole:Super,Dapur'])
-    ->names('ingredient');
-Route::post('/ingredients/opname', [IngredientController::class, 'storeOpname'])->name('ingredients.opname');
-Route::get('/ingredients/opname-history', [App\Http\Controllers\IngredientController::class, 'history'])->name('ingredients.history');
-
+    // 1. Route PDF HARUS di atas resource (biar tidak tertimpa)
+    Route::get('/ingredient/laporan/pdf', [LaporanStockopnameIngredients::class, 'exportPdf'])
+        ->name('laporan.ingredients.pdf');
+    
+    // 2. Route Stock Opname (Custom, di atas resource)
+    Route::post('/ingredients/opname', [IngredientController::class, 'storeOpname'])
+        ->name('ingredients.opname');
+    
+    // 3. Route History (Custom, di atas resource)
+    Route::get('/ingredients/opname-history', [IngredientController::class, 'history'])
+        ->name('ingredients.history');
+    
+    // 4. Resource Routes (Paling bawah)
+    Route::resource('ingredient', IngredientController::class)
+        ->names('ingredient');
+});
 
 // POS Routes
 /*

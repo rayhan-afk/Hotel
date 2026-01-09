@@ -156,7 +156,8 @@
 </div>
 
 <div class="modal fade" id="modalStockOpname" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable"> <div class="modal-content">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
             <div class="modal-header" style="background-color: #F7F3E4; color: #50200C;">
                 <h5 class="modal-title"><i class="fas fa-clipboard-check me-2"></i>Form Stock Opname</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -192,8 +193,7 @@
                                     <td>
                                         <input type="number" step="0.01" name="items[{{ $loop->index }}][physical_stock]" 
                                                class="form-control form-control-sm text-center border-warning" 
-                                               value="{{ $item->stock }}" required> 
-                                               {{-- Default value disamakan dulu biar user gak capek ngetik 0 --}}
+                                               value="{{ $item->stock }}" required>
                                     </td>
                                     <td>
                                         <input type="text" name="items[{{ $loop->index }}][notes]" 
@@ -216,7 +216,8 @@
     </div>
 </div>
 <div class="modal fade" id="modalHistory" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg"> <div class="modal-content">
+    <div class="modal-dialog modal-lg"> 
+        <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Riwayat Stock Opname</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>

@@ -2,8 +2,8 @@
 @section('title', 'Dashboard')
 
 @section('content')
-{{-- PERBAIKAN 1: Tambah style padding-left: 40px agar berjarak dari sidebar --}}
-<div class="dashboard-container fade-in" style="padding-left: 40px; padding-right: 20px;">
+{{-- HAPUS STYLE PADDING DISINI AGAR MENGIKUTI MASTER BLADE --}}
+<div class="fade-in"> 
     
     <div class="row mb-5">
         <div class="col-12">
@@ -25,9 +25,9 @@
         <div class="col-xl-3 col-lg-6 col-md-6">
             <a href="{{ route('room-info.available') }}" class="card-stat-link">
                 <div class="card card-modern h-100 position-relative">
-                    <div class="card-body d-flex align-items-center p-4">
+                    <div class="card-body d-flex align-items-center p-3">
                         <div class="stat-icon-wrapper me-3" style="background-color: #A8D5BA;">
-                            <i class="fas fa-bed fa-lg" style="color: #50200C;"></i>
+                            <i class="fas fa-bed fa-3x" style="color: #50200C;"></i>
                         </div>
                         <div>
                             <div class="stat-number mb-0">{{ $availableRoomsCount }}</div>
@@ -46,9 +46,9 @@
         <div class="col-xl-3 col-lg-6 col-md-6">
             <a href="{{ route('transaction.checkin.index') }}" class="card-stat-link">
                 <div class="card card-modern h-100 position-relative">
-                    <div class="card-body d-flex align-items-center p-4">
+                    <div class="card-body d-flex align-items-center p-3">
                         <div class="stat-icon-wrapper me-3" style="background-color: #8FB8E1;">
-                            <i class="fas fa-check-circle fa-lg" style="color: #50200C;"></i>
+                            <i class="fas fa-check-circle fa-3x" style="color: #50200C;"></i>
                         </div>
                         <div>
                             <div class="stat-number mb-0">{{ $occupiedRoomsCount }}</div>
@@ -67,9 +67,9 @@
         <div class="col-xl-3 col-lg-6 col-md-6">
             <a href="{{ route('room-info.reservation') }}" class="card-stat-link">
                 <div class="card card-modern h-100 position-relative">
-                    <div class="card-body d-flex align-items-center p-4">
+                    <div class="card-body d-flex align-items-center p-3">
                         <div class="stat-icon-wrapper me-3" style="background-color: #C49A6C;">
-                            <i class="fas fa-calendar-alt fa-lg" style="color: #50200C;"></i>
+                            <i class="fas fa-calendar-alt fa-3x" style="color: #50200C;"></i>
                         </div>
                         <div>
                             <div class="stat-number mb-0">{{ $todayReservationsCount }}</div>
@@ -88,9 +88,9 @@
         <div class="col-xl-3 col-lg-6 col-md-6">
             <a href="{{ route('room-info.cleaning') }}" class="card-stat-link">
                 <div class="card card-modern h-100 position-relative">
-                    <div class="card-body d-flex align-items-center p-4">
+                    <div class="card-body d-flex align-items-center p-3">
                         <div class="stat-icon-wrapper me-3" style="background-color: #F2C2B8;">
-                            <i class="fas fa-broom fa-lg" style="color: #50200C;"></i>
+                            <i class="fas fa-broom fa-3x" style="color: #50200C;"></i>
                         </div>
                         <div>
                             <div class="stat-number mb-0">{{ $cleaningRoomsCount }}</div>
@@ -110,7 +110,7 @@
         <div class="col-lg-8">
             <div class="card card-modern h-100 border-0 shadow-sm" style="overflow: hidden;">
                 
-                <div class="card-header border-0 pt-4 px-4 pb-2 d-flex justify-content-between align-items-center" 
+                <div class="card-header border-0 pt-4 px-4 pb-3 d-flex justify-content-between align-items-center" 
                      style="background-color: #F7F3E4;">
                     <div>
                         <h4 class="fw-bold mb-1" style="color: #50200C;">Tamu Hari Ini</h4>
@@ -124,18 +124,16 @@
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0" style="font-size: 1rem;">
-                            
-                            <thead style="background-color: #F7F3E4; border-bottom: 1px solid rgba(80, 32, 12, 0.1);">
+                            <thead style="background-color: #fff; border-bottom: 2px solid #f0f0f0;">
                                 <tr>
-                                    <th class="ps-4 py-3" style="color: #50200C; background-color: #F7F3E4;">Tamu</th>
-                                    <th style="color: #50200C; background-color: #F7F3E4;">Kamar</th>
-                                    <th style="color: #50200C; background-color: #F7F3E4;">Check In/Out</th>
-                                    <th class="text-center" style="color: #50200C; background-color: #F7F3E4;">Sarapan</th>
-                                    <th style="color: #50200C; background-color: #F7F3E4;">Total</th>
-                                    <th class="text-end pe-4" style="color: #50200C; background-color: #F7F3E4;">Status</th>
+                                    <th class="ps-4 py-3" style="color: #50200C;">Tamu</th>
+                                    <th style="color: #50200C;">Kamar</th>
+                                    <th style="color: #50200C;">Check In/Out</th>
+                                    <th class="text-center" style="color: #50200C;">Sarapan</th>
+                                    <th style="color: #50200C;">Total</th>
+                                    <th class="text-end pe-4" style="color: #50200C;">Status</th>
                                 </tr>
                             </thead>
-                            
                             <tbody>
                                 @forelse ($transactions as $transaction)
                                     <tr>
@@ -315,18 +313,18 @@
 
 /* Stat Icons */
 .stat-icon-wrapper {
-    width: 60px; /* Ukuran diperbesar */
-    height: 60px;
-    border-radius: 12px;
+    width: 85px;  /* Icon Besar */
+    height: 85px; 
+    border-radius: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.1);
 }
 
 .stat-number {
     font-family: 'Inter', sans-serif;
-    font-size: 2.5rem; /* Font diperbesar */
+    font-size: 2rem; 
     font-weight: 800;
     color: #50200C; 
     line-height: 1;
@@ -335,19 +333,19 @@
 .stat-label {
     color: #50200C;
     opacity: 0.8;
-    font-size: 1.1rem; /* Font diperbesar */
+    font-size: 1.1rem; 
     font-weight: 600;
     margin-top: 2px;
 }
 
 /* Badge Stat di pojok */
 .badge-stat {
-    font-size: 0.85rem !important; /* Font diperbesar */
+    font-size: 0.85rem !important;
 }
 
 /* Avatar */
 .avatar-circle {
-    width: 50px; /* Diperbesar dikit */
+    width: 50px; 
     height: 50px;
     border-radius: 50%;
     object-fit: cover;
@@ -374,13 +372,13 @@
 }
 
 .btn-action-card .icon-box {
-    width: 60px; /* Diperbesar */
+    width: 60px;
     height: 60px;
     border-radius: 50%; 
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem; /* Icon diperbesar */
+    font-size: 1.5rem; 
     margin-right: 15px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.05);
 }
@@ -394,7 +392,7 @@
 .btn-action-card .title {
     color: #50200C; 
     font-weight: 800;
-    font-size: 1.2rem; /* Font diperbesar */
+    font-size: 1.2rem;
 }
 
 .btn-action-card .arrow {
@@ -410,7 +408,7 @@
 }
 
 /* Chart Indicators */
-.dot-indicator { width: 12px; height: 12px; border-radius: 50%; } /* Diperbesar */
+.dot-indicator { width: 12px; height: 12px; border-radius: 50%; }
 
 /* Utilities */
 .btn-icon-only {

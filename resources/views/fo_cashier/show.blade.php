@@ -9,7 +9,7 @@
         <div class="card-body p-4">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h3 class="mb-1 fw-bold" style="color: #50200C;">Guest Folio</h3>
+                    <h3 class="mb-1 fw-bold" style="color: #50200C;">Tagihan Tamu</h3>
                     <p class="text-muted mb-0">
                         <i class="fas fa-door-open me-1"></i> Kamar: <strong>{{ $transaction->room->number }}</strong> 
                         <span class="mx-2">|</span> 

@@ -1,3 +1,5 @@
+<div class="top-shield"></div>
+
 <nav class="navbar modern-navbar d-flex justify-content-between align-items-center">
     
     <a class="navbar-brand d-flex align-items-center" href="{{ route('dashboard.index') }}">
@@ -56,6 +58,9 @@
         z-index: 1001; 
         padding: 0 40px; 
         transition: all 0.3s ease;
+
+        backdrop-filter: blur(10px); 
+        -webkit-backdrop-filter: blur(10px);
     }
 
     /* === LOGO STYLE === */
@@ -144,6 +149,17 @@
         
         body { padding-top: 120px; }
     }
+
+    .top-shield {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 25px; /* Sedikit lebih besar dari jarak top navbar (15px) + radius */
+        background-color: #F7F3E4; /* WAJIB SAMA dengan warna background Body */
+        z-index: 1000; /* Di atas konten, tapi di bawah Navbar */
+    }
+
 </style>
 
 <script>

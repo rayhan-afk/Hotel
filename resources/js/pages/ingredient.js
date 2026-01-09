@@ -2,6 +2,8 @@ $(function () {
     const currentRoute = window.location.pathname;
     if (!currentRoute.includes("ingredient")) return;
 
+    console.log("🚀 Ingredient JS Loaded - Fixed Version");
+
     // === TAMBAH CSS ANIMASI UNTUK WARNING ===
     const style = document.createElement('style');
     style.textContent = `
@@ -29,7 +31,6 @@ $(function () {
             background-color: transparent !important;
         }
         
-        /* Pastikan badge tidak terpengaruh style row */
         .low-stock-row .badge {
             color: inherit !important;
             text-shadow: none !important;
@@ -66,7 +67,6 @@ $(function () {
             75% { transform: translateX(-5px) rotate(-8deg); }
         }
         
-        /* Override DataTable striping */
         .low-stock-row.odd,
         .low-stock-row.even {
             background-color: #ff6b6b !important;
@@ -78,25 +78,22 @@ $(function () {
     `;
     document.head.appendChild(style);
 
-    // === FUNGSI UNTUK MEMUTAR SUARA WARNING (Multiple Methods) ===
+    // === FUNGSI UNTUK MEMUTAR SUARA WARNING ===
     let hasPlayedWarningSound = false;
     let audioContext = null;
     
     function playWarningSound() {
         console.log("🔊 Attempting to play warning sound...");
         
-        // Method 1: Web Audio API (Beep Sound)
         try {
             if (!audioContext) {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
             }
             
-            // Unlock audio context (required for some browsers)
             if (audioContext.state === 'suspended') {
                 audioContext.resume();
             }
             
-            // Create beep sequence
             const beeps = [
                 { freq: 900, start: 0, duration: 0.15 },
                 { freq: 700, start: 0.25, duration: 0.15 },
@@ -124,7 +121,6 @@ $(function () {
             console.error("❌ Web Audio API failed:", error);
         }
         
-        // Method 2: Fallback HTML5 Audio dengan online sound
         setTimeout(() => {
             try {
                 const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTUIGGS56+mdTQ0OTKXh8LJnGwU7k9nyw3QpBSh+zPDijz8KElyw6OyrWBELTKDd8sFuJAUqg87y2ok0CAdefObsqlUSCk+m4e+xaBsFOpPY8sN1KwUofs3w34pBCw9dtunxrV4PDE+h3/K7bycFKYPM8tmJNAgZZrjq6J5QDA5Kp+HwtmocBjiR2PLEeCwGI3fH8N2RQAoVXrTp66hUFQtHnt/yvnAiBSl/zfHaiTQIF2O56+idUAwOTKTh77VpHAU6k9jzxHYtBSh+zPDfjj8LEV6w6e+sWBELTKHe8sBwJQYof8zw24k0CRdkveLpnlUPDkum4PCxaBwFO5PZ88N2LQUmfszw34s/CBNY');
@@ -137,7 +133,6 @@ $(function () {
         }, 100);
     }
     
-    // Unlock audio on first user interaction
     function unlockAudio() {
         if (audioContext && audioContext.state === 'suspended') {
             audioContext.resume();
@@ -149,6 +144,65 @@ $(function () {
     
     document.addEventListener('click', unlockAudio);
     document.addEventListener('touchstart', unlockAudio);
+
+    // ✅ CRITICAL FIX: Gunakan ID modal yang BENAR (#ingredient-modal, bukan #main-modal)
+    const ingredientModal = new bootstrap.Modal(document.getElementById("ingredient-modal"));
+    const stockOpnameModal = new bootstrap.Modal(document.getElementById("modalStockOpname"));
+    const laporanModal = new bootstrap.Modal(document.getElementById("modalLaporanIngredients"));
+
+    console.log("✅ Modals initialized:", {
+        ingredient: $('#ingredient-modal').length > 0,
+        stockOpname: $('#modalStockOpname').length > 0,
+        laporan: $('#modalLaporanIngredients').length > 0
+    });
+
+    // ✅ Reset ingredient modal ketika ditutup
+    $('#ingredient-modal').on('hidden.bs.modal', function () {
+        console.log("🧹 Ingredient modal closed - resetting");
+        $(this).find('.modal-body').html('');
+        $(this).find('.modal-title').text('Form');
+        $('#btn-modal-save').off('click');
+    });
+
+    // ✅ CRITICAL: Handler Stock Opname Button
+    $('#btn-stock-opname').on('click', function(e) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        
+        console.log("📋 ========== STOCK OPNAME CLICKED ==========");
+        
+        // Tutup modal ingredient
+        ingredientModal.hide();
+        laporanModal.hide();
+        
+        // Tunggu, lalu buka Stock Opname
+        setTimeout(() => {
+            console.log("✅ Opening Stock Opname modal");
+            stockOpnameModal.show();
+        }, 400);
+        
+        return false;
+    });
+
+    // ✅ CRITICAL: Handler Laporan Button
+    $('#btn-laporan').on('click', function(e) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        
+        console.log("📄 ========== LAPORAN CLICKED ==========");
+        
+        // Tutup modal ingredient
+        ingredientModal.hide();
+        stockOpnameModal.hide();
+        
+        // Tunggu, lalu buka Laporan
+        setTimeout(() => {
+            console.log("✅ Opening Laporan modal");
+            laporanModal.show();
+        }, 400);
+        
+        return false;
+    });
 
     const datatable = $("#ingredient-table").DataTable({
         processing: true,
@@ -164,19 +218,16 @@ $(function () {
                 console.error("Error:", xhr);
             },
             dataSrc: function (json) {
-                // Cek apakah ada bahan dengan stok kritis
                 const lowStockItems = json.aaData.filter(item => item.is_low_stock);
                 const hasLowStock = lowStockItems.length > 0;
                 
                 console.log("📊 Low stock items found:", lowStockItems.length);
                 
-                // Main suara warning jika ada stok kritis
                 if (hasLowStock && !hasPlayedWarningSound) {
                     console.log("🚨 Playing warning sound...");
                     playWarningSound();
                     hasPlayedWarningSound = true;
                     
-                    // Show toast notification
                     if (typeof Swal !== 'undefined') {
                         const itemNames = lowStockItems.map(item => item.name).join(', ');
                         Swal.fire({
@@ -277,7 +328,6 @@ $(function () {
             }
         },
         drawCallback: function() {
-            // Force apply styles after draw
             $('.low-stock-row').each(function() {
                 $(this).css('background-color', '#ff6b6b');
             });
@@ -294,21 +344,30 @@ $(function () {
         datatable.ajax.reload();
     });
 
-    const modal = new bootstrap.Modal(document.getElementById("main-modal"));
-
+    // ✅ Handler Tambah Bahan Baku
     $("#add-button").on("click", async function () {
+        console.log("➕ ========== ADD BUTTON CLICKED ==========");
+        
+        // Tutup modal lain
+        stockOpnameModal.hide();
+        laporanModal.hide();
+        
         $("#btn-modal-save").text("Simpan").attr("disabled", true);
         $('button[data-bs-dismiss="modal"]:not(.btn-close)').text("Batal");
         $('.btn-close[data-bs-dismiss="modal"]').text('');
 
-        $("#main-modal .modal-title").text("Tambah Bahan Baku");
-        $(".modal-body").html('<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>');
-        modal.show();
+        $("#ingredient-modal .modal-title").text("Tambah Bahan Baku");
+        $("#ingredient-modal .modal-body").html('<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>');
+        
+        setTimeout(() => {
+            ingredientModal.show();
+        }, 400);
+        
         try {
             const response = await $.get("/ingredient/create");
-            $(".modal-body").html(response.view);
+            $("#ingredient-modal .modal-body").html(response.view);
         } catch (e) {
-            $(".modal-body").html('<div class="text-danger">Gagal memuat form.</div>');
+            $("#ingredient-modal .modal-body").html('<div class="text-danger">Gagal memuat form.</div>');
         }
 
         $("#btn-modal-save").text("Simpan").attr("disabled", false);
@@ -316,20 +375,31 @@ $(function () {
         $('.btn-close[data-bs-dismiss="modal"]').text('');
     });
 
-     $(document).on("click", '[data-action="edit"]', async function () {
+    // ✅ Handler Edit Bahan Baku
+    $(document).on("click", '[data-action="edit"]', async function () {
+        console.log("✏️ ========== EDIT BUTTON CLICKED ==========");
+        
+        // Tutup modal lain
+        stockOpnameModal.hide();
+        laporanModal.hide();
+        
         $("#btn-modal-save").text("Simpan").attr("disabled", true);
         $('button[data-bs-dismiss="modal"]:not(.btn-close)').text("Batal");
         $('.btn-close[data-bs-dismiss="modal"]').text('');
 
         const id = $(this).data("id");
-        $("#main-modal .modal-title").text("Edit Bahan Baku");
-        $(".modal-body").html('<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>');
-        modal.show();
+        $("#ingredient-modal .modal-title").text("Edit Bahan Baku");
+        $("#ingredient-modal .modal-body").html('<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>');
+        
+        setTimeout(() => {
+            ingredientModal.show();
+        }, 400);
+        
         try {
             const response = await $.get(`/ingredient/${id}/edit`);
-            $(".modal-body").html(response.view);
+            $("#ingredient-modal .modal-body").html(response.view);
         } catch (e) {
-            $(".modal-body").html('<div class="text-danger">Gagal memuat data.</div>');
+            $("#ingredient-modal .modal-body").html('<div class="text-danger">Gagal memuat data.</div>');
         }
 
         $("#btn-modal-save").text("Simpan").attr("disabled", false);
@@ -357,16 +427,17 @@ $(function () {
                 data: $(this).serialize(),
             });
 
-            modal.hide();
+            ingredientModal.hide();
+            
             Swal.fire({
                 icon: "success",
                 title: "Berhasil!",
                 text: response.message,
                 timer: 1500,
                 showConfirmButton: false,
-                iconColor: '#50200C', // ✅ Warna icon success
+                iconColor: '#50200C',
                 customClass: {
-                    title: 'swal-title-brown' // ✅ Custom warna title
+                    title: 'swal-title-brown'
                 }
             });
             hasPlayedWarningSound = false;
@@ -383,9 +454,9 @@ $(function () {
                     icon: "error",
                     title: "Error",
                     text: "Terjadi kesalahan!",
-                    iconColor: '#50200C', // ✅ Warna icon success
+                    iconColor: '#50200C',
                     customClass: {
-                        title: 'swal-title-brown' // ✅ Custom warna title
+                        title: 'swal-title-brown'
                     }
                 });
             }
@@ -421,9 +492,9 @@ $(function () {
                         title: "Terhapus!",
                         text: "Data bahan baku berhasil dihapus.",
                         icon: "success",
-                        iconColor: '#50200C', // Warna icon
+                        iconColor: '#50200C',
                         customClass: {
-                            title: 'swal-title-brown' // Custom warna title
+                            title: 'swal-title-brown'
                         }
                     });
                     hasPlayedWarningSound = false;
@@ -433,9 +504,9 @@ $(function () {
                         title: "Gagal",
                         text: "Gagal menghapus data.",
                         icon: "error",
-                        iconColor: '#50200C', // Warna icon
+                        iconColor: '#50200C',
                         customClass: {
-                            title: 'swal-title-brown' // Custom warna title
+                            title: 'swal-title-brown'
                         }
                     });
                 }
@@ -443,4 +514,3 @@ $(function () {
         });
     });
 });
-

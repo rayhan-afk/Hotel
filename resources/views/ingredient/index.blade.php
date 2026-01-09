@@ -17,8 +17,8 @@
             <i class="fas fa-plus me-2"></i>Tambah Bahan Baku
         </button>
 
-        {{-- Tombol 2: Stock Opname (Pakai class add-room-btn) --}}
-        <button type="button" class="add-room-btn" data-bs-toggle="modal" data-bs-target="#modalStockOpname">
+        {{-- ✅ FIX: Tombol 2: Stock Opname - HAPUS data-bs-toggle dan data-bs-target --}}
+        <button id="btn-stock-opname" type="button" class="add-room-btn">
             <i class="fas fa-clipboard-check me-2"></i> Stock Opname
         </button>
 
@@ -27,7 +27,8 @@
             <i class="fas fa-history me-2"></i> Riwayat Opname
         </button>
 
-        <button type="button" class="add-room-btn" data-bs-toggle="modal" data-bs-target="#modalLaporanIngredients">
+        {{-- ✅ FIX: Tombol 4: Laporan - HAPUS data-bs-toggle dan data-bs-target --}}
+        <button id="btn-laporan" type="button" class="add-room-btn">
             <i class="fas fa-file-pdf me-2"></i> Laporan
         </button>
         
@@ -36,7 +37,7 @@
     {{-- 2. STATUS STOK WIDGET (Ubah jadi col-md-5 biar seimbang) --}}
     <div class="col-md-5 col-12 d-flex justify-content-md-end justify-content-start">
         <div class="stock-status-compact d-flex align-items-center flex-wrap" 
-             style="background-color: #F7F3E4; border: 1px solid #e0e0e0; padding: 10px 20px; border-radius: 12px; gap: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);"></div>
+             style="background-color: #F7F3E4; border: 1px solid #e0e0e0; padding: 10px 20px; border-radius: 12px; gap: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
                 {{-- Label --}}
                 <div style="font-size: 14px; color: #50200C; font-weight: bold; white-space: nowrap;">
                     <i class="fas fa-chart-pie me-2"></i>Status Stok:
@@ -137,17 +138,16 @@
     </div>
 </div>
 
-{{-- MODAL --}}
-<div class="modal fade" id="main-modal" tabindex="-1" aria-hidden="true">
+{{-- ✅ MODAL INGREDIENT - ID DIGANTI JADI ingredient-modal BIAR GAK BENTROK --}}
+<div class="modal fade" id="ingredient-modal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="mainModalLabel">Form</h5>
+                <h5 class="modal-title" id="ingredientModalLabel">Form</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body"></div>
             <div class="modal-footer">
-                {{-- Updated Buttons --}}
                 <button type="button" class="btn btn-modal-close" data-bs-dismiss="modal">Batal</button>
                 <button type="button" class="btn btn-modal-save" id="btn-modal-save">Simpan</button>
             </div>
@@ -156,7 +156,8 @@
 </div>
 
 <div class="modal fade" id="modalStockOpname" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable"> <div class="modal-content">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
             <div class="modal-header" style="background-color: #F7F3E4; color: #50200C;">
                 <h5 class="modal-title"><i class="fas fa-clipboard-check me-2"></i>Form Stock Opname</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -193,7 +194,6 @@
                                         <input type="number" step="0.01" name="items[{{ $loop->index }}][physical_stock]" 
                                                class="form-control form-control-sm text-center border-warning" 
                                                value="{{ $item->stock }}" required> 
-                                               {{-- Default value disamakan dulu biar user gak capek ngetik 0 --}}
                                     </td>
                                     <td style="background-color: #F7F3E4; color: #50200C;">
                                         <input type="text" name="items[{{ $loop->index }}][notes]" 
@@ -215,6 +215,7 @@
         </div>
     </div>
 </div>
+
 <div class="modal fade" id="modalHistory" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg"> 
         <div class="modal-content" style="background-color: #F7F3E4; color: #50200C;">
@@ -228,6 +229,7 @@
         </div>
     </div>
 </div>
+
 <div class="modal fade" id="modalLaporanIngredients" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -236,7 +238,6 @@
                 <button type="button" class="btn-close btn-close-brown" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
-            {{-- PENTING: Action Form harus ke route yang baru --}}
             <form action="{{ route('laporan.ingredients.pdf') }}" method="GET" target="_blank">
                 
                 <div class="modal-body" style="background-color: #F7F3E4; color: #50200C;">
@@ -266,18 +267,14 @@
 @push('scripts')
 <script>
     function showOpnameHistory() {
-        // Tampilkan modal
         $('#modalHistory').modal('show');
         
-        // Tampilkan loading dulu
         $('#modalHistoryBody').html('<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div><br>Sedang memuat data...</div>');
 
-        // Panggil Controller via AJAX
         $.ajax({
             url: "{{ route('ingredients.history') }}",
             type: 'GET',
             success: function(response) {
-                // Masukkan hasil tabel ke dalam body modal
                 $('#modalHistoryBody').html(response.view);
             },
             error: function(xhr) {
@@ -287,4 +284,3 @@
     }
 </script>
 @endpush
-

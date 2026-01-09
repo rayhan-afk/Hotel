@@ -73,12 +73,12 @@ $(function () {
                     className: "text-center",
                     render: function (data) {
                         // Warnai badge sesuai grup
-                        let badgeClass = 'bg-secondary'; // Default jika tidak ada match
+                        let badgeClass = 'badge-rejected'; // Default jika tidak ada match
                         
-                        if (data === 'OTA') badgeClass = 'bg-info text-dark';
-                        if (data === 'Corporate') badgeClass = 'bg-primary';
-                        if (data === 'OwnerReferral') badgeClass = 'bg-warning text-dark';
-                        if (!data || data === 'General') badgeClass = 'bg-light text-dark border'; // WalkIn/General
+                        if (data === 'OTA') badgeClass = 'badge-reserved';
+                        if (data === 'Corporate') badgeClass = 'badge-approved';
+                        if (data === 'OwnerReferral') badgeClass = 'badge-pending';
+                        if (!data || data === 'General') badgeClass = 'badge-orange'; // WalkIn/General
 
                         let text = data ? data : 'Walk-In';
                         

@@ -3110,6 +3110,11 @@ tr.total-text {
     color: #50200C !important;
 }
 
+.badge-brown{
+    background-color: #50200C !important;
+    color: #F7F3E4 !important;
+}
+
 .btn-outline-brown {
     color: #50200C;
     border-color: #50200C;
@@ -3139,6 +3144,11 @@ tr.total-text {
 .modal-soft-brown .modal-footer {
     background-color: #F7F3E4;
 }
+
+.modal-delete-fit {
+    max-width: 420px; /* FIT: tidak sempit, tidak kebesaran */
+}
+
 
 /* DEFAULT (belum di klik) */
 .btn-outline-secondary {

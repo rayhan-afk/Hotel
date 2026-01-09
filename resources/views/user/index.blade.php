@@ -65,7 +65,7 @@
                                                 </td>
                                                 <td class="align-middle" style="background-color: #F7F3E4;">
                                                     {{-- Simulasi Status Active --}}
-                                                    <span class="badge rounded-pill bg-success" style="font-weight: normal;">
+                                                    <span class="badge rounded-pill badge-approved" style="font-weight: normal;">
                                                         Active
                                                     </span>
                                                 </td>

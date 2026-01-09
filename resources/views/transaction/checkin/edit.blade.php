@@ -40,7 +40,7 @@
                    value="{{ \Carbon\Carbon::parse($transaction->check_out)->format('Y-m-d') }}" 
                    min="{{ \Carbon\Carbon::parse($transaction->check_in)->addDay()->format('Y-m-d') }}"
                    required>
-            <small class="text-muted" style="font-size: 11px">Ubah tanggal untuk extend.</small>
+            <small class="" style="color: #50200C; font-size: 11px">Ubah tanggal untuk extend.</small>
         </div>
     </div>
 
@@ -55,7 +55,7 @@
                 Ya (Dengan Sarapan)
             </option>
         </select>
-        <div class="form-text text-muted small">
+        <div class="form-text small" style="color: #50200C">
             Pengaturan ini berlaku untuk setiap malam menginap.
         </div>
     </div>

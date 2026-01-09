@@ -58,8 +58,8 @@ $(function () {
 
                         return `
                             <div class="fw-bold" style="color: #50200C;">${dateStr}</div>
-                            <small class="text-muted" style="font-size: 0.85em;">
-                                <i class="fas fa-clock me-1 text-primary"></i>${timeStr}
+                            <small class="" style="color: #50200C; font-size: 0.85em;">
+                                <i class="fas fa-clock me-1"></i>${timeStr}
                             </small>
                         `;
                     }
@@ -294,10 +294,10 @@ $(function () {
                 
                 let earlyAlert = `
                     <div class="alert alert-warning dynamic-alert border-warning d-flex align-items-center mt-3" role="alert" style="background-color: #fff3cd;">
-                        <i class="fas fa-clock me-3 fa-2x text-warning"></i>
+                        <i class="fas fa-clock me-3 fa-2x" style="color: #F7B267"></i>
                         <div class="text-start">
-                            <strong class="d-block text-dark">EARLY CHECK-OUT</strong>
-                            <small style="color: #856404">
+                            <strong class="d-block" style="color: #50200C">EARLY CHECK-OUT</strong>
+                            <small style="color: #50200C">
                                 Tamu ini seharusnya checkout tanggal <strong>${formattedPlan}</strong>.<br>
                                 Anda akan memproses checkout <b>LEBIH AWAL</b>.
                             </small>

@@ -1,6 +1,6 @@
-<div class="table-responsive">
-    <table class="table table-bordered table-striped">
-        <thead class="bg-light">
+<div class="table-responsive" style="background-color: #F7F3E4; color: #50200C;">
+    <table class="table table-custom table-striped">
+        <thead class="">
             <tr>
                 <th>Tanggal</th>
                 <th>Nama Bahan</th>
@@ -28,7 +28,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6" class="text-center">Belum ada riwayat stock opname.</td>
+                    <td colspan="6" class="text-center" style="background-color: #F7F3E4; color: #50200C;">Belum ada riwayat stock opname.</td>
                 </tr>
             @endforelse
         </tbody>

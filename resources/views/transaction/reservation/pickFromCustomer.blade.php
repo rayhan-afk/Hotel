@@ -26,10 +26,10 @@
             border-radius: 20px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        .bg-general { background-color: #6c757d; color: white; }
-        .bg-corporate { background-color: #0d6efd; color: white; }
-        .bg-family { background-color: #198754; color: white; }
-        .bg-government { background-color: #ffc107; color: black; }
+        .bg-general { background-color: #F2C2B8; color: #50200C; }
+        .bg-corporate { background-color: #8FB8E1; color: #50200C; }
+        .bg-family { background-color: #A8D5BA; color: #50200C; }
+        .bg-government { background-color: #FAE8A4; color: #50200C; }
     </style>
 @endsection
 @section('content')

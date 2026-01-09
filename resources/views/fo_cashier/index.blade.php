@@ -7,21 +7,21 @@
         <div class="col-md-10">
             
             {{-- HEADER INFORMASI (STYLE MIRIP SHOW) --}}
-            <div class="card mb-4 shadow-sm border-0 bg-white">
+            <div class="card mb-4 shadow-sm border-0" style="background-color: #F7F3E4">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h3 class="mb-1 fw-bold" style="color: #50200C;">
                                 <i class="fas fa-cash-register me-2"></i>Front Office Cashier
                             </h3>
-                            <p class="text-muted mb-0">Kelola tagihan tamu yang sedang menginap (In-House).</p>
+                            <p class="mb-0" style="color: #50200C">Kelola tagihan tamu yang sedang menginap (In-House).</p>
                         </div>
                         <div class="d-flex align-items-center gap-3">
                             <div class="text-end d-none d-md-block">
-                                <small class="text-muted d-block text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;">Total In-House</small>
-                                <span class="fw-bold fs-3 text-success">{{ $transactions->total() }}</span> <span class="text-muted small">Tamu</span>
+                                <small class="d-block text-uppercase" style="color: #50200C; font-size: 0.75rem; letter-spacing: 1px;">Total In-House</small>
+                                <span class="fw-bold fs-3 text-success">{{ $transactions->total() }}</span> <span class="small" style="color: #50200C">Tamu</span>
                             </div>
-                            <div class="vr h-100 mx-2 text-muted"></div>
+                            <div class="vr h-100 mx-2" style="color: #50200C"></div>
                             <a href="{{ route('dashboard.index') }}" class="btn btn-outline-secondary px-3 shadow-sm">
                                 <i class="fas fa-arrow-left me-1"></i> Dashboard
                             </a>
@@ -32,16 +32,16 @@
 
             {{-- SEARCH BAR --}}
             <div class="card shadow-sm border-0 mb-4" style="border-radius: 12px; overflow: hidden;">
-                <div class="card-body p-4" style="background: linear-gradient(to right, #fffcf5, #ffffff);">
+                <div class="card-body p-4" style="background: #F7F3E4">
                     <form action="{{ route('fo.cashier.index') }}" method="GET">
                         <div class="input-group input-group-lg shadow-sm">
                             <span class="input-group-text bg-white border-0 ps-4">
-                                <i class="fas fa-search text-muted opacity-50"></i>
+                                <i class="fas fa-search" style="color: #50200C"></i>
                             </span>
                             <input type="text" name="keyword" class="form-control border-0 bg-white" 
                                    placeholder="Cari Nomor Kamar atau Nama Tamu..." 
                                    value="{{ request('keyword') }}"
-                                   style="font-size: 0.95rem;">
+                                   style="color: #50200C; font-size: 0.95rem;">
                             
                             <button class="btn text-white fw-bold px-5" type="submit" 
                                     style="background: linear-gradient(to right, #50200C, #8B4513);">
@@ -66,7 +66,7 @@
                         {{ request('keyword') ? 'Hasil Pencarian' : 'Daftar Tamu Menginap' }}
                     </span>
                     @if(request('keyword'))
-                        <small class="text-muted fw-normal">Ditemukan {{ $transactions->total() }} data</small>
+                        <small class="fw-normal" style="color: #50200C">Ditemukan {{ $transactions->total() }} data</small>
                     @endif
                 </div>
                 
@@ -88,18 +88,18 @@
                                     {{-- Nama Tamu (Sekarang Bisa Diklik) --}}
                                     <h5 class="mb-1 fw-bold">
                                         <a href="{{ route('customer.show', $trx->customer->id) }}" 
-                                           class="text-decoration-none text-dark hover-underline">
+                                           class="text-decoration-none hover-underline" style="color: #50200C">
                                             {{ $trx->customer->name }}
                                         </a>
                                     </h5>
 
-                                    <div class="text-muted small mb-1">
-                                        <i class="fas fa-bed me-1 text-warning"></i> {{ $trx->room->type->name }}
+                                    <div class="small mb-1" style="color: #50200C">
+                                        <i class="fas fa-bed me-1" style="color: #FAE8A4"></i> {{ $trx->room->type->name }}
                                         <span class="mx-2">•</span>
-                                        <i class="fas fa-calendar-check me-1 text-primary"></i> Check-in: {{ \Carbon\Carbon::parse($trx->check_in)->format('d M Y, H:i') }}
+                                        <i class="fas fa-calendar-check me-1" style="color: #8FB8E1"></i> Check-in: {{ \Carbon\Carbon::parse($trx->check_in)->format('d M Y, H:i') }}
                                     </div>
-                                    <span class="badge bg-light text-dark border rounded-pill px-3">
-                                        <i class="fas fa-clock me-1 text-secondary"></i> {{ $trx->getDateDifferenceWithPlural() }}
+                                    <span class="badge bg-light border rounded-pill px-3" style="color: #50200C">
+                                        <i class="fas fa-clock me-1" style="color: #50200C"></i> {{ $trx->getDateDifferenceWithPlural() }}
                                     </span>
                                 </div>
 
@@ -121,7 +121,7 @@
                                         <a href="{{ route('fo.cashier.show', $trx->id) }}" 
                                            class="btn btn-outline-dark rounded-pill px-4 py-2 shadow-sm fw-bold d-flex align-items-center"
                                            style="border-color: #50200C; color: #50200C;">
-                                            Buka Folio <i class="fas fa-arrow-right ms-2"></i>
+                                            Buka Tagihan <i class="fas fa-arrow-right ms-2"></i>
                                         </a>
 
                                     </div>

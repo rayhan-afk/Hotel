@@ -207,16 +207,19 @@ $(function() {
             title: "Yakin ingin menghapus?",
             text: "Data tidak bisa dikembalikan!",
             icon: "warning",
+            background: '#F7F3E4',
             showCancelButton: true,
             confirmButtonColor: "#F2C2B8",
             cancelButtonColor: "#8FB8E1",
-            confirmButtonText: "Ya, Hapus!",
-            cancelButtonText: "Batal",
+            confirmButtonText: 'Ya, Kosongkan!',
+            cancelButtonText: 'Batal',
+            iconColor: '#50200C',
             customClass: {
-                confirmButton: "text-50200C btn btn-success me-2",
-                cancelButton: "text-50200C btn btn-danger",
-            },
-            buttonsStyling: false
+                confirmButton: "text-50200C",
+                cancelButton: "text-50200C",
+                title: "text-50200C",
+                htmlContainer: "text-50200C"
+            }
         }).then((result) => {
             if (result.isConfirmed) {
                 $(`#delete-type-form-${type_id}`).submit();

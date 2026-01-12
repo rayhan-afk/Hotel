@@ -155,7 +155,11 @@
                     icon: 'warning',
                     title: 'Pilih Menu Dulu',
                     text: 'Silakan klik tombol "Atur Resep" pada salah satu menu di sebelah kiri.',
-                    confirmButtonColor: '#50200C'
+                    confirmButtonColor: '#50200C',
+                    customClass: {
+                        title: "text-50200C",
+                        htmlContainer: "text-50200C"
+                    }
                 });
                 return;
             }
@@ -255,7 +259,11 @@
                     icon: 'warning',
                     title: 'Data Belum Lengkap',
                     text: 'Pastikan menu dipilih dan minimal ada 1 bahan baku.',
-                    confirmButtonColor: '#50200C'
+                    confirmButtonColor: '#50200C',
+                    customClass: {
+                        title: "text-50200C",
+                        htmlContainer: "text-50200C"
+                    }
                 });
                 return;
             }
@@ -371,13 +379,21 @@
 
             Swal.fire({
                 title: "Hapus Menu?",
-                html: `Yakin ingin menghapus <b>${menuName}</b>?<br><small style="color: #d33">Semua resep terkait juga akan dihapus permanen!</small>`,
+                html: `Yakin ingin menghapus <b>${menuName}</b>?<br><small style="color: #A94442">Semua resep terkait juga akan dihapus permanen!</small>`,
                 icon: "warning",
+                background: '#F7F3E4',
                 showCancelButton: true,
-                confirmButtonColor: "#d33",
-                cancelButtonColor: "#50200C",
-                confirmButtonText: "Ya, Hapus!",
-                cancelButtonText: "Batal",
+                confirmButtonColor: "#F2C2B8",
+                cancelButtonColor: "#8FB8E1",
+                confirmButtonText: 'Ya, Kosongkan!',
+                cancelButtonText: 'Batal',
+                iconColor: '#50200C',
+                customClass: {
+                    confirmButton: "text-50200C",
+                    cancelButton: "text-50200C",
+                    title: "text-50200C",
+                    htmlContainer: "text-50200C"
+                }
             }).then((result) => {
                 if (result.isConfirmed) {
                     form.submit();

@@ -1,7 +1,7 @@
 /**
  * POS Logic - Point of Sales
  * File: resources/js/pages/POS.js
- * Status: FIXED (Category Filter Added)
+ * Status: UPDATED (SweetAlert2 for Clear Cart)
  */
 
 (function () {
@@ -35,7 +35,7 @@
     };
 
     // ============================================
-    // [PENTING] EVENT LISTENER CLICK (Dikembalikan)
+    // EVENT LISTENER CLICK
     // ============================================
     if (menuContainer) {
         menuContainer.addEventListener("click", function (e) {
@@ -119,11 +119,37 @@
         renderCart();
     };
 
+    // ✅ FIX: Ganti confirm() biasa dengan SweetAlert2
     window.clearCart = function () {
-        if (confirm("Reset keranjang?")) {
-            cart = [];
-            renderCart();
-        }
+        if (cart.length === 0) return;
+
+        Swal.fire({
+            title: 'Reset Keranjang?',
+            text: "Semua item akan dihapus dari keranjang.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33', // Merah untuk bahaya
+            cancelButtonColor: '#50200C', // Coklat sesuai tema
+            confirmButtonText: 'Ya, Kosongkan!',
+            cancelButtonText: 'Batal',
+            iconColor: '#50200C'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                cart = [];
+                renderCart();
+                
+                // Feedback kecil setelah berhasil
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Keranjang Kosong',
+                    text: 'Siap untuk pesanan baru',
+                    timer: 1000,
+                    showConfirmButton: false,
+                    iconColor: '#50200C',
+                    customClass: { title: 'swal-title-brown' }
+                });
+            }
+        });
     };
 
     // ============================================
@@ -232,8 +258,8 @@
         const payInput = document.getElementById("payAmount").value;
         const payAmount = payInput ? parseFloat(payInput) : 0;
 
-        if (cart.length === 0) return alert("Keranjang kosong!");
-        if (payAmount < currentTotal) return alert("Uang pembayaran kurang!");
+        if (cart.length === 0) return Swal.fire('Error', 'Keranjang kosong!', 'error');
+        if (payAmount < currentTotal) return Swal.fire('Error', 'Uang pembayaran kurang!', 'error');
 
         const storeRoute = window.posConfig ? window.posConfig.storeRoute : "";
         const csrfToken = window.posConfig ? window.posConfig.csrfToken : "";
@@ -284,7 +310,7 @@
                         savedChange
                     );
                 } else {
-                    alert("Gagal: " + data.message);
+                    Swal.fire('Gagal', data.message, 'error');
                     if (btnProcess) {
                         btnProcess.innerText = originalText;
                         btnProcess.disabled = false;
@@ -293,7 +319,7 @@
             })
             .catch((err) => {
                 console.error(err);
-                alert("Terjadi kesalahan sistem.");
+                Swal.fire('Error', 'Terjadi kesalahan sistem.', 'error');
                 if (btnProcess) {
                     btnProcess.innerText = originalText;
                     btnProcess.disabled = false;

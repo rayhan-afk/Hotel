@@ -30,7 +30,7 @@
 
     <div class="row">
         
-        {{-- KOLOM KIRI --}}
+        {{-- KOLOM KIRI (QUICK ACTIONS & INPUT) --}}
         <div class="col-md-4">
             
             {{-- 1. QUICK ACTION --}}
@@ -39,7 +39,6 @@
                     <i class="fas fa-bolt me-2" style="color: #FAE8A4"></i>Quick Actions
                 </div>
                 <div class="card-body pt-0 pb-3 px-3">
-                    
                     {{-- EXTRA BED --}}
                     <div class="d-flex gap-2 mb-2">
                         <form action="{{ route('fo.cashier.store_charge', $transaction->id) }}" method="POST" class="w-100">
@@ -79,7 +78,6 @@
                             <i class="fas fa-pen"></i>
                         </button>
                     </div>
-
                 </div>
             </div>
 
@@ -143,13 +141,14 @@
 
         {{-- KOLOM KANAN: TABEL RINCIAN --}}
         <div class="col-md-8">
-            <div class="card shadow-sm border-0">
+            
+            {{-- TABEL ITEMS --}}
+            <div class="card shadow-sm border-0 mb-4">
                 <div class="card-header fw-bold py-3" style="background-color: #C49A6C; border-bottom: 2px solid #f0f0f0; color: #50200C;">
-                    <i class="fas fa-file-invoice-dollar me-1"></i> Rincian Tagihan
+                    <i class="fas fa-file-invoice-dollar me-1"></i> Rincian Item Tambahan (Charges)
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        
                         <table class="table table-hover align-middle mb-0">
                             <thead class="bg-light">
                                 <tr class="small text-uppercase">
@@ -160,23 +159,12 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {{-- BIAYA KAMAR --}}
+                                {{-- PERHITUNGAN --}}
                                 @php
                                     $totalCharges = $transaction->charges->sum('total');
-                                    $pureRoomBill = $transaction->total_price - $totalCharges;
+                                    // Hitung harga kamar murni (Total - Charges)
+                                    $roomBill = $transaction->total_price - $totalCharges;
                                 @endphp
-                                <tr style="background-color: #FFFF; color: #50200C;">
-                                    <td class="ps-4 py-3">
-                                        <div class="fw-bold" style="color: #50200C">Room Charge & Extras</div>
-                                        <small class="">
-                                            <i class="fas fa-bed me-1" style="color: #50200C"></i> {{ $transaction->room->type->name }} | 
-                                            {{ $transaction->getDateDifferenceWithPlural() }}
-                                        </small>
-                                    </td>
-                                    <td><span class="badge badge-brown px-3 py-2 rounded-pill">ROOM</span></td>
-                                    <td class="text-end fw-bold" style="color: #50200C">{{ number_format($pureRoomBill, 0, ',', '.') }}</td>
-                                    <td class="text-center" style="color: #50200C"><i class="fas fa-lock opacity-50"></i></td> 
-                                </tr>
 
                                 {{-- LOOPING CHARGES --}}
                                 @forelse($transaction->charges as $charge)
@@ -197,7 +185,7 @@
                                     </td>
                                     <td class="text-end fw-bold" style="color: #50200C">{{ number_format($charge->total, 0, ',', '.') }}</td>
                                     
-                                    {{-- TOMBOL HAPUS (FIXED: PASTI BISA DIKLIK) --}}
+                                    {{-- TOMBOL HAPUS --}}
                                     <td class="text-center">
                                         <button type="button" 
                                                 class="btn btn-sm btn-light text-danger border-0 hover-shadow"
@@ -213,19 +201,131 @@
                                 <tr><td colspan="4" class="text-center py-5 fst-italic" style="color: #50200C">Belum ada tagihan tambahan.</td></tr>
                                 @endforelse
                             </tbody>
-                            <tfoot class="bg-light" style="border-top: 2px solid #50200C;">
-                                <tr>
-                                    <td colspan="2" class="text-end fw-bold pt-3 pb-3" style="color: #50200C">Grand Total</td>
-                                    <td class="text-end fw-bold fs-4 pt-3 pb-3" style="color: #50200C;">
-                                        Rp {{ number_format($transaction->total_price, 0, ',', '.') }}
-                                    </td>
-                                    <td></td>
-                                </tr>
-                            </tfoot>
                         </table>
                     </div>
                 </div>
             </div>
+
+            {{-- [REVISI] SUMBER TAGIHAN & PEMBAYARAN DIPERJELAS --}}
+            <div class="card shadow-sm border-0" style="background-color: #fff8f0; border: 1px solid #e6dac8 !important;">
+                <div class="card-header fw-bold py-3 d-flex justify-content-between align-items-center" style="background-color: #e6dac8; color: #50200C;">
+                    <span><i class="fas fa-calculator me-2"></i> Analisa Tagihan & Pembayaran</span>
+                    <span class="badge bg-white text-dark shadow-sm">ID TRX: #{{ $transaction->id }}</span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-4">
+                        
+                        {{-- 1. SUMBER TAGIHAN (Source of Funds) --}}
+                        <div class="col-md-7 border-end" style="border-color: #dccbb1 !important;">
+                            <h6 class="fw-bold mb-3 border-bottom pb-2" style="color: #50200C">
+                                <i class="fas fa-receipt me-2"></i>Sumber Tagihan
+                            </h6>
+                            
+                            {{-- Baris Biaya Kamar (Otomatis Extend) --}}
+                            <div class="d-flex justify-content-between mb-3 align-items-center">
+                                <div>
+                                    <div class="fw-bold" style="color: #50200C">Biaya Kamar & Sarapan</div>
+                                    @php
+                                        // Hitung durasi berdasarkan tanggal saja (abaikan jam) agar akurat
+                                        $start = \Carbon\Carbon::parse($transaction->check_in)->startOfDay();
+                                        $end   = \Carbon\Carbon::parse($transaction->check_out)->startOfDay();
+                                        $days  = $start->diffInDays($end);
+                                        // Jika 0 (Check in & out di hari sama), anggap 1 hari (Day Use) atau biarkan 0
+                                        $days  = $days == 0 ? 1 : $days; 
+                                    @endphp
+
+                                    <small class="text-muted d-block">
+                                        <i class="fas fa-clock me-1"></i> Durasi Total: <strong>{{ $days }} Malam</strong>
+                                    </small>
+                                    <small class="text-primary fst-italic" style="font-size: 0.75rem;">
+                                        *Sudah termasuk jika ada perpanjangan (extend)
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="fw-bold fs-5" style="color: #50200C">Rp {{ number_format($roomBill, 0, ',', '.') }}</span>
+                                </div>
+                            </div>
+
+                            {{-- Baris Biaya Tambahan --}}
+                            <div class="d-flex justify-content-between mb-3 align-items-center bg-white p-2 rounded border border-light">
+                                <div>
+                                    <div class="fw-bold" style="color: #50200C">Tagihan Tambahan (Charges)</div>
+                                    <small class="text-muted d-block">
+                                        Total Item: {{ $transaction->charges->count() }} (Laundry, F&B, dll)
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="fw-bold" style="color: #50200C">Rp {{ number_format($totalCharges, 0, ',', '.') }}</span>
+                                </div>
+                            </div>
+
+                            <hr style="border-color: #bfa58a; border-style: dashed;">
+
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold h5 mb-0" style="color: #50200C">TOTAL KESELURUHAN</span>
+                                <span class="fw-bold h4 mb-0" style="color: #50200C">Rp {{ number_format($transaction->total_price, 0, ',', '.') }}</span>
+                            </div>
+                        </div>
+
+                        {{-- 2. STATUS PEMBAYARAN (Payment Status) --}}
+                        <div class="col-md-5 ps-md-4">
+                            <h6 class="fw-bold mb-3 border-bottom pb-2" style="color: #50200C">
+                                <i class="fas fa-wallet me-2"></i>Status Pembayaran
+                            </h6>
+
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Total Tagihan</span>
+                                <span class="fw-bold" style="color: #50200C">Rp {{ number_format($transaction->total_price, 0, ',', '.') }}</span>
+                            </div>
+
+                            <div class="d-flex justify-content-between mb-3">
+                                <span class="text-muted">Sudah Dibayar (DP)</span>
+                                <span class="fw-bold text-success">- Rp {{ number_format($transaction->paid_amount, 0, ',', '.') }}</span>
+                            </div>
+
+                            @php
+                                $sisa = $transaction->total_price - $transaction->paid_amount;
+                            @endphp
+
+                            {{-- KOTAK SISA BAYAR --}}
+                            <div class="p-3 rounded text-center position-relative overflow-hidden" 
+                                 style="background-color: {{ $sisa > 0 ? '#ffebee' : '#e8f5e9' }}; border: 2px dashed {{ $sisa > 0 ? '#ef9a9a' : '#a5d6a7' }};">
+                                
+                                @if($sisa > 0)
+                                    {{-- Jika Kurang Bayar --}}
+                                    <small class="d-block fw-bold text-uppercase text-danger" style="letter-spacing: 1px;">KEKURANGAN PEMBAYARAN</small>
+                                    <h3 class="fw-bold mb-0 mt-1 text-danger">
+                                        Rp {{ number_format(abs($sisa), 0, ',', '.') }}
+                                    </h3>
+                                    <small class="d-block mt-2 text-muted" style="font-size: 0.75rem;">
+                                        (Akumulasi dari Sisa Kamar + Charges)
+                                    </small>
+                                @else
+                                    {{-- Jika Lunas --}}
+                                    <div style="color: #2e7d32">
+                                        <i class="fas fa-check-circle fa-2x mb-2"></i>
+                                        <h4 class="fw-bold mb-0">LUNAS</h4>
+                                        <small>Tidak ada tunggakan.</small>
+                                    </div>
+                                @endif
+                            </div>
+
+                            {{-- TOMBOL EKSEKUSI --}}
+                            @if($sisa > 0)
+                                <div class="mt-3">
+                                    <button class="btn btn-danger w-100 fw-bold py-3 shadow-sm d-flex justify-content-center align-items-center" 
+                                            onclick="quickPay('{{ $transaction->id }}', '{{ addslashes($transaction->customer->name) }}', '{{ number_format($sisa, 0, ',', '.') }}')">
+                                        <span>LUNASI SEKARANG</span>
+                                        <i class="fas fa-arrow-right ms-2"></i>
+                                    </button>
+                                </div>
+                            @endif
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
@@ -295,7 +395,7 @@
     </div>
 </div>
 
-{{-- MODAL KONFIRMASI DELETE (PASTI JALAN) --}}
+{{-- MODAL KONFIRMASI DELETE --}}
 <div class="modal fade" id="modalDeleteConfirmation" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-delete-fit">
         <div class="modal-content border-0 shadow">
@@ -314,8 +414,6 @@
             </div>
             <div class="modal-footer border-0 justify-content-center p-2" style="background-color: #F7F3E4">
                 <button type="button" class="btn btn-modal-close btn-sm px-3" data-bs-dismiss="modal">Batal</button>
-                
-                {{-- Form Delete --}}
                 <form id="formDeleteCharge" action="" method="POST">
                     @csrf
                     @method('DELETE')
@@ -329,10 +427,53 @@
 @endsection
 
 @section('footer')
-{{-- Script Super Sederhana & Kuat (Tanpa Event Listener Rumit) --}}
 <script>
     function setDeleteAction(url) {
         document.getElementById('formDeleteCharge').action = url;
+    }
+
+    // Fungsi Pelunasan Cepat
+    function quickPay(id, name, amount) {
+        Swal.fire({
+            title: 'Pelunasan Tagihan',
+            html: `
+                <div class="text-center mb-3">
+                    <div class="mb-2 text-muted">Total Kekurangan Pembayaran</div>
+                    <h2 class="text-danger fw-bold">Rp ${amount}</h2>
+                    <div class="badge bg-light text-dark mt-2 border">Tamu: ${name}</div>
+                </div>
+                <p class="text-muted small">Klik tombol di bawah untuk mencatat pelunasan tunai.</p>
+            `,
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="fas fa-check-circle me-1"></i> Lunasi Sekarang',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({ title: 'Memproses...', didOpen: () => { Swal.showLoading() } });
+                
+                $.ajax({
+                    url: `/transaction/pay-remaining/${id}`,
+                    type: 'POST',
+                    data: { _token: '{{ csrf_token() }}' },
+                    success: function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Lunas!',
+                            text: response.message,
+                            confirmButtonColor: '#50200C'
+                        }).then(() => {
+                            location.reload(); 
+                        });
+                    },
+                    error: function(xhr) {
+                        Swal.fire('Error', xhr.responseJSON ? xhr.responseJSON.message : 'Terjadi kesalahan', 'error');
+                    }
+                });
+            }
+        });
     }
 </script>
 @endsection

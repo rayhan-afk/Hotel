@@ -124,8 +124,6 @@ class CheckinController extends Controller
             $oldGrandTotal = $transaction->total_price;
             
             // LOGIKA NETT: GrandTotal - Charges - Sarapan = Harga Kamar Murni
-            // (Asumsi: Data lama extra bed/bk di DB transaksi dianggap 0 atau sudah dipindah ke charges)
-            // Jika masih ada data lama di kolom extra_bed DB, ini mungkin sedikit bias, tapi karena fitur dihapus, kita anggap 0.
             $oldRoomPure = $oldGrandTotal - $oldCharges - $oldBreakfastMain;
 
             // 4. DAPATKAN RATE PER MALAM YANG DISEPAKATI
@@ -174,7 +172,6 @@ class CheckinController extends Controller
             $taxableAmount = $roomPriceTotal + $mainBreakfastPrice;
 
             // 5. Total Baru (Plus Jajanan Lama/Charges)
-            // Extra Bed & Breakfast dihapus dari sini
             $newGrandTotal = $taxableAmount + $oldCharges; 
 
             // 6. Simpan
@@ -182,7 +179,6 @@ class CheckinController extends Controller
                 'check_in'        => $dbCheckInString,  
                 'check_out'       => $dbCheckOutString, 
                 'breakfast'       => $request->breakfast,
-                // Kolom extra_bed & extra_breakfast tidak diupdate lagi
                 'total_price'     => $newGrandTotal
             ]);
 
@@ -237,5 +233,44 @@ class CheckinController extends Controller
             'message' => 'Tamu berhasil Check-Out!',
             'redirect_url' => route('laporan.kamar.index')
         ]);
+    }
+
+    // === [METHOD BARU: BAYAR LUNAS (QUICK ACTION)] ===
+    public function payRemaining(Request $request, $id)
+    {
+        DB::beginTransaction();
+        try {
+            $transaction = Transaction::findOrFail($id);
+            
+            // Hitung Sisa
+            $shortfall = $transaction->total_price - $transaction->paid_amount;
+
+            if ($shortfall <= 0) {
+                return response()->json(['status' => 'error', 'message' => 'Transaksi ini sudah lunas!'], 400);
+            }
+
+            // 1. Buat Record Pembayaran
+            \App\Models\Payment::create([
+                'user_id'        => auth()->id(), // [FIX] Tambahkan User ID
+                'transaction_id' => $id,
+                'price'          => $shortfall,
+                'status'         => 'Full Payment', // Menandakan pelunasan
+                'type'           => 'Cash' // Default Cash
+            ]);
+
+            // 2. Update Paid Amount di Transaksi
+            $transaction->increment('paid_amount', $shortfall);
+
+            DB::commit();
+            
+            return response()->json([
+                'status' => 'success', 
+                'message' => 'Pembayaran lunas berhasil! Sisa tagihan Rp 0.'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
     }
 }

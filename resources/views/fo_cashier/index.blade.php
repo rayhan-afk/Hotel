@@ -6,7 +6,7 @@
     <div class="row justify-content-center">
         <div class="col-md-10">
             
-            {{-- HEADER INFORMASI (STYLE MIRIP SHOW) --}}
+            {{-- HEADER INFORMASI --}}
             <div class="card mb-4 shadow-sm border-0" style="background-color: #F7F3E4">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center">
@@ -85,7 +85,6 @@
 
                                 {{-- INFO TAMU --}}
                                 <div class="col ms-2">
-                                    {{-- Nama Tamu (Sekarang Bisa Diklik) --}}
                                     <h5 class="mb-1 fw-bold">
                                         <a href="{{ route('customer.show', $trx->customer->id) }}" 
                                            class="text-decoration-none hover-underline" style="color: #50200C">
@@ -93,31 +92,61 @@
                                         </a>
                                     </h5>
 
-                                    <div class="small mb-1" style="color: #50200C">
+                                    <div class="small mb-2" style="color: #50200C">
                                         <i class="fas fa-bed me-1" style="color: #FAE8A4"></i> {{ $trx->room->type->name }}
                                         <span class="mx-2">•</span>
                                         <i class="fas fa-calendar-check me-1" style="color: #8FB8E1"></i> Check-in: {{ \Carbon\Carbon::parse($trx->check_in)->format('d M Y, H:i') }}
                                     </div>
-                                    <span class="badge bg-light border rounded-pill px-3" style="color: #50200C">
-                                        <i class="fas fa-clock me-1" style="color: #50200C"></i> {{ $trx->getDateDifferenceWithPlural() }}
-                                    </span>
+
+                                    {{-- Info Durasi & Sisa Tagihan --}}
+                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                        <span class="badge bg-light border rounded-pill px-3" style="color: #50200C">
+                                            <i class="fas fa-clock me-1" style="color: #50200C"></i> {{ $trx->getDateDifferenceWithPlural() }}
+                                        </span>
+
+                                        @php
+                                            $sisaBayar = $trx->total_price - $trx->paid_amount;
+                                        @endphp
+
+                                        @if($sisaBayar > 0)
+                                            {{-- [MODERN] BUTTON BAYAR LUNAS (MIRIP CHECKIN) --}}
+                                            <button type="button" 
+                                                    class="btn btn-sm d-flex align-items-center justify-content-between p-1 pe-3 shadow-sm btn-quick-pay"
+                                                    style="background-color: #fff5f5; border: 1px solid #ffc9c9; border-radius: 50px; min-width: 145px; transition: all 0.2s;"
+                                                    onmouseover="this.style.backgroundColor='#ffe0e0'; this.style.borderColor='#ff8f8f';"
+                                                    onmouseout="this.style.backgroundColor='#fff5f5'; this.style.borderColor='#ffc9c9';"
+                                                    onclick="quickPay('{{ $trx->id }}', '{{ addslashes($trx->customer->name) }}', '{{ number_format($sisaBayar, 0, ',', '.') }}')"
+                                                    title="Klik untuk Melunasi Tagihan">
+                                                
+                                                <span class="badge rounded-pill bg-danger text-white me-2" style="font-size: 10px; padding: 5px 10px;">
+                                                    BAYAR <i class="fas fa-chevron-right ms-1"></i>
+                                                </span>
+                                                
+                                                <span class="text-danger fw-bold" style="font-size: 12px; font-weight: 800;">
+                                                    Rp {{ number_format($sisaBayar, 0, ',', '.') }}
+                                                </span>
+                                            </button>
+                                        @else
+                                            <span class="badge rounded-pill d-inline-flex align-items-center" 
+                                                  style="background-color: #e8f5e9; color: #1b5e20; border: 1px solid #c8e6c9; padding: 6px 12px;">
+                                                <i class="fas fa-check-circle me-1"></i> Lunas
+                                            </span>
+                                        @endif
+                                    </div>
                                 </div>
 
                                 {{-- TOMBOL AKSI --}}
                                 <div class="col-auto text-end">
                                     <div class="d-flex gap-2 justify-content-end">
                                         
-                                        {{-- [BARU] TOMBOL PROFIL --}}
                                         <a href="{{ route('customer.show', $trx->customer->id) }}" 
                                            class="btn btn-light border rounded-pill px-3 py-2 shadow-sm d-flex align-items-center justify-content-center"
                                            style="color: #50200C; width: 45px; height: 45px;"
                                            data-bs-toggle="tooltip" 
-                                           data-bs-placement="top" 
                                            title="Lihat Profil Tamu">
                                             <i class="fas fa-id-card fa-lg"></i>
                                         </a>
 
-                                        {{-- TOMBOL BUKA FOLIO --}}
                                         <a href="{{ route('fo.cashier.show', $trx->id) }}" 
                                            class="btn btn-outline-dark rounded-pill px-4 py-2 shadow-sm fw-bold d-flex align-items-center"
                                            style="border-color: #50200C; color: #50200C;">
@@ -130,7 +159,7 @@
                             </div>
                         </div>
                     @empty
-                        {{-- EMPTY STATE (SAMA SEPERTI SEBELUMNYA) --}}
+                        {{-- EMPTY STATE --}}
                         <div class="text-center py-5">
                             <div class="mb-3">
                                 <span class="fa-stack fa-2x opacity-25">
@@ -187,4 +216,52 @@
         color: #50200C !important;
     }
 </style>
+
+{{-- SCRIPT QUICK PAY --}}
+<script>
+    function quickPay(id, name, amount) {
+        Swal.fire({
+            title: 'Pelunasan Tagihan',
+            html: `
+                <div class="text-center mb-3">
+                    <div class="mb-2 text-muted">Total Kekurangan Pembayaran</div>
+                    <h2 class="text-danger fw-bold">${amount}</h2>
+                    <div class="badge bg-light text-dark mt-2 border">Tamu: ${name}</div>
+                </div>
+                <p class="text-muted small">Klik tombol di bawah untuk mencatat pelunasan tunai.</p>
+            `,
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="fas fa-check-circle me-1"></i> Lunasi Sekarang',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Tampilkan Loading
+                Swal.fire({ title: 'Memproses...', didOpen: () => Swal.showLoading() });
+
+                // Kirim Request
+                $.ajax({
+                    url: `/transaction/pay-remaining/${id}`,
+                    type: 'POST',
+                    data: { _token: '{{ csrf_token() }}' },
+                    success: function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Lunas!',
+                            text: 'Tagihan berhasil dilunasi.',
+                            confirmButtonColor: '#50200C'
+                        }).then(() => {
+                            location.reload(); 
+                        });
+                    },
+                    error: function(xhr) {
+                        Swal.fire('Gagal', xhr.responseJSON ? xhr.responseJSON.message : 'Error', 'error');
+                    }
+                });
+            }
+        });
+    }
+</script>
 @endsection

@@ -89,10 +89,10 @@ Route::group(['middleware' => 'guest'], function () {
 Route::group(['middleware' => ['auth', 'checkRole:Super,Housekeeping,Manager']], function () {
     // Resource Amenities
    // 1. Taruh Custom Route PALING ATAS (Sebelum Resource)
-Route::post('/amenity/stock-opname', [App\Http\Controllers\AmenityController::class, 'stockOpname'])->name('amenity.stock-opname');
+    Route::post('/amenity/stock-opname', [App\Http\Controllers\AmenityController::class, 'stockOpname'])->name('amenity.stock-opname');
 
-// 2. Baru kemudian Route Resource
-Route::resource('amenity', App\Http\Controllers\AmenityController::class);
+    // 2. Baru kemudian Route Resource
+    Route::resource('amenity', App\Http\Controllers\AmenityController::class);
     // Route untuk melihat halaman riwayat
     Route::get('/amenities/history', [AmenityController::class, 'history'])->name('amenities.history');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout.housekeeping');
@@ -360,6 +360,9 @@ Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Customer,Manager,D
 
         // [BARU] Route Trigger Check-In & Potong Stok Amenities
         Route::post('/check-in/{id}/process', [CheckinController::class, 'processCheckIn'])->name('checkin.process');
+
+        // [BARU] Route Bayar Lunas (Quick Pay)
+        Route::post('/pay-remaining/{id}', [CheckinController::class, 'payRemaining'])->name('payRemaining');
 
         Route::get('/check-out', [CheckoutController::class, 'index'])->name('checkout.index');
         Route::post('/check-out/{transaction}', [CheckoutController::class, 'process'])->name('checkout.process');

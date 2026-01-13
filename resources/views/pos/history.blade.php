@@ -36,7 +36,7 @@
                             <td>{{ $trx->created_at->format('d M Y H:i') }}</td>
                             <td class="fw-bold">Rp {{ number_format($trx->total_amount, 0, ',', '.') }}</td>
                             <td>Rp {{ number_format($trx->pay_amount, 0, ',', '.') }}</td>
-                            <td class="" style="color: #F2C2B8">Rp {{ number_format($trx->change_amount, 0, ',', '.') }}</td>
+                            <td class="" style="color: #A94442">Rp {{ number_format($trx->change_amount, 0, ',', '.') }}</td>
                             
                             <td>
                                 <button onclick="popupPrint('{{ $trx->invoice_number }}')" class="btn btn-sm btn-outline-primary">

@@ -155,7 +155,7 @@
                     <div class="p-4 border-bottom" style="background: #F7F3E4;">
                         <div class="d-flex justify-content-between align-items-center">
                             <h5 class="mb-0 fw-bold" style="color: #50200C;"><i class="fas fa-shopping-basket me-2"></i>Pesanan</h5>
-                            <button onclick="clearCart()" class="btn btn-sm text-danger fw-bold" style="font-size: 0.8rem;">Reset</button>
+                            <button onclick="clearCart()" class="btn btn-sm fw-bold" style="color: #A94442; font-size: 0.8rem;">Reset</button>
                         </div>
                     </div>
 
@@ -209,7 +209,7 @@
                 </div>
                 <div class="d-flex justify-content-between alert alert-light border">
                     <span class="fw-bold" style="color: #50200C">Kembalian:</span>
-                    <span class="fw-bold" style="color: #F2C2B8" id="changeDisplay">Rp 0</span>
+                    <span class="fw-bold" style="color: #A94442" id="changeDisplay">Rp 0</span>
                 </div>
             </div>
             <div class="modal-footer">

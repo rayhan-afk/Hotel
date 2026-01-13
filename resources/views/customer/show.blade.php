@@ -22,10 +22,10 @@
                         <span class="badge me-1" style="background-color: #50200C;">{{ $customer->job }}</span>
                         @php
                             $group = $customer->customer_group ?? 'WalkIn';
-                            $badgeClass = 'bg-secondary';
-                            if($group == 'OTA') $badgeClass = 'bg-primary';
-                            if($group == 'Corporate') $badgeClass = 'bg-success';
-                            if($group == 'OwnerReferral') $badgeClass = 'bg-warning text-dark';
+                            $badgeClass = 'badge-rejected';
+                            if($group == 'OTA') $badgeClass = 'badge-reserved';
+                            if($group == 'Corporate') $badgeClass = 'badge-approved';
+                            if($group == 'OwnerReferral') $badgeClass = 'badge-pending';
                         @endphp
                         <span class="badge {{ $badgeClass }}">{{ $group }}</span>
                     </div>
@@ -76,12 +76,12 @@
                                             @php
                                                 $status = $transaction->status;
                                                 $badgeColor = match($status) {
-                                                    'Canceled'  => 'bg-danger', // Default bootstrap (kadang pink)
-                                                    'Check In'  => 'bg-success',
-                                                    'Check Out' => 'bg-secondary',
-                                                    'Booking'   => 'bg-warning text-dark',
-                                                    'Payment Pending' => 'bg-info text-dark',
-                                                    default     => 'bg-light text-dark border'
+                                                    'Canceled'  => 'badge-rejected',
+                                                    'Check In'  => 'badge-approved',
+                                                    'Check Out' => 'badge-orange',
+                                                    'Booking'   => 'badge-reserved',
+                                                    'Payment Pending' => 'badge-pending',
+                                                    default     => 'badge-rejected'
                                                 };
                                             @endphp
 
@@ -90,17 +90,17 @@
                                                 <button type="button" 
                                                         class="btn badge shadow-sm border-0 btn-view-cancel-reason"
                                                         {{-- Style khusus biar MERAH MATANG (Bukan Pink) --}}
-                                                        style="background-color: #D32F2F !important; color: white;"
+                                                        style="background-color: #A94442 !important; color: #F7F3E4;"
                                                         data-reason="{{ $transaction->cancel_reason ?? 'Tidak ada alasan' }}"
                                                         data-notes="{{ $transaction->cancel_notes ?? '-' }}"
                                                         data-bs-toggle="modal" 
                                                         data-bs-target="#modalCancelDetail"
                                                         title="Klik untuk lihat alasan">
-                                                    {{ $status }} <i class="fas fa-search-plus ms-1" style="font-size: 0.7em;"></i>
+                                                    {{ $status }} <i class="fas fa-search-plus ms-1" style="color: #F7F3E4 !important; font-size: 0.7em;"></i>
                                                 </button>
                                                 
                                                 {{-- Teks Alasan di Bawahnya --}}
-                                                <div class="mt-1 small fw-bold" style="font-size: 0.7rem; color: #D32F2F;">
+                                                <div class="mt-1 small fw-bold" style="font-size: 0.7rem; color: #A94442;">
                                                     {{ $transaction->cancel_reason ?? '' }}
                                                 </div>
                                             @else
@@ -111,7 +111,7 @@
                                         <td style="color: #50200C">{{ \Carbon\Carbon::parse($transaction->check_out)->format('d M Y') }}</td>
                                         <td class="text-end px-4 fw-bold" style="color: #50200C;">
                                             @if($status == 'Canceled')
-                                                <span class="text-decoration-line-through text-muted small me-1">Rp {{ number_format($transaction->total_price, 0, ',', '.') }}</span><br><span class="badge bg-danger" style="background-color: #D32F2F !important;">0</span>
+                                                <span class="text-decoration-line-through small me-1">Rp {{ number_format($transaction->total_price, 0, ',', '.') }}</span><br><span class="badge badge-red">0</span>
                                             @else
                                                 Rp {{ number_format($transaction->total_price, 0, ',', '.') }}
                                             @endif
@@ -139,22 +139,22 @@
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content border-0 shadow">
             {{-- Header Modal juga Merah --}}
-            <div class="modal-header text-white" style="background-color: #D32F2F;">
+            <div class="modal-header" style="background-color: #F7F3E4; color: #50200C">
                 <h6 class="modal-title fw-bold"><i class="fas fa-info-circle me-1"></i> Detail Pembatalan</h6>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-brown" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body text-center py-4">
+            <div class="modal-body text-center py-4" style="background-color: #F7F3E4">
                 <div class="mb-3">
-                    <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Alasan Utama</small>
-                    <h5 class="fw-bold mt-1" style="color: #D32F2F;" id="modalCancelReason">...</h5>
+                    <small class="text-uppercase fw-bold" style="color: #50200C; font-size: 0.7rem;">Alasan Utama</small>
+                    <h5 class="fw-bold mt-1" style="color: #A94442;" id="modalCancelReason">...</h5>
                 </div>
-                <hr class="w-50 mx-auto text-muted">
+                <hr class="w-50 mx-auto" style="color: #50200C">
                 <div>
-                    <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Catatan Tambahan</small>
-                    <p class="mb-0 mt-1 text-dark fst-italic" id="modalCancelNotes">...</p>
+                    <small class="text-uppercase fw-bold" style="color: #50200C; font-size: 0.7rem;">Catatan Tambahan</small>
+                    <p class="mb-0 mt-1 fst-italic" style="color: #50200C"id="modalCancelNotes">...</p>
                 </div>
             </div>
-            <div class="modal-footer justify-content-center bg-light p-2">
+            <div class="modal-footer justify-content-center p-2" style="background-color: #F7F3E4">
                 <button type="button" class="btn btn-sm btn-secondary w-100" data-bs-dismiss="modal">Tutup</button>
             </div>
         </div>

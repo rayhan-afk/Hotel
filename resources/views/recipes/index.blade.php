@@ -177,7 +177,7 @@
                                         @csrf
                                         @method('DELETE')
                                         
-                                        <button type="button" class="dropdown-item text-danger btn-delete-menu" data-name="{{ $menu->name }}">
+                                        <button type="button" class="dropdown-item btn-delete-menu" data-name="{{ $menu->name }}" style="color: #A94442">
                                             <i class="fas fa-trash-alt me-2"></i>Hapus Menu
                                         </button>
                                     </form>
@@ -277,7 +277,7 @@
                     </div>
                 </div>
 
-                <div class="p-3 bg-white mt-auto border-top">
+                <div class="p-3 mt-auto border-top" style="background-color: #F7F3E4">
                     <button class="btn w-100 py-3 fs-6 text-white fw-bold" id="btnSaveRecipe" style="background-color: #50200C;" disabled>
                         <i class="fas fa-save me-2"></i> Simpan Resep Menu Ini
                     </button>

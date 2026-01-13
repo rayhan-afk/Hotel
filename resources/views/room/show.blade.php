@@ -33,7 +33,7 @@
                                 <div class="col-lg-12" style="color: #50200C;">
                                     <h5 class="mt-0 fw-bold">{{ $customer->name }}</h5>
                                     <div class="table-responsive">
-                                        <table class="table table-sm table-borderless small">
+                                        <table class="table table-sm table-borderless small bg-soft-cream">
                                             <tr>
                                                 <td width="15%"><i class="fas fa-envelope" style="color: #50200C;"></i></td>
                                                 <td>{{ $email }}</td>
@@ -82,9 +82,9 @@
                         <h3 class="mb-0">Kamar {{ $room->number }}</h3>
                         <small>{{ $room->name }}</small>
                     </div>
-                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#imageModal"
+                    <button type="button" class="btn btn-sm btn-search-custom" data-bs-toggle="modal" data-bs-target="#imageModal"
                             style="color: #50200C; border-color: #50200C !important;">
-                        <i class="fas fa-camera me-1" style="color: #50200C;"></i> Ganti Gambar
+                        <i class="fas fa-camera me-1"></i> Ganti Gambar
                     </button>
                 </div>
                 
@@ -111,19 +111,19 @@
 
                         {{-- Info Grid --}}
                         <div class="col-6" style="color: #50200C;">
-                            <small class="d-block text-muted">Tipe Kamar</small>
+                            <small class="d-block">Tipe Kamar</small>
                             <h6 class="fw-bold">{{ $room->type->name }}</h6>
                         </div>
                         <div class="col-6" style="color: #50200C;">
-                            <small class="d-block text-muted">Harga per Malam</small>
+                            <small class="d-block">Harga per Malam</small>
                             <h6 class="fw-bold">Rp {{ number_format($room->price, 0, ',', '.') }}</h6>
                         </div>
                         <div class="col-6" style="color: #50200C;">
-                            <small class="d-block text-muted">Kapasitas</small>
+                            <small class="d-block">Kapasitas</small>
                             <h6 class="fw-bold">{{ $room->capacity }} Orang</h6>
                         </div>
                         <div class="col-6" style="color: #50200C;">
-                            <small class="d-block text-muted">Luas Area</small>
+                            <small class="d-block">Luas Area</small>
                             <h6 class="fw-bold">{{ $room->area_sqm ?? '-' }} m²</h6>
                         </div>
 
@@ -132,13 +132,13 @@
                         {{-- Fasilitas --}}
                         <div class="col-12" style="color: #50200C;">
                             <strong class="d-block mb-1"><i class="fas fa-tv me-1"></i> Fasilitas Kamar</strong>
-                            <p class="small mb-0 text-muted">
+                            <p class="small mb-0">
                                 {{ $room->room_facilities ?? 'Tidak ada data fasilitas.' }}
                             </p>
                         </div>
                         <div class="col-12" style="color: #50200C;">
                             <strong class="d-block mb-1"><i class="fas fa-bath me-1"></i> Fasilitas Kamar Mandi</strong>
-                            <p class="small mb-0 text-muted">
+                            <p class="small mb-0">
                                 {{ $room->bathroom_facilities ?? 'Tidak ada data fasilitas.' }}
                             </p>
                         </div>

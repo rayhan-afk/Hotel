@@ -250,10 +250,22 @@ $(function () {
     $(document).on("click", ".delete-btn", function () {
         const id = $(this).data("id");
         Swal.fire({
-            title: "Hapus bahan ini?", text: "Data tidak bisa dikembalikan!", icon: "warning",
-            showCancelButton: true, confirmButtonColor: "#F2C2B8", cancelButtonColor: "#8FB8E1",
-            confirmButtonText: "Ya, Hapus!", cancelButtonText: "Batal",
-            customClass: { confirmButton: "text-50200C", cancelButton: "text-50200C" }
+            title: "Hapus bahan ini?", 
+            text: "Data tidak bisa dikembalikan!", 
+            icon: "warning",
+            background: '#F7F3E4',
+            showCancelButton: true,
+            confirmButtonColor: "#F2C2B8",
+            cancelButtonColor: "#8FB8E1",
+            confirmButtonText: 'Ya, Kosongkan!',
+            cancelButtonText: 'Batal',
+            iconColor: '#50200C',
+            customClass: {
+                confirmButton: "text-50200C",
+                cancelButton: "text-50200C",
+                title: "text-50200C",
+                htmlContainer: "text-50200C"
+            }
         }).then(async (result) => {
             if (result.isConfirmed) {
                 try {

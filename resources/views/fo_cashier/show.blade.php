@@ -10,7 +10,7 @@
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h3 class="mb-1 fw-bold" style="color: #50200C;">Tagihan Tamu</h3>
-                    <p class="text-muted mb-0">
+                    <p class="mb-0" style="color: #50200C">
                         <i class="fas fa-door-open me-1"></i> Kamar: <strong>{{ $transaction->room->number }}</strong> 
                         <span class="mx-2">|</span> 
                         <i class="fas fa-user me-1"></i> Tamu: <strong>{{ $transaction->customer->name }}</strong>
@@ -234,10 +234,10 @@
                                         $days  = $days == 0 ? 1 : $days; 
                                     @endphp
 
-                                    <small class="text-muted d-block">
+                                    <small class="d-block" style="color: #50200C">
                                         <i class="fas fa-clock me-1"></i> Durasi Total: <strong>{{ $days }} Malam</strong>
                                     </small>
-                                    <small class="text-primary fst-italic" style="font-size: 0.75rem;">
+                                    <small class="fst-italic" style="color: #50200C; font-size: 0.75rem;">
                                         *Sudah termasuk jika ada perpanjangan (extend)
                                     </small>
                                 </div>
@@ -250,7 +250,7 @@
                             <div class="d-flex justify-content-between mb-3 align-items-center bg-white p-2 rounded border border-light">
                                 <div>
                                     <div class="fw-bold" style="color: #50200C">Tagihan Tambahan (Charges)</div>
-                                    <small class="text-muted d-block">
+                                    <small class="d-block" style="color: #50200C">
                                         Total Item: {{ $transaction->charges->count() }} (Laundry, F&B, dll)
                                     </small>
                                 </div>
@@ -274,13 +274,13 @@
                             </h6>
 
                             <div class="d-flex justify-content-between mb-2">
-                                <span class="text-muted">Total Tagihan</span>
+                                <span class="" style="color: #50200C">Total Tagihan</span>
                                 <span class="fw-bold" style="color: #50200C">Rp {{ number_format($transaction->total_price, 0, ',', '.') }}</span>
                             </div>
 
                             <div class="d-flex justify-content-between mb-3">
-                                <span class="text-muted">Sudah Dibayar (DP)</span>
-                                <span class="fw-bold text-success">- Rp {{ number_format($transaction->paid_amount, 0, ',', '.') }}</span>
+                                <span class="" style="color: #50200C">Sudah Dibayar</span>
+                                <span class="fw-bold" style="color: #2E7D32">- Rp {{ number_format($transaction->paid_amount, 0, ',', '.') }}</span>
                             </div>
 
                             @php
@@ -293,16 +293,16 @@
                                 
                                 @if($sisa > 0)
                                     {{-- Jika Kurang Bayar --}}
-                                    <small class="d-block fw-bold text-uppercase text-danger" style="letter-spacing: 1px;">KEKURANGAN PEMBAYARAN</small>
-                                    <h3 class="fw-bold mb-0 mt-1 text-danger">
+                                    <small class="d-block fw-bold text-uppercase" style="color: #A94442; letter-spacing: 1px;">KEKURANGAN PEMBAYARAN</small>
+                                    <h3 class="fw-bold mb-0 mt-1" style="color: #A94442">
                                         Rp {{ number_format(abs($sisa), 0, ',', '.') }}
                                     </h3>
-                                    <small class="d-block mt-2 text-muted" style="font-size: 0.75rem;">
+                                    <small class="d-block mt-2" style="color: #50200C; font-size: 0.75rem;">
                                         (Akumulasi dari Sisa Kamar + Charges)
                                     </small>
                                 @else
                                     {{-- Jika Lunas --}}
-                                    <div style="color: #2e7d32">
+                                    <div style="color: #2E7D32">
                                         <i class="fas fa-check-circle fa-2x mb-2"></i>
                                         <h4 class="fw-bold mb-0">LUNAS</h4>
                                         <small>Tidak ada tunggakan.</small>
@@ -313,7 +313,7 @@
                             {{-- TOMBOL EKSEKUSI --}}
                             @if($sisa > 0)
                                 <div class="mt-3">
-                                    <button class="btn btn-danger w-100 fw-bold py-3 shadow-sm d-flex justify-content-center align-items-center" 
+                                    <button class="btn btn-danger w-100 fw-bold py-3 shadow-sm d-flex justify-content-center align-items-center" style="color: #50200C" 
                                             onclick="quickPay('{{ $transaction->id }}', '{{ addslashes($transaction->customer->name) }}', '{{ number_format($sisa, 0, ',', '.') }}')">
                                         <span>LUNASI SEKARANG</span>
                                         <i class="fas fa-arrow-right ms-2"></i>

@@ -79,19 +79,19 @@ $(function () {
 
                         if (status === 'Menunggu Checkout') {
                             // KUNING (Warning)
-                            return `<span class="badge rounded-pill bg-warning text-dark" style="${styleBase}">
+                            return `<span class="badge rounded-pill badge-pending" style="${styleBase}">
                                 <i class="fas fa-clock me-1"></i> Menunggu Checkout
                             </span>`;
                         } 
                         else if (status === 'Sedang Dibersihkan') {
                             // BIRU (Info)
-                            return `<span class="badge rounded-pill bg-info text-white" style="${styleBase}">
+                            return `<span class="badge rounded-pill badge-reserved" style="${styleBase}">
                                 <i class="fas fa-broom me-1"></i> Sedang Dibersihkan
                             </span>`;
                         } 
                         else {
                             // HIJAU (Tersedia / Default Style Kamu)
-                            return `<span class="badge rounded-pill" style="background-color: #A8D5BA; color: #50200C; ${styleBase}">
+                            return `<span class="badge rounded-pill badge-approved" style="${styleBase}">
                                 <i class="fas fa-check me-1"></i> Tersedia
                             </span>`;
                         }

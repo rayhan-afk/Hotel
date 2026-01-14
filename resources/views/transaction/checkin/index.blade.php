@@ -31,18 +31,20 @@
                             <tr>
                                 {{-- Penyesuaian Lebar Kolom (Total 100%) --}}
                                 <th scope="col" style="width: 5%;"><i class="fas fa-hashtag me-1"></i>No</th>
-                                <th scope="col" style="width: 17%;"><i class="fas fa-user me-1"></i>Tamu</th>
-                                <th scope="col" style="width: 10%;"><i class="fas fa-bed me-1"></i>Kamar</th>
-                                <th scope="col" style="width: 12%;"><i class="fas fa-calendar-check me-1"></i>Check-In</th>
-                                <th scope="col" style="width: 12%;"><i class="fas fa-calendar-times me-1"></i>Check-Out</th>
+                                <th scope="col" style="width: 15%;"><i class="fas fa-user me-1"></i>Tamu</th>
                                 
-                                {{-- Extra Bed & Breakfast DIHAPUS --}}
+                                {{-- [KOLOM BARU] --}}
+                                <th scope="col" style="width: 10%;"><i class="fas fa-users me-1"></i>Jml. Tamu</th>
 
-                                <th scope="col" style="width: 8%;" class="text-center"><i class="fas fa-utensils me-1"></i>Srp</th> 
+                                <th scope="col" style="width: 10%;"><i class="fas fa-bed me-1"></i>Kamar</th>
+                                <th scope="col" style="width: 10%;"><i class="fas fa-calendar-check me-1"></i>Check-In</th>
+                                <th scope="col" style="width: 10%;"><i class="fas fa-calendar-times me-1"></i>Check-Out</th>
+                                
+                                <th scope="col" style="width: 5%;" class="text-center"><i class="fas fa-utensils me-1"></i>Srp</th> 
                                 <th scope="col" style="width: 12%;" class="text-end"><i class="fas fa-dollar-sign me-1"></i>Total</th>
                                 <th scope="col" style="width: 12%;" class="text-end text-danger"><i class="fas fa-hand-holding-usd me-1"></i>Sisa</th>
-                                <th scope="col" style="width: 12%;" class="text-center"><i class="fas fa-info-circle me-1"></i>Status</th>
-                                <th scope="col" style="width: 10%;" class="text-center"><i class="fas fa-cogs me-1"></i>Aksi</th>
+                                <th scope="col" style="width: 8%;" class="text-center"><i class="fas fa-info-circle me-1"></i>Status</th>
+                                <th scope="col" style="width: 8%;" class="text-center"><i class="fas fa-cogs me-1"></i>Aksi</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -128,6 +130,6 @@
         .professional-table td .badge { margin: 0 1px; }
     </style>
     
-    {{-- PENTING: Pastikan JS dipanggil disini jika tidak ada di template master --}}
-    {{-- <script src="{{ asset('js/checkin.js') }}"></script> --}}
+    {{-- Aktifkan script JS khusus Checkin --}}
+    <script src="{{ asset('js/pages/checkin.js') }}"></script>
 @endsection

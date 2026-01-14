@@ -30,7 +30,8 @@
                         <thead>
                             <tr>
                                 <th scope="col" style="width: 5%;"><i class="fas fa-hashtag me-1"></i>No</th>
-                                <th scope="col" style="width: 20%;"><i class="fas fa-user me-1"></i>Tamu</th>
+                                <th scope="col" style="width: 18%;"><i class="fas fa-user me-1"></i>Nama Tamu</th>
+                                <th scope="col" style="width: 12%;"><i class="fas fa-users me-1"></i>Jml. Tamu</th> {{-- Kolom Baru --}}
                                 <th scope="col" style="width: 15%;"><i class="fas fa-bed me-1"></i>Kamar</th>
                                 <th scope="col" style="width: 12%;"><i class="fas fa-calendar-check me-1"></i>Check-In</th>
                                 <th scope="col" style="width: 12%;"><i class="fas fa-calendar-times me-1"></i>Check-Out</th>
@@ -51,7 +52,7 @@
     </div>
 </div>
 
-{{-- [BARU] MODAL CANCEL RESERVATION --}}
+{{-- MODAL CANCEL RESERVATION --}}
 <div class="modal fade" id="cancelReservationModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -62,7 +63,6 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             
-            {{-- Form ini nanti Action-nya diisi via JS --}}
             <form id="cancelReservationForm" action="" method="POST">
                 @csrf
                 <div class="modal-body p-4 bg-light">
@@ -74,7 +74,6 @@
                         </div>
                     </div>
 
-                    {{-- Pilihan Alasan --}}
                     <div class="mb-3">
                         <label class="form-label fw-bold small text-muted text-uppercase">Alasan Pembatalan</label>
                         <select name="cancel_reason" class="form-select shadow-sm" required>
@@ -87,7 +86,6 @@
                         </select>
                     </div>
 
-                    {{-- Catatan Tambahan --}}
                     <div class="mb-3">
                         <label class="form-label fw-bold small text-muted text-uppercase">Catatan Tambahan</label>
                         <textarea name="cancel_notes" class="form-control shadow-sm" rows="3" placeholder="Contoh: Tamu sakit, reschedule, dll..."></textarea>

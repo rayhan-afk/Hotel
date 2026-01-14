@@ -30,7 +30,7 @@
                             <div class="col-md-4 mb-3">
                                 <div class="d-flex gap-2">
                                     <button type="button" id="btn-filter" class="btn w-100 btn-lg text-white shadow-sm btn-brown">
-                                        Cari
+                                        <i class="fas fa-search me-1"></i> Cari
                                     </button>
                                     <button type="button" id="btn-reset" class="btn btn-secondary btn-lg shadow-sm" title="Reset Filter">
                                         <i class="fas fa-sync-alt"></i>
@@ -85,6 +85,13 @@
 
 @section('footer')
 <style>
+    .professional-table-container {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        padding: 20px;
+        margin-top: 20px;
+    }
     .btn-brown {
         background-color: #50200C !important;
         border-color: #50200C !important;
@@ -95,8 +102,19 @@
     }
     .professional-table-container .table-header::before { display: none !important; content: none !important; }
     .table-header form { position: relative; z-index: 10; }
-    
     .align-middle { vertical-align: middle !important; }
+    
+    /* Styling Header Tabel */
+    .professional-table thead th { 
+        background-color: #f7f3e8; 
+        color: #333; 
+        font-weight: 600; 
+        text-transform: uppercase; 
+        font-size: 0.85rem; 
+        padding: 12px; 
+    }
 </style>
-{{-- JS ada di file public/js/pages/laporan-kamar.js --}}
+
+{{-- Pastikan file JS ini dibuat nanti --}}
+<script src="{{ asset('js/pages/laporan-kamar.js') }}"></script>
 @endsection

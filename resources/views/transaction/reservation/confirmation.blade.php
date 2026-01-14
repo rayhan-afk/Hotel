@@ -3,7 +3,7 @@
 @section('head')
     <link rel="stylesheet" href="{{ asset('style/css/progress-indication.css') }}">
     <style>
-        /* === STYLE TAMBAHAN (DIPULIHKAN) === */
+        /* === STYLE TAMBAHAN === */
         .btn-modal-close {
             background: linear-gradient(135deg, #F2C2B8 0%, #E8B3A8 100%);
             border: 1px solid #E8B3A8;
@@ -36,8 +36,6 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(80, 32, 12, 0.25);
         }
-        /* =================================== */
-
         .invoice-card {
             border: none;
             box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
@@ -71,7 +69,6 @@
             border-radius: 20px;
             font-size: 0.8rem;
         }
-        /* Badge Amenities Style */
         .amenity-badge {
             background-color: #e8f5e9;
             color: #2e7d32;
@@ -83,7 +80,6 @@
             margin-bottom: 4px;
             display: inline-block;
         }
-
         .btn-download-invoice {
             background: linear-gradient(135deg, #A8C9E8 0%, #8FB8E1 100%) !important;
             border: 1px solid #8FB8E1 !important;
@@ -100,7 +96,6 @@
             box-shadow: 0 4px 12px rgba(143, 184, 225, 0.3) !important;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
         }
-
         .btn-download-invoice:hover {
             background: linear-gradient(135deg, #8FB8E1 0%, #7DA3CC 100%) !important;
             border-color: #7DA3CC !important;
@@ -108,15 +103,22 @@
             transform: translateY(-2px) !important;
             color: #50200C !important;
         }
-        
         .bg-custom-list {
             background-color: #fff; 
         }
     </style>
 @endsection
+
 @section('content')
     @include('transaction.reservation.progressbar')
     
+    {{-- Ambil data dari Request dengan aman --}}
+    @php
+        $countPerson = request('count_person', 1); // Default 1 Dewasa
+        $countChild  = request('count_child', 0);  // Default 0 Anak
+        $totalGuest  = $countPerson + $countChild;
+    @endphp
+
     <div class="container mt-4 mb-5">
         <div class="row justify-content-center">
             {{-- Kolom Kiri: Invoice Tagihan --}}
@@ -132,7 +134,16 @@
                             <div class="col-md-6" style="color:#50200C">
                                 <p class="mb-1 small text-uppercase fw-bold">Info Kamar</p>
                                 <h5 class="fw-bold">{{ $room->number }} - {{ $room->type->name }}</h5>
-                                <p class="mb-0"><i class="fas fa-user me-1"></i> {{ $room->capacity }} Orang</p>
+                                
+                                {{-- [PERBAIKAN LOGIKA TAMPILAN] --}}
+                                <p class="mb-0">
+                                    <i class="fas fa-user me-1"></i> 
+                                    <strong>{{ $countPerson }}</strong> Dewasa
+                                    
+                                    @if($countChild > 0)
+                                        , <strong>{{ $countChild }}</strong> Anak
+                                    @endif
+                                </p>
                                 
                                 <div class="mt-2">
                                     <span class="badge bg-secondary">Rate: {{ $customer->customer_group ?? 'WalkIn' }}</span>
@@ -174,8 +185,9 @@
                             <input type="hidden" name="check_out" value="{{ $stayUntil }}">
                             <input type="hidden" name="total_price" id="input_total_price" value="{{ $downPayment }}"> 
                             
-                            {{-- [MODIFIED] Force count_person to 2 (HARDCODE AMAN) --}}
-                            <input type="hidden" name="count_person" value="2">
+                            {{-- [PENTING] Pastikan data terkirim ke controller simpan --}}
+                            <input type="hidden" name="count_person" value="{{ $countPerson }}">
+                            <input type="hidden" name="count_child" value="{{ $countChild }}">
 
                             {{-- Tabel Rincian Biaya --}}
                             <div class="table-responsive">
@@ -211,7 +223,11 @@
                                             <td>
                                                 <span class="fw-bold" style="color:#50200C">Paket Sarapan</span>
                                                 <div class="small" style="color:#50200C">
-                                                    <span class="breakfast-badge" style="color:#50200C"><i class="fas fa-utensils me-1"></i> Max 2 Orang</span>
+                                                    {{-- Info Kapasitas Sarapan --}}
+                                                    <span class="breakfast-badge" style="color:#50200C">
+                                                        <i class="fas fa-utensils me-1"></i> 
+                                                        {{ $totalGuest }} Orang
+                                                    </span>
                                                 </div>
                                             </td>
                                             <td class="text-end" style="color:#50200C">Rp 100.000</td>
@@ -229,7 +245,6 @@
                                                     <label for="breakfast_select" class="fw-bold me-3 mb-0">
                                                         <i class="fas fa-coffee me-1"></i> Tambah Sarapan?
                                                     </label>
-                                                    {{-- [PERBAIKAN] Dropdown otomatis terpilih sesuai data dari Controller --}}
                                                     <select class="form-select w-auto border-primary" style="color:#50200C" id="breakfast_select" name="breakfast">
                                                         <option value="No" {{ (!isset($breakfastPrice) || $breakfastPrice == 0) ? 'selected' : '' }}>Tidak</option>
                                                         <option value="Yes" {{ (isset($breakfastPrice) && $breakfastPrice > 0) ? 'selected' : '' }}>Ya, Tambahkan (+Rp 100.000/malam)</option>
@@ -238,7 +253,7 @@
                                             </td>
                                         </tr>
                                         
-                                        {{-- Total Bayar (Lunas) --}}
+                                        {{-- Total Bayar --}}
                                         <tr class="total-row total-text">
                                             <td colspan="3" class="text-end">Total yang Harus Dibayar</td>
                                             <td class="text-end" id="display_total_price">
@@ -252,7 +267,8 @@
 
                         {{-- Tombol Aksi --}}
                         <div class="d-flex justify-content-between mt-4">
-                            <a href="{{ route('transaction.reservation.chooseRoom', ['customer' => $customer->id]) }}?check_in={{$stayFrom}}&check_out={{$stayUntil}}&count_person=2" 
+                            {{-- Link Kembali membawa parameter lengkap --}}
+                            <a href="{{ route('transaction.reservation.chooseRoom', ['customer' => $customer->id]) }}?check_in={{$stayFrom}}&check_out={{$stayUntil}}&count_person={{$countPerson}}&count_child={{$countChild}}" 
                                class="btn btn-modal-close px-4 py-2" id="btn-modal-close">
                                 <i class="fas fa-arrow-left me-2"></i>Kembali
                             </a>
@@ -275,7 +291,7 @@
                 </div>
             </div>
 
-            {{-- Kolom Kanan: Data Pelanggan (SAMA SEPERTI SEBELUMNYA) --}}
+            {{-- Kolom Kanan: Data Pelanggan --}}
             <div class="col-lg-4">
                 <div class="card invoice-card border-0 sticky-top" style="top: 20px; z-index: 1; background-color: #F7F3E4">
                     <div class="card-header text-center py-4 border-0">
@@ -320,12 +336,8 @@
 
 @section('footer')
 <script>
-    // [PENTING] KITA GUNAKAN HARGA TOTAL DARI CONTROLLER (SULTAN MODE)
     const baseRoomTotal = {{ $roomPriceTotal }}; 
-    
-    // [PERBAIKAN] Cek Status Awal dari PHP (Agar sinkron dengan Controller)
     let isBreakfastSelected = {{ (isset($breakfastPrice) && $breakfastPrice > 0) ? 'true' : 'false' }};
-    
     const dayCount = {{ $dayDifference }};
     const breakfastPricePerDay = 100000; 
 
@@ -333,14 +345,12 @@
     const breakfastSelect = document.getElementById('breakfast_select');
     const rowBreakfast = document.getElementById('row_breakfast');
     const displayBreakfastTotal = document.getElementById('display_breakfast_total');
-    // const displayTax = document.getElementById('display_tax'); <--- DIHAPUS
     const displayTotalPrice = document.getElementById('display_total_price');
     const inputTotalPrice = document.getElementById('input_total_price');
     const btnDownloadInvoice = document.getElementById('btn-download-invoice');
     
     const baseInvoiceUrl = "{{ route('transaction.reservation.previewInvoice', ['customer' => $customer->id, 'room' => $room->id, 'from' => $stayFrom, 'to' => $stayUntil]) }}";
 
-    // Fungsi Format Rupiah
     const formatRupiah = (number) => {
         return new Intl.NumberFormat('id-ID', { 
             style: 'currency', 
@@ -350,12 +360,10 @@
         }).format(number);
     };
 
-    // [PERBAIKAN] Logika Hitung (TANPA PAJAK)
     function calculateTotal() {
         let currentSubTotal = baseRoomTotal; 
         let breakfastParam = 'No';
         
-        // Ambil nilai dari dropdown
         const selectedValue = breakfastSelect.value;
 
         if (selectedValue === 'Yes') {
@@ -370,12 +378,8 @@
             rowBreakfast.style.display = 'none';
         }
 
-        // const taxAmount = currentSubTotal * 0.10; <--- DIHAPUS
-        // const finalTotal = currentSubTotal + taxAmount; <--- DIHAPUS
+        const finalTotal = currentSubTotal; 
 
-        const finalTotal = currentSubTotal; // Langsung Subtotal
-
-        // displayTax.innerText = formatRupiah(taxAmount); <--- DIHAPUS
         displayTotalPrice.innerText = formatRupiah(finalTotal);
         
         if(inputTotalPrice) {
@@ -387,12 +391,10 @@
         }
     }
 
-    // Event Listener (Saat user mengubah dropdown)
     breakfastSelect.addEventListener('change', function() {
         calculateTotal();
     });
 
-    // Jalankan hitungan saat halaman pertama kali dimuat
     document.addEventListener("DOMContentLoaded", function() {
         calculateTotal();
     });

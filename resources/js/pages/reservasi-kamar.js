@@ -20,6 +20,8 @@ $(function () {
                 { 
                     data: null, 
                     sortable: false,
+                    searchable: false,
+                    className: "text-center",
                     render: function (data, type, row, meta) {
                         return meta.row + meta.settings._iDisplayStart + 1;
                     }
@@ -27,16 +29,39 @@ $(function () {
                 { 
                     name: "customers.name", 
                     data: "customer_name",
-                    className: "fw-bold text-primary"
+                    className: "fw-bold text-primary",
+                    defaultContent: "Tamu" 
                 },
+                
+                // KOLOM JUMLAH TAMU (Safety Check)
+                { 
+                    name: "transactions.count_person", 
+                    data: "count_person",
+                    className: "text-center",
+                    searchable: false,
+                    render: function(data, type, row) {
+                        let personCount = (data !== null && data !== undefined) ? data : 1;
+                        let childCount  = (row.count_child !== null && row.count_child !== undefined) ? row.count_child : 0;
+
+                        let text = `<span class="fw-bold">${personCount}</span> Dewasa`;
+                        
+                        if (childCount > 0) {
+                            text += `, <span class="fw-bold">${childCount}</span> Anak`;
+                        }
+                        
+                        return `<span class="badge bg-light text-dark border shadow-sm" style="font-weight: 500;">${text}</span>`;
+                    }
+                },
+
                 { 
                     name: "rooms.number", 
                     data: "room_info",
                     render: function(data) {
+                        if (!data) return '<span class="text-muted">-</span>';
                         return `
                             <div class="d-flex flex-column">
                                 <span class="fw-bold">${data.number}</span>
-                                <span class="small">${data.type}</span>
+                                <span class="small text-muted">${data.type}</span>
                             </div>
                         `;
                     }
@@ -59,7 +84,8 @@ $(function () {
                     data: "total_price",
                     className: "text-end fw-bold",
                     render: function(data) {
-                        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(data);
+                        let price = data ? data : 0;
+                        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(price);
                     }
                 },
                 { 
@@ -67,7 +93,11 @@ $(function () {
                     data: "status",
                     className: "text-center",
                     render: function(data) {
-                        return `<span class="badge rounded-pill" style="background-color: #FAE8A4; color: #50200C; font-size: 10px; padding: 6px 12px; font-weight: 700;">${data}</span>`;
+                        let color = '#FAE8A4'; 
+                        if(data === 'Check In') color = '#A8D5BA';
+                        if(data === 'Canceled') color = '#F2C2B8';
+                        
+                        return `<span class="badge rounded-pill" style="background-color: ${color}; color: #50200C; font-size: 10px; padding: 6px 12px; font-weight: 700;">${data}</span>`;
                     }
                 },
                 {
@@ -94,26 +124,31 @@ $(function () {
                     }
                 }
             ],
-            order: [[3, 'asc']],
+            order: [[4, 'asc']], 
             drawCallback: function() {
-                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-                var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                    return new bootstrap.Tooltip(tooltipTriggerEl)
-                })
+                if (typeof bootstrap !== 'undefined') {
+                    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+                    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                        return new bootstrap.Tooltip(tooltipTriggerEl)
+                    })
+                }
             },
+            // [PERBAIKAN] Menghapus custom text "Maju/Mundur" agar kembali default
             language: {
                 emptyTable: "Tidak ada data reservasi yang tersedia saat ini.",
                 processing: "Memuat data...",
-                zeroRecords: "Data tidak ditemukan"
+                zeroRecords: "Data tidak ditemukan",
+                search: "Cari Tamu/Kamar:",
+                lengthMenu: "Tampilkan _MENU_ data",
+                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                // paginate: dihapus agar kembali ke default icon/standard
             }
         });
 
-        // =======================================================
-        // EVENT 1: PROSES CHECK IN (TETAP SAMA SEPERTI SEBELUMNYA)
-        // =======================================================
+        // Event Handler CheckIn & Cancel tetap sama
         $(document).on('click', '.btn-checkin', function() {
             let transactionId = $(this).data('id');
-            let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            let csrfToken = $('meta[name="csrf-token"]').attr('content'); 
 
             Swal.fire({
                 html: `<h2 style="color: #50200C; font-weight: bold; margin-top: -10px;">Check In Tamu?</h2>
@@ -154,43 +189,35 @@ $(function () {
             });
         });
 
-        // =======================================================
-        // [BARU] EVENT 2: KLIK TOMBOL CANCEL (BUKA MODAL)
-        // =======================================================
         $(document).on('click', '.btn-cancel', function() {
             let transactionId = $(this).data('id');
             let url = `/room-info/reservation/${transactionId}/cancel`;
             
-            // Set URL Action pada Form Modal
             $('#cancelReservationForm').attr('action', url);
-            
-            // Reset Form (kosongkan inputan sebelumnya)
             $('#cancelReservationForm')[0].reset();
 
-            // Tampilkan Modal
-            let modal = new bootstrap.Modal(document.getElementById('cancelReservationModal'));
-            modal.show();
+            if (typeof bootstrap !== 'undefined') {
+                let modal = new bootstrap.Modal(document.getElementById('cancelReservationModal'));
+                modal.show();
+            } else {
+                alert("Bootstrap JS not loaded.");
+            }
         });
 
-        // =======================================================
-        // [BARU] EVENT 3: SUBMIT FORM CANCEL
-        // =======================================================
         $('#cancelReservationForm').on('submit', function(e) {
-            e.preventDefault(); // Mencegah reload halaman
-            
+            e.preventDefault(); 
             let form = $(this);
             let url = form.attr('action');
-            let formData = form.serialize(); // Ambil data form (Reason & Notes)
+            let formData = form.serialize(); 
 
-            // Tutup Modal Dulu
-            let modalElement = document.getElementById('cancelReservationModal');
-            let modal = bootstrap.Modal.getInstance(modalElement);
-            modal.hide();
+            if (typeof bootstrap !== 'undefined') {
+                let modalElement = document.getElementById('cancelReservationModal');
+                let modal = bootstrap.Modal.getInstance(modalElement);
+                if (modal) modal.hide();
+            }
 
-            // Tampilkan Loading
             Swal.fire({ title: 'Membatalkan Reservasi...', didOpen: () => { Swal.showLoading(); } });
 
-            // Kirim AJAX
             $.ajax({
                 url: url,
                 type: 'POST',
@@ -199,7 +226,7 @@ $(function () {
                     Swal.fire({
                         icon: 'success',
                         title: 'Berhasil Dibatalkan!',
-                        text: 'Reservasi telah dibatalkan dan alasan tersimpan.',
+                        text: 'Reservasi telah dibatalkan.',
                         customClass: { title: 'swal-title-brown', htmlContainer: 'swal-text-brown', confirmButton: 'swal-btn-blue', icon: 'swal-icon-custom' }
                     });
                     table.ajax.reload(null, false);

@@ -116,7 +116,7 @@ class TransactionRoomReservationController extends Controller
         ]);
     }
 
-    // === [METHOD CONFIRMATION: PAJAK DIHAPUS] ===
+    // === [METHOD CONFIRMATION] ===
     public function confirmation(Customer $customer, Room $room, $stayFrom, $stayUntil, Request $request)
     {
         $dayDifference = Helper::getDateDifference($stayFrom, $stayUntil);
@@ -133,12 +133,13 @@ class TransactionRoomReservationController extends Controller
 
         // 3. Hitung Total (TANPA PAJAK)
         $subTotal = $roomPriceTotal + $breakfastPrice;
-        // $tax = $subTotal * 0.10; <--- DIHAPUS
         
         // Total Lunas = Subtotal
         $totalPayment = $subTotal; 
 
+        // [UPDATE] Ambil data jumlah tamu dari Request
         $countPerson = $request->input('count_person', 1);
+        $countChild  = $request->input('count_child', 0); // Ambil data anak
 
         return view('transaction.reservation.confirmation', [
             'customer' => $customer,
@@ -148,13 +149,17 @@ class TransactionRoomReservationController extends Controller
             'downPayment' => $totalPayment, // Full Payment
             'dayDifference' => $dayDifference,
             'minimumTax' => 0, // PAJAK 0
+            
+            // Kirim data tamu ke View Confirmation
             'countPerson' => $countPerson,
+            'countChild'  => $countChild,
+
             'roomPriceTotal' => $roomPriceTotal,
             'breakfastPrice' => $breakfastPrice > 0 ? $breakfastPrice : self::BREAKFAST_PRICE 
         ]);
     }
 
-    // === [METHOD PREVIEW: PAJAK DIHAPUS] ===
+    // === [METHOD PREVIEW] ===
     public function previewInvoice(Customer $customer, Room $room, $stayFrom, $stayUntil, Request $request)
     {
         $days = Helper::getDateDifference($stayFrom, $stayUntil);
@@ -201,13 +206,16 @@ class TransactionRoomReservationController extends Controller
         return view('transaction.reservation.invoice_preview', $invoiceData);
     }
     
-    // === [METHOD SIMPAN: PAJAK DIHAPUS] ===
+    // === [METHOD SIMPAN: UPDATE DATA TAMU] ===
     public function payDownPayment(Customer $customer, Room $room, Request $request) 
     {
         $request->validate([
             'check_in'  => 'required|date',
             'check_out' => 'required|date|after:check_in',
             'breakfast' => 'required|in:Yes,No',
+            // Validasi Jumlah Tamu
+            'count_person' => 'required|integer|min:1',
+            'count_child'  => 'nullable|integer|min:0',
         ]);
 
         $occupiedRoomIds = $this->getOccupiedRoomID($request->check_in, $request->check_out);
@@ -227,13 +235,15 @@ class TransactionRoomReservationController extends Controller
         
         // 3. Hitung Total (TANPA PAJAK)
         $subTotal       = $roomPriceTotal + $breakfastPrice;
-        $grandTotal     = $subTotal; // TANPA PAJAK
+        $grandTotal     = $subTotal; 
 
-        // 4. Masukkan Harga Final ke Request
+        // 4. Masukkan Harga Final & Data Tamu ke Request
         $request->merge([
-            'total_price' => $grandTotal,
-            'paid_amount' => $grandTotal, 
-            'status'      => 'Reservation' 
+            'total_price'  => $grandTotal,
+            'paid_amount'  => $grandTotal, 
+            'status'       => 'Reservation',
+            // [UPDATE] Pastikan data anak masuk (default 0 jika null)
+            'count_child'  => $request->input('count_child', 0)
         ]);
 
         // 5. Simpan ke Repository
@@ -315,14 +325,13 @@ class TransactionRoomReservationController extends Controller
     }
 
     // ===============================================================
-    // METHOD PRINT INVOICE: (REVISI: HAPUS EXTRA BED & BK)
+    // METHOD PRINT INVOICE
     // ===============================================================
     public function printInvoice(Transaction $transaction)
     {
         $transaction->load(['customer', 'room', 'user', 'charges']); 
 
         // 1. KUPAS DULU ITEM EXTRA (HANYA CHARGES)
-        // [REVISI] Menghapus logika extra_bed dan extra_breakfast manual
         $chargesTotal = $transaction->charges->sum('total'); 
 
         // Total yang bukan kamar (hanya charges)

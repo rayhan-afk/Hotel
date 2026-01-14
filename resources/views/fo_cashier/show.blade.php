@@ -14,6 +14,14 @@
                         <i class="fas fa-door-open me-1"></i> Kamar: <strong>{{ $transaction->room->number }}</strong> 
                         <span class="mx-2">|</span> 
                         <i class="fas fa-user me-1"></i> Tamu: <strong>{{ $transaction->customer->name }}</strong>
+                        
+                        {{-- [INFO BARU: JUMLAH TAMU] --}}
+                        <span class="mx-2">|</span>
+                        <i class="fas fa-users me-1"></i> 
+                        <strong>{{ $transaction->count_person ?? 1 }} Dewasa</strong>
+                        @if($transaction->count_child > 0)
+                            , <strong>{{ $transaction->count_child }} Anak</strong>
+                        @endif
                     </p>
                 </div>
                 <div>

@@ -24,7 +24,7 @@
             transform: scale(1.01);
         }
 
-        /* [BARU] Style untuk Tombol Kembali */
+        /* Style untuk Tombol Kembali */
         .btn-modal-close {
             background-color: #fff;
             color: #50200C;
@@ -38,7 +38,7 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         
-        /* [BARU] Style Badge Amenities */
+        /* Style Badge Amenities */
         .badge-amenity {
             background-color: #e8f5e9;
             color: #2e7d32;
@@ -59,6 +59,10 @@
         $checkInDate = request()->input('check_in') ? \Carbon\Carbon::parse(request()->input('check_in')) : \Carbon\Carbon::now();
         $isWeekend = $checkInDate->isWeekend();
         $dayLabel = $isWeekend ? 'Weekend' : 'Weekday';
+        
+        // Ambil Data Tamu dari URL
+        $countPerson = request()->input('count_person', 1);
+        $countChild  = request()->input('count_child', 0);
 
         function getDynamicPrice($room, $customerGroup, $isWeekend) {
             $specialPrice = \App\Models\TypePrice::where('type_id', $room->type_id)
@@ -107,6 +111,15 @@
                                     <i class="fas fa-arrow-right mx-1"></i> 
                                     {{ Helper::dateFormat(request()->input('check_out')) }}
                                 </p>
+                                {{-- [BARU] Info Jumlah Tamu --}}
+                                <div class="mt-1">
+                                    <span class="badge bg-light border border-secondary text-dark">
+                                        <i class="fas fa-users me-1"></i> {{ $countPerson }} Dewasa
+                                        @if($countChild > 0)
+                                            , {{ $countChild }} Anak
+                                        @endif
+                                    </span>
+                                </div>
                             </div>
                         </div>
                         
@@ -114,7 +127,9 @@
                         
                         {{-- Form Filter --}}
                         <form method="GET" action="{{ route('transaction.reservation.chooseRoom', ['customer' => $customer->id]) }}" class="mb-4">
-                            <input type="hidden" name="count_person" value="{{ request()->input('count_person') }}">
+                            {{-- [PENTING] Membawa Data Jumlah Tamu agar tidak hilang saat filter --}}
+                            <input type="hidden" name="count_person" value="{{ $countPerson }}">
+                            <input type="hidden" name="count_child" value="{{ $countChild }}">
                             <input type="hidden" name="check_in" value="{{ request()->input('check_in') }}">
                             <input type="hidden" name="check_out" value="{{ request()->input('check_out') }}">
                             
@@ -183,7 +198,7 @@
                                                 @endif
                                             </div>
 
-                                            {{-- [BARU] Section Amenities (Badge Hijau) --}}
+                                            {{-- Section Amenities (Badge Hijau) --}}
                                             @if($room->amenities->count() > 0)
                                                 <div class="mb-2">
                                                     <small class="fw-bold text-uppercase text-success" style="font-size: 0.7rem;">
@@ -220,7 +235,8 @@
                                                 </p>
                                             </div>
 
-                                            <a href="{{ route('transaction.reservation.confirmation', ['customer' => $customer->id, 'room' => $room->id, 'from' => request()->input('check_in'), 'to' => request()->input('check_out'), 'count_person' => request()->input('count_person')]) }}"
+                                            {{-- [PENTING] Tombol Pilih dengan Data Tamu --}}
+                                            <a href="{{ route('transaction.reservation.confirmation', ['customer' => $customer->id, 'room' => $room->id, 'from' => request()->input('check_in'), 'to' => request()->input('check_out'), 'count_person' => $countPerson, 'count_child' => $countChild]) }}"
                                                class="btn btn-choose w-100 mt-auto py-2 fw-bold shadow-sm">
                                                 Pilih Kamar Ini <i class="fas fa-arrow-right ms-1"></i>
                                             </a>
@@ -228,7 +244,6 @@
                                         
                                         {{-- Gambar Kamar --}}
                                         <div class="col-md-4 d-none d-md-block position-relative">
-                                            {{-- Helper Image Fallback --}}
                                             @php
                                                 $imageUrl = method_exists($room, 'getImage') ? $room->getImage() : asset($room->main_image_path ?? 'img/default-room.jpg');
                                             @endphp

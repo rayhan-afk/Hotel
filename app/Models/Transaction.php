@@ -25,6 +25,9 @@ class Transaction extends Model
         // 'extra_breakfast'
         'cancel_reason', 
         'cancel_notes',
+
+        'count_person', // Jumlah Dewasa
+        'count_child',
     ];
 
     protected $casts = [

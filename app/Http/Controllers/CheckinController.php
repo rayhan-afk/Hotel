@@ -91,14 +91,16 @@ class CheckinController extends Controller
         }
     }
 
-    // === [METHOD UPDATE: EXTEND/EDIT TRANSAKSI (BERSIH DARI EXTRA BED/BK)] ===
+    // === [METHOD UPDATE: EXTEND/EDIT TRANSAKSI] ===
     public function update(Request $request, $id)
     {
         $request->validate([
             'check_in'      => 'required|date', 
             'check_out'     => 'required|date|after:check_in',
             'breakfast'     => 'required|in:Yes,No',
-            // 'extra_bed' & 'extra_breakfast' dihapus
+            // Validasi untuk jumlah tamu
+            'count_person'  => 'nullable|integer|min:1',
+            'count_child'   => 'nullable|integer|min:0',
         ]);
 
         DB::beginTransaction();
@@ -117,20 +119,17 @@ class CheckinController extends Controller
 
             // 2. Hitung komponen biaya LAMA (Hanya Charges & Breakfast Utama)
             $oldCharges   = $transaction->charges->sum('total');
-            // Extra bed & bk lama diabaikan/dihapus dari logika hitung
             $oldBreakfastMain = ($transaction->breakfast == 'Yes') ? (100000 * $oldDays) : 0; 
 
             // 3. Dapatkan Harga Kamar Murni LAMA
             $oldGrandTotal = $transaction->total_price;
-            
-            // LOGIKA NETT: GrandTotal - Charges - Sarapan = Harga Kamar Murni
             $oldRoomPure = $oldGrandTotal - $oldCharges - $oldBreakfastMain;
 
             // 4. DAPATKAN RATE PER MALAM YANG DISEPAKATI
             $lockedPricePerNight = round($oldRoomPure / $oldDays); 
 
             // =========================================================
-            // B. PROSES UPDATE SEPERTI BIASA (PAKAI LOCKED PRICE)
+            // B. PROSES UPDATE (PAKAI LOCKED PRICE)
             // =========================================================
             
             // 1. Siapkan Waktu Baru
@@ -167,19 +166,21 @@ class CheckinController extends Controller
             // 4. Hitung Ulang Total (Menggunakan $lockedPricePerNight)
             $roomPriceTotal = $lockedPricePerNight * $newDays;
             $mainBreakfastPrice = ($request->breakfast == 'Yes') ? (100000 * $newDays) : 0;
-            
-            // HARGA TOTAL KAMAR & SARAPAN UTAMA
             $taxableAmount = $roomPriceTotal + $mainBreakfastPrice;
 
             // 5. Total Baru (Plus Jajanan Lama/Charges)
             $newGrandTotal = $taxableAmount + $oldCharges; 
 
-            // 6. Simpan
+            // 6. Simpan (TERMASUK COUNT PERSON & CHILD)
             $transaction->update([
                 'check_in'        => $dbCheckInString,  
                 'check_out'       => $dbCheckOutString, 
                 'breakfast'       => $request->breakfast,
-                'total_price'     => $newGrandTotal
+                'total_price'     => $newGrandTotal,
+                
+                // [PERBAIKAN] Gunakan input() dengan nilai default agar tidak null/kosong
+                'count_person'    => $request->input('count_person', 1), 
+                'count_child'     => $request->input('count_child', 0)
             ]);
 
             DB::commit();

@@ -49,27 +49,18 @@
                 <div class="card shadow-sm border-0" style="border: 1px solid #e0e0e0;">
                     <div class="card-header border-0 pt-4 px-4" style="background-color: #f7f3e4; color: #50200C;">
                         <h4 class="fw-bold" style="color: #50200C">Detail Reservasi</h4>
-                        <p class="small">Tentukan tanggal menginap dan jumlah tamu.</p>
+                        <p class="small">Tentukan tanggal menginap dan komposisi tamu.</p>
                     </div>
                     <div class="card-body p-4">
+                        {{-- 
+                             [PENTING] Form menggunakan Method GET 
+                             Agar data check_in, check_out, count_person, count_child 
+                             masuk ke URL dan bisa dibaca oleh Controller chooseRoom 
+                        --}}
                         <form class="row g-3" method="GET" action="{{ route('transaction.reservation.chooseRoom', ['customer' => $customer->id]) }}">
                             
-                            {{-- Jumlah Orang (Fixed 2) --}}
-                            <div class="col-md-12">
-                                <label for="count_person" class="form-label fw-bold" style="color:#50200C">
-                                    <i class="fas fa-users me-1"></i> Jumlah Tamu (Maksimal)
-                                </label>
-                                <div class="input-group">
-                                    <input type="text" class="form-control bg-light text-center fw-bold" 
-                                           style="color:#50200C; border-color: #C49A6C;" 
-                                           id="count_person" name="count_person" value="2" readonly>
-                                    <span class="input-group-text bg-white" style="color:#50200C; border-color: #C49A6C;">Orang</span>
-                                </div>
-                                <small class="" style="color: #50200C">*Kapasitas standar kamar adalah 2 orang.</small>
-                            </div>
-
                             {{-- Check In --}}
-                            <div class="col-md-6 mt-4">
+                            <div class="col-md-6">
                                 <label for="check_in" class="form-label fw-bold" style="color:#50200C">
                                     <i class="fas fa-calendar-check me-1"></i> Tanggal Check-In
                                 </label>
@@ -82,7 +73,7 @@
                             </div>
 
                             {{-- Check Out --}}
-                            <div class="col-md-6 mt-4">
+                            <div class="col-md-6">
                                 <label for="check_out" class="form-label fw-bold" style="color:#50200C">
                                     <i class="fas fa-calendar-times me-1"></i> Tanggal Check-Out
                                 </label>
@@ -92,6 +83,43 @@
                                 @error('check_out')
                                     <div class="text-danger mt-1 small">{{ $message }}</div>
                                 @enderror
+                            </div>
+
+                            {{-- Input Jumlah Tamu (Dewasa & Anak) --}}
+                            <div class="col-12 mt-4">
+                                <label class="form-label fw-bold" style="color:#50200C">
+                                    <i class="fas fa-users me-1"></i> Jumlah Tamu
+                                </label>
+                                <div class="row g-3">
+                                    {{-- Dewasa --}}
+                                    <div class="col-md-6">
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light text-muted border-end-0" style="border-color: #C49A6C;">
+                                                <i class="fas fa-user"></i>
+                                            </span>
+                                            {{-- Default value 1 --}}
+                                            <input type="number" class="form-control p-3 fw-bold text-center border-start-0" 
+                                                   style="color:#50200C; border-color: #C49A6C;" 
+                                                   id="count_person" name="count_person" value="{{ old('count_person', 1) }}" min="1" required>
+                                            <span class="input-group-text bg-white fw-bold" style="color:#50200C; border-color: #C49A6C;">Dewasa</span>
+                                        </div>
+                                        <small class="text-muted ms-1" style="font-size: 0.75rem;">*Minimal 1 orang dewasa</small>
+                                    </div>
+
+                                    {{-- Anak-anak --}}
+                                    <div class="col-md-6">
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light text-muted border-end-0" style="border-color: #C49A6C;">
+                                                <i class="fas fa-child"></i>
+                                            </span>
+                                            {{-- Default value 0 --}}
+                                            <input type="number" class="form-control p-3 fw-bold text-center border-start-0" 
+                                                   style="color:#50200C; border-color: #C49A6C;" 
+                                                   id="count_child" name="count_child" value="{{ old('count_child', 0) }}" min="0">
+                                            <span class="input-group-text bg-white fw-bold" style="color:#50200C; border-color: #C49A6C;">Anak</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             {{-- Tombol Aksi --}}

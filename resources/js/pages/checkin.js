@@ -41,17 +41,24 @@ $(function () {
                     className: "text-center",
                     searchable: false,
                     render: function(data, type, row) {
-                        // Safety Check: Default 1 Dewasa, 0 Anak
+                        // Safety default
                         let personCount = (data !== null && data !== undefined) ? data : 1;
                         let childCount  = (row.count_child !== null && row.count_child !== undefined) ? row.count_child : 0;
 
-                        let text = `<span class="fw-bold">${personCount}</span> Dewasa`;
-                        
+                        let text = `
+                            <span class="badge bg-light border rounded-pill px-3 py-2"
+                                style="color:#50200C; font-size: 10px; padding: 6px 12px; font-weight: 700;">
+                                <i class="fas fa-users me-1" style="color: #50200C"></i>
+                                <strong>${personCount}</strong> Dewasa
+                        `;
+
                         if (childCount > 0) {
-                            text += `<br><span class="small text-muted"><span class="fw-bold">${childCount}</span> Anak</span>`;
+                            text += `, <strong>${childCount}</strong> Anak`;
                         }
-                        
-                        return `<div class="d-flex flex-column align-items-center">${text}</div>`;
+
+                        text += `</span>`;
+
+                        return `<div class="text-center">${text}</div>`;
                     }
                 },
 

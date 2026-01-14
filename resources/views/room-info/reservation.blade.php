@@ -56,18 +56,18 @@
 <div class="modal fade" id="cancelReservationModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-danger text-white border-0">
+            <div class="modal-header border-0" style="background-color: #F7F3E4; color: #50200C;">
                 <h5 class="modal-title fw-bold">
                     <i class="fas fa-ban me-2"></i>Batalkan Reservasi
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-brown" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             
             <form id="cancelReservationForm" action="" method="POST">
                 @csrf
-                <div class="modal-body p-4 bg-light">
+                <div class="modal-body p-4" style="background-color: #F7F3E4">
                     
-                    <div class="alert alert-warning d-flex align-items-center mb-4 border-0 shadow-sm" role="alert">
+                    <div class="alert alert-light d-flex align-items-center mb-4 border-0 shadow-sm" role="alert" style="color: #50200C">
                         <i class="fas fa-exclamation-triangle me-3 fa-2x"></i>
                         <div>
                             <strong>Perhatian!</strong> Pembatalan ini bersifat permanen dan status kamar akan kembali menjadi "Available".
@@ -75,7 +75,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-bold small text-muted text-uppercase">Alasan Pembatalan</label>
+                        <label class="form-label fw-bold small text-uppercase" style="color: #50200C">Alasan Pembatalan</label>
                         <select name="cancel_reason" class="form-select shadow-sm" required>
                             <option value="" disabled selected>-- Pilih Alasan --</option>
                             <option value="Guest Request">Permintaan Tamu (Guest Request)</option>
@@ -92,9 +92,9 @@
                     </div>
 
                 </div>
-                <div class="modal-footer border-0 bg-white">
-                    <button type="button" class="btn btn-light shadow-sm" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-danger shadow-sm fw-bold px-4">
+                <div class="modal-footer border-0" style="background-color: #F7F3E4">
+                    <button type="button" class="btn btn-light shadow-sm" style="color: #50200C" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-danger shadow-sm fw-bold px-4" style="color: #50200C">
                         <i class="fas fa-times-circle me-1"></i> Konfirmasi Batal
                     </button>
                 </div>

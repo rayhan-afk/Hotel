@@ -43,13 +43,20 @@ $(function () {
                         let personCount = (data !== null && data !== undefined) ? data : 1;
                         let childCount  = (row.count_child !== null && row.count_child !== undefined) ? row.count_child : 0;
 
-                        let text = `<span class="fw-bold">${personCount}</span> Dewasa`;
-                        
+                        let text = `
+                            <span class="badge bg-light border rounded-pill px-3 py-2"
+                                style="color:#50200C; font-size: 10px; padding: 6px 12px; font-weight: 700;">
+                                <i class="fas fa-users me-1" style="color: #50200C"></i>
+                                <strong>${personCount}</strong> Dewasa
+                        `;
+
                         if (childCount > 0) {
-                            text += `, <span class="fw-bold">${childCount}</span> Anak`;
+                            text += `, <strong>${childCount}</strong> Anak`;
                         }
-                        
-                        return `<span class="badge bg-light text-dark border shadow-sm" style="font-weight: 500;">${text}</span>`;
+
+                        text += `</span>`;
+
+                        return `<div class="text-center">${text}</div>`;
                     }
                 },
 
@@ -57,11 +64,11 @@ $(function () {
                     name: "rooms.number", 
                     data: "room_info",
                     render: function(data) {
-                        if (!data) return '<span class="text-muted">-</span>';
+                        if (!data) return '<span class="" style="color: #50200C">-</span>';
                         return `
-                            <div class="d-flex flex-column">
+                            <div class="d-flex flex-column" style="color: #50200C">
                                 <span class="fw-bold">${data.number}</span>
-                                <span class="small text-muted">${data.type}</span>
+                                <span class="small">${data.type}</span>
                             </div>
                         `;
                     }

@@ -28,10 +28,13 @@ class IngredientController extends Controller
         // 2. [PERBAIKAN UTAMA DISINI] 
         // Ambil semua data bahan baku untuk ditampilkan di Modal Stock Opname
         // Kita urutkan A-Z biar enak ngecek fisiknya
-        $ingredients = Ingredient::orderBy('name', 'asc')->get();
+        // ✅ PASTIKAN BARIS INI ADA!
+         $ingredients = Ingredient::orderBy('name', 'asc')->get();
+        
+        
 
-        // 3. Kirim kedua variabel ke View
-        return view('ingredient.index', compact('categories', 'ingredients'));
+    // ✅ DAN BARIS INI JUGA ADA!
+    return view('ingredient.index', compact('categories', 'ingredients'));
     }
 
     public function create()

@@ -25,7 +25,7 @@ $(function () {
 
     let hasPlayedWarningSound = false;
     let audioContext = null;
-    
+
     function playWarningSound() {
         try {
             if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -43,7 +43,7 @@ $(function () {
         } catch (e) { console.error("Audio Error", e); }
         setTimeout(() => { try { const a = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTUIGGS56+mdTQ0OTKXh8LJnGwU7k9nyw3QpBSh+zPDijz8KElyw6OyrWBELTKDd8sFuJAUqg87y2ok0CAdefObsqlUSCk+m4e+xaBsFOpPY8sN1KwUofs3w34pBCw9dtunxrV4PDE+h3/K7bycFKYPM8tmJNAgZZrjq6J5QDA5Kp+HwtmocBjiR2PLEeCwGI3fH8N2RQAoVXrTp66hUFQtHnt/yvnAiBSl/zfHaiTQIF2O56+idUAwOTKTh77VpHAU6k9jzxHYtBSh+zPDfjj8LEV6w6e+sWBELTKHe8sBwJQYof8zw24k0CRdkveLpnlUPDkum4PCxaBwFO5PZ88N2LQUmfszw34s/CBNY'); a.volume = 0.5; a.play().catch(e => {}); } catch (e) {} }, 100);
     }
-    
+
     function unlockAudio() {
         if (audioContext && audioContext.state === 'suspended') audioContext.resume();
         document.removeEventListener('click', unlockAudio);
@@ -108,7 +108,7 @@ $(function () {
                     }
                 }
                 return json.aaData;
-            }
+            },
         },
         columns: [
             { data: "id", render: (data, type, row, meta) => meta.row + meta.settings._iDisplayStart + 1, className: "text-center align-middle" },
@@ -178,7 +178,9 @@ $(function () {
             const response = await $.get("/ingredient/create");
             $("#ingredient-modal .modal-body").html(response.view);
         } catch (e) {
-            $("#ingredient-modal .modal-body").html('<div class="text-danger">Gagal memuat form.</div>');
+            $("#ingredient-modal .modal-body").html(
+                '<div class="text-danger">Gagal memuat form.</div>'
+            );
         }
         
         // Aktifkan tombol simpan setelah konten dimuat
@@ -201,7 +203,9 @@ $(function () {
             const response = await $.get(`/ingredient/${id}/edit`);
             $("#ingredient-modal .modal-body").html(response.view);
         } catch (e) {
-            $("#ingredient-modal .modal-body").html('<div class="text-danger">Gagal memuat data.</div>');
+            $("#ingredient-modal .modal-body").html(
+                '<div class="text-danger">Gagal memuat data.</div>'
+            );
         }
         
         $("#btn-modal-save").text("Simpan").attr("disabled", false);
@@ -217,7 +221,9 @@ $(function () {
         
         let btnSave = $("#btn-modal-save");
         let originalText = btnSave.text();
-        btnSave.attr("disabled", true).html('<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...');
+        btnSave
+            .attr("disabled", true)
+            .html('<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...');
 
         try {
             const response = await $.ajax({

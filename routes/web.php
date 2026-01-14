@@ -86,19 +86,50 @@ Route::group(['middleware' => 'guest'], function () {
 | Hanya Super dan Housekeeping yang bisa akses amenities
 |--------------------------------------------------------------------------
 */
-Route::group(['middleware' => ['auth', 'checkRole:Super,Housekeeping,Manager']], function () {
-    // Resource Amenities
-   // 1. Taruh Custom Route PALING ATAS (Sebelum Resource)
-    Route::post('/amenity/stock-opname', [App\Http\Controllers\AmenityController::class, 'stockOpname'])->name('amenity.stock-opname');
-
-    // 2. Baru kemudian Route Resource
-    Route::resource('amenity', App\Http\Controllers\AmenityController::class);
-    // Route untuk melihat halaman riwayat
-    Route::get('/amenities/history', [AmenityController::class, 'history'])->name('amenities.history');
-    Route::post('/logout', [AuthController::class, 'logout'])->name('logout.housekeeping');
+// Route::group(['middleware' => ['auth', 'checkRole:Super,Housekeeping,Manager,Admin']], function () {
+//     // Resource Amenities
+//    // 1. Taruh Custom Route PALING ATAS (Sebelum Resource)
+// Route::post('/amenity/stock-opname', [App\Http\Controllers\AmenityController::class, 'stockOpname'])->name('amenity.stock-opname');
+// Route::get('/laporan/amenities/pdf', [LaporanStockopnameAmenities::class, 'exportPdf'])
+//         ->name('laporan.amenities.pdf');
+// // 2. Baru kemudian Route Resource
+// Route::resource('amenity', App\Http\Controllers\AmenityController::class);
+//     // Route untuk melihat halaman riwayat
+//     Route::get('/amenities/history', [AmenityController::class, 'history'])->name('amenities.history');
+//     Route::post('/logout', [AuthController::class, 'logout'])->name('logout.housekeeping');
     
-    Route::get('/laporan/amenities/pdf', [LaporanStockopnameAmenities::class, 'exportPdf'])->name('laporan.amenities.pdf');
-});
+   
+// });
+/*
+|--------------------------------------------------------------------------
+| ROLE: AMENITIES (Format Meniru Bahan Baku/Ingredient)
+| Akses: Super, Housekeeping, Manager, Admin
+|--------------------------------------------------------------------------
+*/
+
+// 1. Route PDF (Ditaruh di luar/sendiri seperti Ingredient)
+Route::get('/laporan/amenities/pdf', [LaporanStockopnameAmenities::class, 'exportPdf'])
+    ->middleware(['auth', 'checkRole:Super,Housekeeping,Manager,Admin'])
+    ->name('laporan.amenities.pdf');
+
+// 2. Route Resource (Langsung ditempel middleware chain)
+Route::resource('amenity', App\Http\Controllers\AmenityController::class)
+    ->middleware(['auth', 'checkRole:Super,Housekeeping,Manager,Admin'])
+    ->names('amenity');
+
+// 3. Custom Route: Stock Opname
+Route::post('/amenity/stock-opname', [App\Http\Controllers\AmenityController::class, 'stockOpname'])
+    ->middleware(['auth', 'checkRole:Super,Housekeeping,Manager,Admin'])
+    ->name('amenity.stock-opname');
+
+// 4. Custom Route: History
+Route::get('/amenities/history', [AmenityController::class, 'history'])
+    ->middleware(['auth', 'checkRole:Super,Housekeeping,Manager,Admin'])
+    ->name('amenities.history');
+
+// 5. Logout Khusus (Opsional)
+Route::post('/logout-housekeeping', [AuthController::class, 'logout'])
+    ->name('logout.housekeeping');
 
 /*
 |--------------------------------------------------------------------------
@@ -134,15 +165,25 @@ Route::middleware(['auth'])->group(function () {
 | ROLE: SUPER + DAPUR (Bahan Baku / Ingredients)
 |--------------------------------------------------------------------------
 */
-Route::get('/ingredient/laporan/pdf', [LaporanStockopnameIngredients::class, 'exportPdf'])
-    ->name('laporan.ingredients.pdf');
+// === INGREDIENT ROUTES (Semuanya dalam satu group) ===
+Route::group(['middleware' => ['auth', 'checkRole:Super,Dapur']], function () {
     
-Route::resource('ingredient', IngredientController::class)
-    ->middleware(['auth', 'checkRole:Super,Dapur'])
-    ->names('ingredient');
-Route::post('/ingredients/opname', [IngredientController::class, 'storeOpname'])->name('ingredients.opname');
-Route::get('/ingredients/opname-history', [App\Http\Controllers\IngredientController::class, 'history'])->name('ingredients.history');
-
+    // 1. Route PDF HARUS di atas resource (biar tidak tertimpa)
+    Route::get('/ingredient/laporan/pdf', [LaporanStockopnameIngredients::class, 'exportPdf'])
+        ->name('laporan.ingredients.pdf');
+    
+    // 2. Route Stock Opname (Custom, di atas resource)
+    Route::post('/ingredients/opname', [IngredientController::class, 'storeOpname'])
+        ->name('ingredients.opname');
+    
+    // 3. Route History (Custom, di atas resource)
+    Route::get('/ingredients/opname-history', [IngredientController::class, 'history'])
+        ->name('ingredients.history');
+    
+    // 4. Resource Routes (Paling bawah)
+    Route::resource('ingredient', IngredientController::class)
+        ->names('ingredient');
+});
 
 // POS Routes
 /*
@@ -177,7 +218,11 @@ Route::delete('/recipes/delete-menu/{id}', [RecipeController::class, 'destroyMen
 Route::group(['middleware' => ['auth', 'checkRole:Super,Manager,Kasir']], function () {
     Route::prefix('laporan')->name('laporan.')->group(function () {
         Route::get('/pos', [LaporanPosController::class, 'index'])->name('pos.index');
+        
+        // PERBAIKAN DI SINI: Arahkan ke 'exportExcel'
         Route::get('/pos/export', [LaporanPosController::class, 'exportExcel'])->name('pos.export');
+        
+        Route::get('/pos/export-pdf', [LaporanPosController::class, 'exportPdf'])->name('pos.exportPdf');
     });
 });
 /*

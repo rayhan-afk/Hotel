@@ -26,59 +26,39 @@ class LaporanController extends Controller
      * Export CSV Manual (PHP Native)
      * Ini menjamin fitur Export berfungsi tanpa error library.
      */
+   /**
+     * Export Excel Rapat (Metode View Blade)
+     */
     public function exportExcel(Request $request)
     {
-        // 1. Ambil data dari Repository (sudah terfilter tanggal)
+        // 1. Validasi Input
+        $request->validate([
+            'start_date' => 'nullable|date',
+            'end_date'   => 'nullable|date|after_or_equal:start_date',
+        ]);
+
+        // 2. Ambil Query dari Repository
         $query = $this->laporanRepository->getLaporanRapatQuery($request);
-        $transactions = $query->get();
+        
+        // Eksekusi Query
+        // Penting: Tambahkan ->with(['rapatCustomer']) untuk performa (Eager Loading)
+        $transactions = $query->with(['rapatCustomer'])
+                              ->orderBy('tanggal_pemakaian', 'desc')
+                              ->get();
 
-        // 2. Tentukan Header CSV (MEMBERIKAN NAMA FILE)
-        $fileName = 'laporan_rapat_' . date('d-m-Y_H-i') . '.csv';
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
-        ];
+        // 3. Nama File
+        $fileName = 'Laporan_Rapat_' . date('d-m-Y_H-i') . '.xls';
 
-        // 3. Buat fungsi callback untuk streaming data
-        $callback = function() use ($transactions) {
-            $file = fopen('php://output', 'w');
-            
-            // Tambahkan byte order mark (BOM) untuk encoding UTF-8 agar Excel tidak error saat buka CSV
-            fputs($file, $bom = (chr(0xEF) . chr(0xBB) . chr(0xBF))); 
+        // 4. Header Browsers (Agar dianggap file Excel)
+        header("Content-Type: application/vnd.ms-excel");
+        header("Content-Disposition: attachment; filename=\"$fileName\"");
+        header("Pragma: no-cache");
+        header("Expires: 0");
 
-            // Tulis Judul Kolom
-            fputcsv($file, [
-                'No Transaksi', 'Instansi / Perusahaan', 'Nama Pemesan', 'No Handphone', 
-                'Email', 'Tanggal Rapat', 'Jam Mulai', 'Jam Selesai', 
-                'Jumlah Peserta', 'Total Tagihan (Rp)', 'Status Pembayaran', 'Status Reservasi'
-            ]);
-
-            // Tulis Data Transaksi per Baris
-            foreach ($transactions as $row) {
-                // Tentukan data row
-                $data = [
-                    '#' . $row->id,
-                    $row->rapatCustomer->instansi ?? '-',
-                    $row->rapatCustomer->nama,
-                    // PERBAIKAN NO HP: Tambahkan apostrophe (') agar menjadi teks
-                    "'" . $row->rapatCustomer->no_hp,
-                    "'" . $row->rapatCustomer->email, 
-                    \App\Helpers\Helper::dateFormat($row->tanggal_pemakaian),
-                    $row->waktu_mulai,
-                    $row->waktu_selesai,
-                    $row->jumlah_peserta,
-                    // PERBAIKAN TOTAL BAYAR: Format angka penuh dengan pemisah ribuan
-                    number_format($row->total_pembayaran, 0, ',', '.'),
-                    $row->status_pembayaran,
-                    $row->status_reservasi,
-                ];
-                fputcsv($file, $data);
-            }
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        // 5. Return View Blade
+        return view('laporan.rapat.excel', [
+            'transactions' => $transactions
+        ]);
     }
 
     public function laporanKamarHotel(Request $request)

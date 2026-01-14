@@ -2,36 +2,38 @@
     <div class="sidebar-content">
         
         {{-- USER PROFILE (BROWN CARD) --}}
-        <div class="sidebar-user-container">
-            <div class="sidebar-user glass-card">
-                <div class="user-avatar-wrapper">
-                    <img src="{{ auth()->user()->getAvatar() }}" alt="User Avatar" class="user-img">
-                    <span class="status-dot"></span>
-                </div>
-                <div class="user-info">
-                    <div class="user-name">{{ auth()->user()->name }}</div>
-                    <div class="user-role badge-role">{{ auth()->user()->role }}</div>
-                </div>
-                <div class="dropdown">
-                    <button class="btn-dots" type="button" data-bs-toggle="dropdown">
-                        <i class="fas fa-ellipsis-v"></i>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4">
-                        <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profil</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <a class="dropdown-item text-danger" href="{{ route('logout') }}"
-                               onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                <i class="fas fa-sign-out-alt me-2"></i>Keluar
-                            </a>
-                            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                                @csrf
-                            </form>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+<div class="sidebar-user-container">
+    <div class="sidebar-user glass-card">
+        <div class="user-avatar-wrapper">
+            <img src="{{ auth()->user()->getAvatar() }}" alt="User Avatar" class="user-img">
+            <span class="status-dot"></span>
         </div>
+        
+        <div class="user-info">
+            <div class="user-name">{{ auth()->user()->name }}</div>
+            <div class="user-role badge-role">{{ auth()->user()->role }}</div>
+        </div>
+
+        <div class="dropdown">
+            <button class="btn-dots" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-ellipsis-v"></i>
+            </button>
+            
+            {{-- Dropdown Menu (Hanya Keluar) --}}
+            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 p-1" style="min-width: 120px;">
+                <li>
+                    <a class="dropdown-item fw-bold" style="color: #A94442" href="{{ route('logout') }}"
+                       onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                        <i class="fas fa-sign-out-alt me-2"></i>Keluar
+                    </a>
+                    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                        @csrf
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
 
         {{-- NAVIGATION MENU --}}
         <nav class="sidebar-nav custom-scrollbar">

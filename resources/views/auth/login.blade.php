@@ -34,7 +34,7 @@
     .side-image-container {
         position: relative;
         min-height: 100vh;
-        background-image: url("{{ asset('img/Hotel.jpeg') }}");
+        background-image: url("{{ asset('img/hotel-sawunggaling-1.png') }}");
         background-size: cover;
         background-position: center;
         border-top-right-radius: var(--radius-xl);

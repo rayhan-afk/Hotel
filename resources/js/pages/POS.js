@@ -1,7 +1,7 @@
 /**
  * POS Logic - Point of Sales
  * File: resources/js/pages/POS.js
- * Status: FIXED (Category Filter Added)
+ * Status: UPDATED (SweetAlert2 for Clear Cart)
  */
 
 (function () {
@@ -35,7 +35,7 @@
     };
 
     // ============================================
-    // [PENTING] EVENT LISTENER CLICK (Dikembalikan)
+    // EVENT LISTENER CLICK
     // ============================================
     if (menuContainer) {
         menuContainer.addEventListener("click", function (e) {
@@ -61,7 +61,7 @@
         if (!cartContainer) return;
 
         if (cart.length === 0) {
-            cartContainer.innerHTML = `<div class="text-center text-muted mt-5"><i class="fas fa-shopping-cart fa-2x mb-2" style="opacity: 0.3"></i><p>Keranjang kosong</p></div>`;
+            cartContainer.innerHTML = `<div class="text-center mt-5"><i class="fas fa-shopping-cart fa-2x mb-2" style="opacity: 0.3"></i><p>Keranjang kosong</p></div>`;
             updateTotals(0);
             return;
         }
@@ -76,24 +76,24 @@
             htmlString += `
                 <div class="card border-0 shadow-sm mb-2">
                     <div class="card-body p-2 d-flex align-items-center">
-                        <div class="d-flex flex-column align-items-center me-3">
-                             <i class="fas fa-chevron-up small text-muted" style="cursor:pointer" onclick="updateQty(${index}, 1)"></i>
+                        <div class="d-flex flex-column align-items-center me-3" style="color: #50200C">
+                             <i class="fas fa-chevron-up small" style="cursor:pointer" onclick="updateQty(${index}, 1)"></i>
                              <span class="fw-bold my-1">${item.qty}</span>
-                             <i class="fas fa-chevron-down small text-muted" style="cursor:pointer" onclick="updateQty(${index}, -1)"></i>
+                             <i class="fas fa-chevron-down small" style="cursor:pointer" onclick="updateQty(${index}, -1)"></i>
                         </div>
-                        <div class="flex-grow-1">
-                            <div class="fw-bold text-truncate" style="max-width: 140px;">${
+                        <div class="flex-grow-1" style="color: #50200C">
+                            <div class="fw-bold" style="max-width: 140px;">${
                                 item.name
                             }</div>
-                            <small class="text-muted">@ ${formatRupiah(
+                            <small class="">@ ${formatRupiah(
                                 item.price
                             )}</small>
                         </div>
-                        <div class="text-end">
+                        <div class="text-end" style="color: #50200C">
                             <div class="fw-bold">${formatRupiah(
                                 itemTotal
                             )}</div>
-                            <i class="fas fa-trash-alt text-danger small mt-1" style="cursor:pointer" onclick="removeItem(${index})"></i>
+                            <i class="fas fa-trash-alt small mt-1" style="color: #A94442; cursor:pointer" onclick="removeItem(${index})"></i>
                         </div>
                     </div>
                 </div>`;
@@ -119,11 +119,44 @@
         renderCart();
     };
 
+    // ✅ FIX: Ganti confirm() biasa dengan SweetAlert2
     window.clearCart = function () {
-        if (confirm("Reset keranjang?")) {
-            cart = [];
-            renderCart();
-        }
+        if (cart.length === 0) return;
+
+        Swal.fire({
+            title: 'Reset Keranjang?',
+            text: "Semua item akan dihapus dari keranjang.",
+            icon: 'warning',
+            background: '#F7F3E4',
+            showCancelButton: true,
+            confirmButtonColor: "#F2C2B8",
+            cancelButtonColor: "#8FB8E1",
+            confirmButtonText: 'Ya, Kosongkan!',
+            cancelButtonText: 'Batal',
+            iconColor: '#50200C',
+            customClass: {
+                confirmButton: "text-50200C",
+                cancelButton: "text-50200C",
+                title: "text-50200C",
+                htmlContainer: "text-50200C"
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                cart = [];
+                renderCart();
+                
+                // Feedback kecil setelah berhasil
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Keranjang Kosong',
+                    text: 'Siap untuk pesanan baru',
+                    timer: 1000,
+                    showConfirmButton: false,
+                    iconColor: '#50200C',
+                    customClass: { title: 'swal-title-brown' }
+                });
+            }
+        });
     };
 
     // ============================================
@@ -219,7 +252,7 @@
         if (display) {
             if (change < 0) {
                 display.innerText = "Kurang " + formatRupiah(Math.abs(change));
-                display.className = "fw-bold text-danger";
+                display.className = "fw-bold text-merah";
             } else {
                 display.innerText = formatRupiah(change);
                 display.className = "fw-bold text-success";
@@ -232,8 +265,8 @@
         const payInput = document.getElementById("payAmount").value;
         const payAmount = payInput ? parseFloat(payInput) : 0;
 
-        if (cart.length === 0) return alert("Keranjang kosong!");
-        if (payAmount < currentTotal) return alert("Uang pembayaran kurang!");
+        if (cart.length === 0) return Swal.fire('Error', 'Keranjang kosong!', 'error');
+        if (payAmount < currentTotal) return Swal.fire('Error', 'Uang pembayaran kurang!', 'error');
 
         const storeRoute = window.posConfig ? window.posConfig.storeRoute : "";
         const csrfToken = window.posConfig ? window.posConfig.csrfToken : "";
@@ -284,7 +317,7 @@
                         savedChange
                     );
                 } else {
-                    alert("Gagal: " + data.message);
+                    Swal.fire('Gagal', data.message, 'error');
                     if (btnProcess) {
                         btnProcess.innerText = originalText;
                         btnProcess.disabled = false;
@@ -293,7 +326,7 @@
             })
             .catch((err) => {
                 console.error(err);
-                alert("Terjadi kesalahan sistem.");
+                Swal.fire('Error', 'Terjadi kesalahan sistem.', 'error');
                 if (btnProcess) {
                     btnProcess.innerText = originalText;
                     btnProcess.disabled = false;
@@ -333,8 +366,8 @@
                         <span>Bayar:</span> <span>${formatRupiah(bayar)}</span>
                     </div>
                     <div class="d-flex justify-content-between border-top pt-2 mt-2">
-                        <span class="fw-bold" style="color: #F2C2B8">Kembalian:</span>
-                        <span class="fw-bold" style="color: #F2C2B8">${formatRupiah(
+                        <span class="fw-bold" style="color: #A94442">Kembalian:</span>
+                        <span class="fw-bold" style="color: #A94442">${formatRupiah(
                             kembalian
                         )}</span>
                     </div>

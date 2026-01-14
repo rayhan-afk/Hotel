@@ -146,9 +146,23 @@
                                                        class="fw-bold text-decoration-none" style="color: #50200C; font-size: 1.05rem;">
                                                         {{ $transaction->customer->name }}
                                                     </a>
+                                                    @php
+                                                        $group = strtolower(trim($transaction->customer->customer_group ?? 'walk in'));
+
+                                                        $badgeColors = [
+                                                            'ota' => '#8FB8E1',
+                                                            'corporate' => '#A8D5BA',
+                                                            'ownerreferral' => '#FAE8A4',
+                                                            'walkin' => '#F2C2B8',
+                                                            'general' => '#F7B267',
+                                                        ];
+
+                                                        $bgColor = $badgeColors[$group] ?? '#F7B267';
+                                                    @endphp
                                                     <div class="mt-1">
-                                                        <span class="badge border" style="background-color: #fff; color: #50200C; font-size: 0.75rem;">
-                                                            {{ $transaction->customer->customer_group ?? 'WalkIn' }}
+                                                        <span class="badge border"
+                                                            style="background-color: {{ $bgColor }}; color: #50200C; font-size: 0.75rem;">
+                                                            {{ ucfirst($group) }}
                                                         </span>
                                                     </div>
                                                 </div>

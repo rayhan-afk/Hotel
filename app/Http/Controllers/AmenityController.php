@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Amenity;
 use App\Repositories\Interface\AmenityRepositoryInterface;
-use App\Models\AmenityStockOpname;
+// [PERBAIKAN 1] Gunakan nama Model yang benar sesuai file model Anda
+use App\Models\StockOpnameAmenity; 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
@@ -78,45 +79,37 @@ class AmenityController extends Controller
 
     public function stockOpname(Request $request)
     {
-        // 1. Validasi Input (Sekarang menerima ARRAY)
-        // 'stocks' adalah array, key-nya adalah ID amenity, value-nya jumlah stok
         $request->validate([
             'stocks'   => 'required|array',
-            'stocks.*' => 'required|numeric|min:0', // Validasi tiap item stok
-            'notes'    => 'nullable|array',         // Validasi array notes
+            'stocks.*' => 'required|numeric|min:0',
+            'notes'    => 'nullable|array',
         ]);
 
         DB::beginTransaction();
         try {
-            // 2. Looping data yang dikirim dari form
-            // $id = ID Amenity, $fisik = Jumlah Stok Fisik yang diinput
             foreach ($request->stocks as $id => $fisik) {
                 
-                // Cari barangnya
                 $amenity = Amenity::find($id);
 
-                // Jika barang ada, baru proses
                 if ($amenity) {
                     $stokSistem = $amenity->stok;
                     $stokBaru   = floatval($fisik);
                     $selisih    = $stokBaru - $stokSistem;
 
-                    // A. Update Stok di Master Data
+                    // Update Master Data
                     $amenity->stok = $stokBaru;
                     $amenity->save();
 
-                    // B. Ambil Catatan jika ada
+                    // Ambil Catatan
                     $catatan = isset($request->notes[$id]) ? $request->notes[$id] : null;
 
-                    // C. Simpan Riwayat (History)
-                    // HANYA simpan jika ada perubahan stok ATAU user memaksa opname (opsional)
-                    // Disini kita simpan semua agar terekam bahwa barang sudah dicek
-                    AmenityStockOpname::create([
+                    // [UPDATE] Simpan ke Database pakai Bahasa Inggris
+                    StockOpnameAmenity::create([
                         'amenity_id'     => $amenity->id,
-                        'system_stock'   => $stokSistem,
-                        'physical_stock' => $stokBaru,
-                        'difference'     => $selisih,
-                        'notes'          => $catatan,
+                        'system_stock'   => $stokSistem, // Before: stok_sistem
+                        'physical_stock' => $stokBaru,   // Before: stok_fisik
+                        'difference'     => $selisih,    // Before: selisih
+                        'note'           => $catatan,    // Before: keterangan
                     ]);
                 }
             }
@@ -130,19 +123,18 @@ class AmenityController extends Controller
         }
     }
 
-   public function history()
-{
-    // Ambil data riwayat, urutkan dari yang terbaru
-    // Ganti 'StockOpname' jadi 'StockOpnameAmenity' (Model Amenity kamu)
-    // Ganti relasi 'ingredient' jadi 'amenity'
-    $histories = \App\Models\AmenityStockOpname::with('amenity')
-                    ->orderBy('created_at', 'desc')
-                    ->limit(100) // Batasi 100 terakhir
-                    ->get();
+    public function history()
+    {
+        // Ambil data riwayat, urutkan dari yang terbaru
+        // [PERBAIKAN 3] Panggil model yang benar (StockOpnameAmenity)
+        $histories = StockOpnameAmenity::with('amenity')
+                        ->orderBy('created_at', 'desc')
+                        ->limit(100) 
+                        ->get();
 
-    // Render view khusus tabel history (Pastikan path view benar)
-    $view = view('amenity.history', compact('histories'))->render();
+        // Render view khusus tabel history
+        $view = view('amenity.history', compact('histories'))->render();
 
-    return response()->json(['view' => $view]);
-}
+        return response()->json(['view' => $view]);
+    }
 }

@@ -406,6 +406,9 @@ Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Customer,Manager,D
         // [BARU] Route Trigger Check-In & Potong Stok Amenities
         Route::post('/check-in/{id}/process', [CheckinController::class, 'processCheckIn'])->name('checkin.process');
 
+        // [BARU] Route Bayar Lunas (Quick Pay)
+        Route::post('/pay-remaining/{id}', [CheckinController::class, 'payRemaining'])->name('payRemaining');
+
         Route::get('/check-out', [CheckoutController::class, 'index'])->name('checkout.index');
         Route::post('/check-out/{transaction}', [CheckoutController::class, 'process'])->name('checkout.process');
         Route::post('/checkout/{id}', [CheckoutController::class, 'processCheckout'])->name('checkout.process2');

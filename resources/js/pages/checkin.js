@@ -4,7 +4,8 @@ $(function () {
     if (!currentRoute.includes("transaction/check-in")) return;
 
     const tableElement = $("#checkin-table");
-    let checkoutId = null; 
+    let checkoutId = null;
+    let payId = null; 
 
     if (tableElement.length > 0) {
         const table = tableElement.DataTable({
@@ -32,11 +33,34 @@ $(function () {
                     data: "customer_name",
                     className: "fw-bold text-primary"
                 },
-                // 3. Kamar
+                
+                // [KOLOM BARU] 3. Jml. Tamu
+                { 
+                    name: "transactions.count_person", // Pastikan field ini ada di repository
+                    data: "count_person",
+                    className: "text-center",
+                    searchable: false,
+                    render: function(data, type, row) {
+                        // Safety Check: Default 1 Dewasa, 0 Anak
+                        let personCount = (data !== null && data !== undefined) ? data : 1;
+                        let childCount  = (row.count_child !== null && row.count_child !== undefined) ? row.count_child : 0;
+
+                        let text = `<span class="fw-bold">${personCount}</span> Dewasa`;
+                        
+                        if (childCount > 0) {
+                            text += `<br><span class="small text-muted"><span class="fw-bold">${childCount}</span> Anak</span>`;
+                        }
+                        
+                        return `<div class="d-flex flex-column align-items-center">${text}</div>`;
+                    }
+                },
+
+                // 4. Kamar
                 { 
                     name: "rooms.number", 
                     data: "room_info",
                     render: function(data) {
+                        if(!data) return '-';
                         return `
                             <div class="d-flex flex-column">
                                 <span class="fw-bold" style="color: #50200C">${data.number}</span>
@@ -46,7 +70,7 @@ $(function () {
                     }
                 },
                 
-                // 4. CHECK IN (DENGAN JAM)
+                // 5. CHECK IN
                 { 
                     name: "transactions.check_in", 
                     data: "check_in",
@@ -58,14 +82,14 @@ $(function () {
 
                         return `
                             <div class="fw-bold" style="color: #50200C;">${dateStr}</div>
-                            <small class="text-muted" style="font-size: 0.85em;">
-                                <i class="fas fa-clock me-1 text-primary"></i>${timeStr}
+                            <small class="" style="color: #50200C; font-size: 0.85em;">
+                                <i class="fas fa-clock me-1" style="color: #50200C"></i>${timeStr}
                             </small>
                         `;
                     }
                 },
 
-                // 5. Check Out
+                // 6. Check Out
                 { 
                     name: "transactions.check_out", 
                     data: "check_out",
@@ -76,10 +100,7 @@ $(function () {
                     }
                 },
                 
-                // [DELETED] Extra Bed
-                // [DELETED] Extra Breakfast
-
-                // 6. Sarapan (Regular)
+                // 7. Sarapan
                 { 
                     name: "transactions.breakfast", 
                     data: "breakfast",
@@ -88,7 +109,7 @@ $(function () {
                     render: function(data) {
                         if (data === 'Yes') {
                             return `<span class="badge rounded-pill" style="background-color: #A8D5BA; color: #50200C; font-size: 10px; padding: 6px 12px; font-weight: 700;">
-                                        <i class="fas fa-utensils me-1" style="color: #50200C; font-size: 10px;"></i>Ya
+                                            <i class="fas fa-utensils me-1" style="color: #50200C; font-size: 10px;"></i>Ya
                                     </span>`;
                         } else {
                             return `<span class="badge rounded-pill" style="background-color: #F2C2B8; color: #50200C; font-size: 10px; padding: 6px 12px; font-weight: 700;">Tidak</span>`;
@@ -96,7 +117,7 @@ $(function () {
                     }
                 },
 
-                // 7. Total Harga
+                // 8. Total Harga
                 { 
                     name: "rooms.price", 
                     data: "total_price",
@@ -106,21 +127,44 @@ $(function () {
                     }
                 },
 
-                // 8. Sisa Bayar
+                // 9. Sisa Bayar
                 { 
                     name: "transactions.paid_amount", 
                     data: "remaining_payment",
-                    className: "text-center",
-                    render: function(data) {
+                    className: "text-center align-middle",
+                    render: function(data, type, row) {
                         let formatted = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(data);
+                        
                         if (data > 0) {
-                            return `<span class="badge rounded-pill" style="background-color: #F2C2B8; color: #50200C; font-size: 11px; padding: 6px 12px; font-weight: 800; border: 1px solid #E57373;">${formatted}</span>`;
+                            return `
+                                <button class="btn btn-sm btn-pay-remaining d-flex align-items-center justify-content-between p-1 pe-3 shadow-sm mx-auto" 
+                                        style="background-color: #fff5f5; border: 1px solid #ffc9c9; border-radius: 50px; min-width: 145px; transition: all 0.2s; cursor: pointer;"
+                                        onmouseover="this.style.backgroundColor='#ffe0e0'; this.style.borderColor='#A94442';"
+                                        onmouseout="this.style.backgroundColor='#fff5f5'; this.style.borderColor='#ffc9c9';"
+                                        data-id="${row.id}"
+                                        data-amount="${formatted}"
+                                        data-name="${row.customer_name}"
+                                        data-bs-toggle="tooltip"
+                                        title="Klik untuk melunasi tagihan">
+                                    
+                                    <span class="badge rounded-pill bg-danger me-2" style="color: #F7F3E4; font-size: 10px; padding: 5px 10px;">
+                                        BAYAR <i class="fas fa-chevron-right ms-1"></i>
+                                    </span>
+                                    
+                                    <span class="" style="color: #A94442; font-size: 12px; font-weight: 800;">${formatted}</span>
+                                </button>
+                            `;
                         }
-                        return `<span class="badge rounded-pill" style="background-color: #A8D5BA; color: #50200C; font-size: 11px; padding: 6px 12px; font-weight: 800; border: 1px solid #81C784;">Lunas</span>`;
+                        // LUNAS
+                        return `
+                            <span class="badge rounded-pill" style="background-color: #A8D5BA; color: #50200C; font-size: 10px; padding: 6px 12px; font-weight: 700;">
+                                <i class="fas fa-check-circle me-1"></i> Lunas
+                            </span>
+                        `;
                     }
                 },
 
-                // 9. Status
+                // 10. Status
                 { 
                     name: "transactions.status", 
                     data: "status",
@@ -130,7 +174,7 @@ $(function () {
                     }
                 },
                 
-                // 10. AKSI (UPDATE: Tambah data-checkout-plan)
+                // 11. AKSI
                 {
                     data: 'id',
                     orderable: false,
@@ -138,10 +182,8 @@ $(function () {
                     className: "text-center align-middle",
                     render: function(id, type, row) {
                         let customerName = row.customer_name ? row.customer_name.replace(/"/g, '&quot;') : '-'; 
-                        let roomNumber = row.room_info.number;
+                        let roomNumber = row.room_info ? row.room_info.number : '-';
                         let remaining = row.remaining_payment; 
-                        
-                        // [MODIFIKASI] Ambil rencana checkout untuk validasi tanggal
                         let planCheckout = row.check_out; 
 
                         return `
@@ -166,12 +208,16 @@ $(function () {
                     }
                 }
             ],
-            order: [[3, 'desc']], 
+            // Order berdasarkan Tanggal Checkin (Kolom ke-5, index 4) atau Checkout (Kolom ke-6, index 5)
+            // Di kode asli Anda pakai index 3 (Check In), tapi karena ada sisipan kolom baru, sekarang jadi index 4.
+            order: [[4, 'desc']], 
             drawCallback: function() {
-                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-                var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                    return new bootstrap.Tooltip(tooltipTriggerEl)
-                })
+                if(typeof bootstrap !== 'undefined'){
+                    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+                    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                        return new bootstrap.Tooltip(tooltipTriggerEl)
+                    })
+                }
             },
             language: {
                 emptyTable: "Tidak ada data tamu yang check in saat ini.",
@@ -179,6 +225,10 @@ $(function () {
                 zeroRecords: "Data tidak ditemukan"
             }
         });
+
+        // =======================================================
+        // EVENT HANDLERS (TIDAK BERUBAH)
+        // =======================================================
 
         // Event: Tombol Edit
         $(document).on('click', '.btn-edit', function() {
@@ -205,7 +255,6 @@ $(function () {
             let btn = form.find('button[type="submit"]');
             let originalContent = btn.html();
 
-            // Loading State
             btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...');
 
             $.ajax({
@@ -215,9 +264,7 @@ $(function () {
                 success: function(response) {
                     let modalEl = document.getElementById('editCheckinModal');
                     let modal = bootstrap.Modal.getInstance(modalEl);
-                    if (modal) {
-                        modal.hide();
-                    }
+                    if (modal) modal.hide();
                     
                     let iconType = response.status || 'success';
                     let titleText = 'Berhasil Diperbarui!';
@@ -231,16 +278,11 @@ $(function () {
                             title: titleText,
                             text: response.message,
                             iconColor: '#50200C', 
-                            customClass: {
-                                title: 'swal-title-brown',
-                                htmlContainer: 'swal-text-brown',
-                                confirmButton: 'swal-btn-blue'
-                            }
+                            customClass: { title: 'swal-title-brown', htmlContainer: 'swal-text-brown', confirmButton: 'swal-btn-blue' }
                         });
                     } else {
                         alert(titleText + "\n" + response.message); 
                     }
-                    
                     table.ajax.reload(null, false);
                 },
                 error: function(xhr) {
@@ -254,75 +296,43 @@ $(function () {
                             icon: 'error',
                             title: 'Gagal Menyimpan',
                             text: msg,
-                            customClass: {
-                                title: 'swal-title-brown',
-                                confirmButton: 'swal-btn-blue'
-                            }
+                            customClass: { title: 'swal-title-brown', confirmButton: 'swal-btn-blue' }
                         });
-                    } else {
-                         alert(msg);
-                    }
+                    } else { alert(msg); }
                 }
             });
         });
 
-        // Event: Tombol Check Out [MODIFIED LOGIC: Early Checkout & Debt]
+        // Event: Tombol Check Out
         $(document).on('click', '.btn-checkout', function() {
             checkoutId = $(this).data('id');
             let name = $(this).data('name');
             let room = $(this).data('room');
             let remaining = parseFloat($(this).data('remaining'));
-            
-            // [MODIFIKASI] Ambil rencana checkout
             let planDateStr = $(this).data('checkout-plan');
 
             $('#checkoutCustomerName').text(name);
             $('#checkoutRoomNumber').text(room);
 
             let modalBody = $('#checkoutModal .modal-body');
-            modalBody.find('.dynamic-alert').remove(); // Bersihkan alert lama
+            modalBody.find('.dynamic-alert').remove(); 
 
-            // === 1. LOGIKA EARLY CHECKOUT (Peringatan Kepencet) ===
+            // Logic Early Checkout
             let today = new Date();
             today.setHours(0,0,0,0); 
-
             let planDate = new Date(planDateStr);
             planDate.setHours(0,0,0,0);
 
             if (today < planDate) {
                 let formattedPlan = planDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-                
-                let earlyAlert = `
-                    <div class="alert alert-warning dynamic-alert border-warning d-flex align-items-center mt-3" role="alert" style="background-color: #fff3cd;">
-                        <i class="fas fa-clock me-3 fa-2x text-warning"></i>
-                        <div class="text-start">
-                            <strong class="d-block text-dark">EARLY CHECK-OUT</strong>
-                            <small style="color: #856404">
-                                Tamu ini seharusnya checkout tanggal <strong>${formattedPlan}</strong>.<br>
-                                Anda akan memproses checkout <b>LEBIH AWAL</b>.
-                            </small>
-                        </div>
-                    </div>
-                `;
+                let earlyAlert = `<div class="alert alert-warning dynamic-alert border-warning d-flex align-items-center mt-3" role="alert" style="background-color: #fff3cd;"><i class="fas fa-clock me-3 fa-2x text-warning"></i><div class="text-start"><strong class="d-block text-dark">EARLY CHECK-OUT</strong><small style="color: #856404">Tamu seharusnya checkout <strong>${formattedPlan}</strong>.<br>Memproses checkout <b>LEBIH AWAL</b>.</small></div></div>`;
                 $('#checkoutRoomNumber').parent().after(earlyAlert);
             }
 
-            // === 2. LOGIKA KURANG BAYAR ===
+            // Logic Kurang Bayar
             if (remaining > 0) {
-                let formattedRemaining = new Intl.NumberFormat('id-ID', { 
-                    style: 'currency', currency: 'IDR', minimumFractionDigits: 0 
-                }).format(remaining);
-
-                let debtAlert = `
-                    <div class="alert alert-light dynamic-alert border-danger d-flex align-items-center mt-3" role="alert">
-                        <i class="fas fa-exclamation-triangle me-3 fa-2x" style="color: #A94442"></i>
-                        <div class="text-start">
-                            <strong class="d-block" style="color: #A94442">BELUM LUNAS!</strong>
-                            <small style="color: #50200C">Tamu memiliki sisa tagihan sebesar <strong style="color: #A94442; font-size: 1.1em;">${formattedRemaining}</strong>.</small>
-                        </div>
-                    </div>
-                `;
-                // Tampilkan setelah room number (akan menumpuk dgn early alert jika ada)
+                let formattedRemaining = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(remaining);
+                let debtAlert = `<div class="alert alert-light dynamic-alert border-danger d-flex align-items-center mt-3" role="alert"><i class="fas fa-exclamation-triangle me-3 fa-2x" style="color: #A94442"></i><div class="text-start"><strong class="d-block" style="color: #A94442">BELUM LUNAS!</strong><small style="color: #50200C">Sisa tagihan: <strong style="color: #A94442; font-size: 1.1em;">${formattedRemaining}</strong>.</small></div></div>`;
                 $('#checkoutRoomNumber').parent().after(debtAlert);
             }
 
@@ -333,7 +343,6 @@ $(function () {
         // Event: Konfirmasi Check Out
         $('#btn-confirm-checkout').on('click', function() {
             if(!checkoutId) return;
-
             let btn = $(this);
             let originalContent = btn.html();
             let csrfToken = $('meta[name="csrf-token"]').attr('content');
@@ -349,9 +358,8 @@ $(function () {
                     let modal = bootstrap.Modal.getInstance(modalEl);
                     if (modal) modal.hide();
                     
-                    if(response.redirect_url) {
-                        window.location.href = response.redirect_url;
-                    } else {
+                    if(response.redirect_url) window.location.href = response.redirect_url;
+                    else {
                         table.ajax.reload();
                         btn.prop('disabled', false).html(originalContent);
                     }
@@ -359,6 +367,60 @@ $(function () {
                 error: function(xhr) {
                     btn.prop('disabled', false).html(originalContent);
                     alert("Gagal: " + (xhr.responseJSON ? xhr.responseJSON.message : "Terjadi kesalahan sistem"));
+                }
+            });
+        });
+
+        // === EVENT TOMBOL BAYAR LUNAS (QUICK PAY) ===
+        $(document).on('click', '.btn-pay-remaining', function() {
+            payId = $(this).data('id');
+            let amount = $(this).data('amount');
+            let name = $(this).data('name');
+
+            Swal.fire({
+                title: 'Pelunasan Tagihan',
+                html: `
+                    <div class="text-center mb-3">
+                        <div class="mb-2" style="color: #50200C">Total Kekurangan Pembayaran</div>
+                        <h2 class="fw-bold" style="color: #A94442">${amount}</h2>
+                        <div class="badge bg-light mt-2 border" style="color: #50200C">Tamu: ${name}</div>
+                    </div>
+                    <p class="small" style="color: #50200C">Klik tombol di bawah untuk mencatat pelunasan tunai.</p>
+                `,
+                icon: 'warning',
+                background: '#F7F3E4',
+                showCancelButton: true,
+                confirmButtonColor: '#A8D5BA',
+                cancelButtonColor: '#F2C2B8',
+                confirmButtonText: '<i class="fas fa-check-circle me-1"></i> Lunasi Sekarang',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    confirmButton: "text-50200C",
+                    cancelButton: "text-50200C",
+                    title: "text-50200C",
+                    htmlContainer: "text-50200C"
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({ title: 'Memproses...', didOpen: () => { Swal.showLoading() } });
+                    
+                    $.ajax({
+                        url: `/transaction/pay-remaining/${payId}`,
+                        type: 'POST',
+                        data: { _token: $('meta[name="csrf-token"]').attr('content') },
+                        success: function(response) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Lunas!',
+                                text: response.message,
+                                confirmButtonColor: '#50200C'
+                            });
+                            table.ajax.reload(null, false); 
+                        },
+                        error: function(xhr) {
+                            Swal.fire('Error', xhr.responseJSON ? xhr.responseJSON.message : 'Terjadi kesalahan', 'error');
+                        }
+                    });
                 }
             });
         });

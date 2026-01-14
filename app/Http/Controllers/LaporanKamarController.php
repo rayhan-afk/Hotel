@@ -24,124 +24,151 @@ class LaporanKamarController extends Controller
     }
 
     public function exportExcel(Request $request)
-    {
-        // 1. Ambil Query
-        $query = $this->laporanKamarRepository->getLaporanKamarQuery($request);
-        $transactions = $query->with(['customer.user', 'room.type'])->get();
+{
+    // 1. Ambil Query Data (Gunakan Repository yang sudah ada)
+    $query = $this->laporanKamarRepository->getLaporanKamarQuery($request);
+    
+    // Pastikan memuat relasi yang dibutuhkan untuk efisiensi (Eager Loading)
+    $transactions = $query->with(['customer.user', 'room.type'])->get();
 
-        // 2. Setup Header
-        $fileName = 'Laporan_Kamar_' . date('d-m-Y_H-i') . '.csv';
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
-        ];
+    // 2. Setup Header Response
+    $fileName = 'Laporan_Kamar_' . date('d-m-Y_H-i') . '.csv';
+    $headers = [
+        'Content-Type' => 'text/csv; charset=UTF-8', // Pastikan charset UTF-8
+        'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        'Pragma' => 'no-cache',
+        'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+        'Expires' => '0',
+    ];
 
-        // 3. Callback Streaming
-        $callback = function() use ($transactions) {
-            $file = fopen('php://output', 'w');
-            fputs($file, chr(0xEF) . chr(0xBB) . chr(0xBF)); 
+    // 3. Callback Streaming Data
+    $callback = function() use ($transactions) {
+        $file = fopen('php://output', 'w');
+        
+        // Tambahkan BOM (Byte Order Mark) agar Excel membaca karakter UTF-8 dengan benar (termasuk Rupiah/Simbol)
+        fputs($file, chr(0xEF) . chr(0xBB) . chr(0xBF)); 
 
-            // HEADER KOLOM
-            fputcsv($file, [
-                'No', 
-                'ID Transaksi', 
-                'Nama Tamu', 
-                'Nomor Kamar', 
-                'Tipe Kamar',
-                
-                // DATA WAKTU
-                'Waktu Check In', 
-                'Waktu Check Out', 
-                'Durasi Paket (Malam)', 
-                'Rencana Check Out',
-                
-                // [KOLOM BARU] LOGIKA WAKTU (EARLY/LATE)
-                'Catatan Waktu', 
-                
-                'Sarapan', 
-                'Total Harga (Rp)', 
-                'Status',
-                
-                // DATA TAMBAHAN
-                'Email', 'No HP', 'Jenis Kelamin', 'Pekerjaan', 'Alamat'
-            ]);
+        // HEADER KOLOM (Disusun Rapi)
+        fputcsv($file, [
+            // A. INFORMASI DASAR
+            'No', 
+            'ID Transaksi', 
+            'Status',
 
-            // ISI DATA
-            foreach ($transactions as $index => $t) {
-                $totalHarga = $t->total_price ?? 0;
-                
-                // Hitung Durasi Paket
-                $roomPrice = $t->room->price ?? 1;
-                if($roomPrice <= 0) $roomPrice = 1;
-                $durasiPaket = round($totalHarga / $roomPrice);
-                if($durasiPaket < 1) $durasiPaket = 1;
-                
-                // Waktu Real
-                $realCheckIn = Carbon::parse($t->check_in);
-                $realCheckOut = $t->check_out ? Carbon::parse($t->check_out) : null;
-                $planCheckOut = $realCheckIn->copy()->addDays($durasiPaket);
-                
-                // --- LOGIKA DETEKSI JAM (EARLY/LATE) ---
-                $notes = [];
+            // B. INFORMASI TAMU
+            'Nama Tamu', 
+            'Email', 
+            'No HP', 
+            'Jenis Kelamin', 
+            'Pekerjaan', 
+            'Alamat',
 
-                // 1. Early Check-in (Sebelum jam 14:00)
-                if ($realCheckIn->format('H') < 14) {
-                    $notes[] = 'Early Check-in (' . $realCheckIn->format('H:i') . ')';
-                }
+            // C. DETAIL KAMAR
+            'Nomor Kamar', 
+            'Tipe Kamar',
+            'Sarapan',
 
-                if ($realCheckOut) {
-                    // 2. Late Check-out (Setelah jam 12:00)
-                    if ($realCheckOut->format('H') >= 12) {
-                        $notes[] = 'Late Check-out (' . $realCheckOut->format('H:i') . ')';
-                    }
+            // D. WAKTU & DURASI
+            'Waktu Check In (Real)', 
+            'Waktu Check Out (Real)', 
+            'Rencana Check Out',
+            'Durasi (Malam)', 
+            'Catatan Waktu (Early/Late)', // Kolom Analisa Waktu
 
-                    // 3. Pulang Awal (Beda Hari)
-                    if ($realCheckOut->startOfDay()->lt($planCheckOut->copy()->startOfDay())) {
-                        $notes[] = 'Pulang Lebih Awal (Sisa Hari)';
-                    }
-                } else {
-                    $notes[] = 'Belum Checkout';
-                }
+            // E. KEUANGAN
+            'Harga Kamar/Malam',
+            'Total Tagihan (Rp)' 
+        ]);
 
-                $catatanWaktu = empty($notes) ? '-' : implode(', ', $notes);
-                // ------------------------------------------
+        // ISI DATA PER BARIS
+        foreach ($transactions as $index => $t) {
+            
+            // --- 1. Persiapan Data Harga & Durasi ---
+            $totalHarga = $t->total_price ?? 0;
+            $roomPrice  = $t->room->price ?? 0;
+            
+            // Hitung durasi estimasi (jika data durasi tidak tersimpan eksplisit)
+            // Rumus: Total Harga / Harga Kamar (pembulatan) -> Minimal 1
+            $durasiPaket = ($roomPrice > 0) ? round($totalHarga / $roomPrice) : 1;
+            if ($durasiPaket < 1) $durasiPaket = 1;
 
-                // Format No HP
-                $hpRaw = $t->customer->phone ?? '-';
-                $hp = $hpRaw !== '-' ? "'" . $hpRaw : '-';
+            // --- 2. Persiapan Data Waktu ---
+            $realCheckIn  = \Carbon\Carbon::parse($t->check_in);
+            // Gunakan 'updated_at' jika status sudah selesai (checkout real), atau null jika belum
+            $isCheckout   = in_array($t->status, ['Done', 'Payment Done', 'Selesai']);
+            $realCheckOut = ($isCheckout && $t->updated_at) ? \Carbon\Carbon::parse($t->updated_at) : null;
+            
+            // Rencana Check Out = Check In + Durasi
+            $planCheckOut = $realCheckIn->copy()->addDays($durasiPaket);
 
-                $data = [
-                    $index + 1,
-                    '#' . $t->id,
-                    $t->customer->name ?? 'Guest',
-                    $t->room->number ?? '-',
-                    $t->room->type->name ?? '-',
-                    
-                    $realCheckIn->format('d/m/Y H:i'),
-                    $realCheckOut ? $realCheckOut->format('d/m/Y H:i') : '-',
-                    $durasiPaket,
-                    $planCheckOut->format('d/m/Y'),
-                    
-                    $catatanWaktu, // [Hasil Logika]
-                    
-                    ($t->breakfast == 'Yes' || $t->breakfast == 1) ? 'Yes' : 'No',
-                    $totalHarga,
-                    $t->status,
-                    
-                    $t->customer->user->email ?? '-',
-                    $hp,
-                    $t->customer->gender ?? '-',
-                    $t->customer->job ?? '-',
-                    $t->customer->address ?? '-',
-                ];
-                
-                fputcsv($file, $data);
+            // --- 3. Logika Analisa Waktu (Early/Late) ---
+            $notes = [];
+
+            // A. Early Check-in (Masuk sebelum jam 14:00)
+            if ($realCheckIn->format('H') < 14) {
+                $notes[] = 'Early Check-in (' . $realCheckIn->format('H:i') . ')';
             }
-            fclose($file);
-        };
 
-        return response()->stream($callback, 200, $headers);
-    }
+            if ($realCheckOut) {
+                // B. Late Check-out (Keluar setelah jam 12:30 - toleransi 30 menit)
+                if ($realCheckOut->format('H') > 12 || ($realCheckOut->format('H') == 12 && $realCheckOut->format('i') > 30)) {
+                    $notes[] = 'Late Check-out (' . $realCheckOut->format('H:i') . ')';
+                }
+
+                // C. Pulang Lebih Awal (Tanggal keluar < Rencana)
+                if ($realCheckOut->startOfDay()->lt($planCheckOut->copy()->startOfDay())) {
+                    $notes[] = 'Pulang Lebih Awal';
+                }
+            } else {
+                $notes[] = 'Belum Checkout';
+            }
+            
+            $catatanWaktu = empty($notes) ? '-' : implode(', ', $notes);
+
+            // --- 4. Format Data Lain ---
+            $hp = $t->customer->phone ?? '-';
+            // Tambahkan tanda kutip satu (') di depan No HP agar Excel tidak mengubahnya jadi format ilmiah (misal: 6.28E+10)
+            $hpFormatted = ($hp !== '-') ? "'" . $hp : '-'; 
+
+            // --- 5. Susun Array Data ---
+            $data = [
+                // A
+                $index + 1,
+                '#' . $t->id,
+                $t->status,
+
+                // B
+                $t->customer->name ?? 'Guest',
+                $t->customer->user->email ?? '-',
+                $hpFormatted,
+                $t->customer->gender ?? '-',
+                $t->customer->job ?? '-',
+                $t->customer->address ?? '-',
+
+                // C
+                $t->room->number ?? '-',
+                $t->room->type->name ?? '-',
+                ($t->breakfast == 'Yes' || $t->breakfast == 1) ? 'Yes' : 'No',
+
+                // D
+                $realCheckIn->format('d/m/Y H:i'),
+                $realCheckOut ? $realCheckOut->format('d/m/Y H:i') : '-',
+                $planCheckOut->format('d/m/Y'),
+                $durasiPaket,
+                $catatanWaktu,
+
+                // E
+                $roomPrice,  // Harga Satuan
+                $totalHarga  // Total Tagihan
+            ];
+            
+            fputcsv($file, $data);
+        }
+        fclose($file);
+    };
+
+    return response()->stream($callback, 200, $headers);
+}
 
         public function downloadPdf(Request $request)
     {

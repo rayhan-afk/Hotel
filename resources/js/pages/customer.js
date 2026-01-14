@@ -73,12 +73,12 @@ $(function () {
                     className: "text-center",
                     render: function (data) {
                         // Warnai badge sesuai grup
-                        let badgeClass = 'bg-secondary'; // Default jika tidak ada match
+                        let badgeClass = 'badge-rejected'; // Default jika tidak ada match
                         
-                        if (data === 'OTA') badgeClass = 'bg-info text-dark';
-                        if (data === 'Corporate') badgeClass = 'bg-primary';
-                        if (data === 'OwnerReferral') badgeClass = 'bg-warning text-dark';
-                        if (!data || data === 'General') badgeClass = 'bg-light text-dark border'; // WalkIn/General
+                        if (data === 'OTA') badgeClass = 'badge-reserved';
+                        if (data === 'Corporate') badgeClass = 'badge-approved';
+                        if (data === 'OwnerReferral') badgeClass = 'badge-pending';
+                        if (!data || data === 'General') badgeClass = 'badge-orange'; // WalkIn/General
 
                         let text = data ? data : 'Walk-In';
                         
@@ -279,15 +279,19 @@ $(function () {
             title: "Yakin ingin menghapus?",
             text: "Data ini tidak bisa dikembalikan!",
             icon: "warning",
+            background: '#F7F3E4',
             showCancelButton: true,
             confirmButtonColor: "#F2C2B8",
             cancelButtonColor: "#8FB8E1",
-            confirmButtonText: "Ya, Hapus!",
-            cancelButtonText: "Batal",
+            confirmButtonText: 'Ya, Kosongkan!',
+            cancelButtonText: 'Batal',
+            iconColor: '#50200C',
             customClass: {
                 confirmButton: "text-50200C",
                 cancelButton: "text-50200C",
-            },
+                title: "text-50200C",
+                htmlContainer: "text-50200C"
+            }
         });
         if (!result.isConfirmed) return;
 

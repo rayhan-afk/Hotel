@@ -4,137 +4,125 @@
  */
 
 (function () {
-    ("use strict");
+    "use strict";
 
-    console.log("🍳 Recipe Editor Loaded!");
+    console.log("🍳 Recipe Editor Loaded - Fixed & Optimized!");
 
     let currentRecipe = [];
 
-    // Check if we're on recipe page
-    const recipeContainer = document.getElementById("modalTambahMenu");
-    if (!recipeContainer) return;
+    // Cek apakah kita berada di halaman resep
+    // Kita cek container utama atau salah satu elemen unik
+    const addBtn = document.getElementById("add-button");
+    if (!addBtn) return; // Stop jika bukan di halaman resep
 
     // ============================================
-    // 1. FORM TAMBAH MENU BARU (SUDAH DIPERBAIKI)
+    // 1. FORM TAMBAH MENU BARU
     // ============================================
     const formTambahMenu = document.getElementById("formTambahMenu");
     if (formTambahMenu) {
         formTambahMenu.addEventListener("submit", function (e) {
             e.preventDefault();
 
-            // 1. Ambil data form
             const formData = new FormData(this);
-
-            // CEK DEBUG: Lihat di Console browser (F12) apakah file terdeteksi?
-            const fileGambar = formData.get("image");
-            console.log("📸 File yang dikirim:", fileGambar);
-
             const submitBtn = this.querySelector('button[type="submit"]');
+            
+            // Simpan teks asli
+            const originalText = submitBtn.innerHTML;
 
-            // 2. Ubah tombol jadi loading
+            // Disable button
             submitBtn.disabled = true;
-            submitBtn.innerHTML =
-                '<i class="fas fa-spinner fa-spin me-2"></i>Menyimpan...';
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Menyimpan...';
 
             fetch(window.recipeConfig.createMenuRoute, {
                 method: "POST",
                 headers: {
-                    // WAJIB ADA: Agar Laravel merespon dengan JSON jika ada error validasi
-                    Accept: "application/json",
+                    "Accept": "application/json",
                     "X-CSRF-TOKEN": window.recipeConfig.csrfToken,
                 },
-                body: formData, // Fetch otomatis mengatur Content-Type untuk FormData
+                body: formData,
             })
-                .then((response) => response.json())
-                .then((data) => {
-                    // Tangani jika validasi Laravel gagal (Error 422)
-                    if (data.errors) {
-                        let errorMsg = "";
-                        for (const [key, value] of Object.entries(
-                            data.errors
-                        )) {
-                            errorMsg += `• ${value}<br>`;
-                        }
-                        toastr.error(errorMsg, "Gagal Validasi");
-                        throw new Error("Validasi Gagal"); // Stop proses
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.errors) {
+                    // Handle Error Validasi Laravel
+                    let errorMsg = "";
+                    for (const [key, value] of Object.entries(data.errors)) {
+                        errorMsg += `• ${value}<br>`;
                     }
-
-                    if (
-                        data.success ||
-                        data.message === "Menu berhasil ditambahkan"
-                    ) {
-                        // Sesuaikan dengan response controller kamu
-                        toastr.success(
-                            "Menu berhasil ditambahkan! Sekarang Anda bisa atur resepnya."
-                        );
-
-                        // Close modal
-                        const modal = bootstrap.Modal.getInstance(
-                            document.getElementById("modalTambahMenu")
-                        );
-                        if (modal) modal.hide();
-
-                        // Reload
-                        setTimeout(() => location.reload(), 1000);
-                    } else {
-                        // Jika success: false
-                        toastr.error(
-                            "Gagal: " +
-                                (data.message || "Terjadi kesalahan server")
-                        );
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML =
-                            '<i class="fas fa-save me-2"></i>Simpan & Atur Resep';
-                    }
-                })
-                .catch((error) => {
-                    if (error.message !== "Validasi Gagal") {
-                        console.error("❌ Error:", error);
-                        toastr.error(
-                            "Terjadi kesalahan sistem / File terlalu besar (Max 2MB)."
-                        );
-                    }
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML =
-                        '<i class="fas fa-save me-2"></i>Simpan & Atur Resep';
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Validasi Gagal',
+                        html: errorMsg,
+                        confirmButtonColor: '#50200C'
+                    });
+                } else if (data.success || data.status === 'success') {
+                    // Sukses
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: 'Menu berhasil ditambahkan.',
+                        confirmButtonColor: '#50200C',
+                        timer: 1500,
+                        showConfirmButton: false
+                    }).then(() => {
+                        location.reload();
+                    });
+                    
+                    // Tutup modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById("modalTambahMenu"));
+                    if (modal) modal.hide();
+                } else {
+                    throw new Error(data.message || "Gagal menyimpan data.");
+                }
+            })
+            .catch((error) => {
+                console.error("❌ Error:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Terjadi kesalahan: ' + error.message,
+                    confirmButtonColor: '#50200C'
                 });
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            });
         });
     }
 
     // ============================================
-    // 2. LOAD RECIPE DATA
+    // 2. LOAD RECIPE DATA (ATUR RESEP) - PAKAI DELEGATION
     // ============================================
-    document.querySelectorAll(".load-recipe-btn").forEach((btn) => {
-        btn.addEventListener("click", function () {
-            const menuId = this.getAttribute("data-menu-id");
-            const menuName = this.getAttribute("data-menu-name");
+    // Menggunakan document.addEventListener agar tombol dinamis tetap terbaca
+    document.addEventListener('click', function(e) {
+        // Cek apakah yang diklik adalah tombol .load-recipe-btn atau anaknya
+        const target = e.target.closest('.load-recipe-btn');
+        
+        if (target) {
+            e.preventDefault();
+            const menuId = target.getAttribute("data-menu-id");
+            const menuName = target.getAttribute("data-menu-name");
 
             console.log("📖 Loading recipe for menu:", menuId, menuName);
 
-            document.getElementById(
-                "editingMenuName"
-            ).innerHTML = `Mengedit resep untuk: <strong style="color: #50200C;">${menuName}</strong>`;
+            // Update UI Kolom Kanan
+            document.getElementById("editingMenuName").innerHTML = `Mengedit resep untuk: <strong style="color: #50200C;">${menuName}</strong>`;
             document.getElementById("editingMenuId").value = menuId;
             document.getElementById("btnSaveRecipe").disabled = false;
             document.getElementById("selectedIngredientsList").innerHTML =
-                '<div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x text-muted"></i></div>';
+                '<div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x text-muted"></i><br><small>Memuat data...</small></div>';
 
             currentRecipe = [];
 
-            // Fetch recipe data
+            // Fetch Data
             fetch(`/recipes/get/${menuId}`)
                 .then((response) => {
-                    console.log("📥 Response status:", response.status);
-                    if (!response.ok) {
-                        throw new Error(
-                            `HTTP error! status: ${response.status}`
-                        );
-                    }
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                     return response.json();
                 })
                 .then((data) => {
                     console.log("📦 Recipe data received:", data);
-
                     if (data.length > 0) {
                         data.forEach((item) => {
                             currentRecipe.push({
@@ -144,43 +132,50 @@
                                 qty: parseFloat(item.quantity),
                             });
                         });
-                        console.log("✅ Recipe loaded:", currentRecipe);
-                    } else {
-                        console.log("ℹ️ No recipe found for this menu");
                     }
                     renderRecipeList();
                 })
                 .catch((error) => {
                     console.error("❌ Error loading recipe:", error);
-                    document.getElementById(
-                        "selectedIngredientsList"
-                    ).innerHTML =
-                        '<div class="text-danger text-center p-3">Gagal memuat resep: ' +
-                        error.message +
-                        "</div>";
+                    document.getElementById("selectedIngredientsList").innerHTML =
+                        `<div class="text-danger text-center p-3">Gagal memuat resep.<br>Error: ${error.message}</div>`;
                 });
-        });
+        }
     });
 
     // ============================================
-    // 3. ADD INGREDIENT FROM LIST
+    // 3. ADD INGREDIENT TO LIST (Button +)
     // ============================================
     document.querySelectorAll(".available-ingredient-item").forEach((item) => {
         item.addEventListener("click", function () {
             const menuId = document.getElementById("editingMenuId").value;
+            
             if (!menuId) {
-                toastr.warning(
-                    "Silakan pilih menu di kolom kiri terlebih dahulu!"
-                );
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Pilih Menu Dulu',
+                    text: 'Silakan klik tombol "Atur Resep" pada salah satu menu di sebelah kiri.',
+                    confirmButtonColor: '#50200C',
+                    customClass: {
+                        title: "text-50200C",
+                        htmlContainer: "text-50200C"
+                    }
+                });
                 return;
             }
 
             const ingId = this.getAttribute("data-ing-id");
+            // Cek duplikasi
             const existing = currentRecipe.find((r) => r.id == ingId);
 
             if (existing) {
-                toastr.info("Bahan ini sudah ada di resep.");
-                return;
+                // Highlight item yang sudah ada (Visual feedback)
+                const existingRow = document.querySelector(`.ingredient-item[data-ing-id="${ingId}"]`);
+                if(existingRow) {
+                    existingRow.style.border = "2px solid #50200C";
+                    setTimeout(() => existingRow.style.border = "1px solid #e0e0e0", 500);
+                }
+                return; // Jangan tambah lagi
             }
 
             console.log("➕ Adding ingredient:", ingId);
@@ -189,7 +184,7 @@
                 id: ingId,
                 name: this.getAttribute("data-ing-name"),
                 unit: this.getAttribute("data-ing-unit"),
-                qty: 1,
+                qty: 1, // Default qty
             });
 
             renderRecipeList();
@@ -197,19 +192,14 @@
     });
 
     // ============================================
-    // 4. RENDER RECIPE LIST
+    // 4. RENDER RECIPE LIST (Logic Tampilan)
     // ============================================
     function renderRecipeList() {
-        console.log("🔄 Rendering recipe list...");
-
         const container = document.getElementById("selectedIngredientsList");
         const countSpan = document.getElementById("selectedCount");
         const template = document.getElementById("ingredientRowTemplate");
 
-        if (!container || !countSpan || !template) {
-            console.error("❌ Required elements not found");
-            return;
-        }
+        if (!container || !countSpan || !template) return;
 
         container.innerHTML = "";
         countSpan.textContent = currentRecipe.length;
@@ -217,11 +207,10 @@
         if (currentRecipe.length === 0) {
             container.innerHTML = `
                 <div class="text-center text-muted mt-4">
-                    <i class="fas fa-carrot fa-3x mb-3" style="opacity: 0.3"></i>
-                    <p>Belum ada bahan baku ditambahkan.</p>
-                    <small>Cari dan klik bahan di bawah untuk menambahkan.</small>
+                    <i class="fas fa-carrot fa-3x mb-3" style="opacity: 0.3; color: #50200C"></i>
+                    <p style="color: #50200C">Belum ada bahan baku ditambahkan.</p>
+                    <small style="color: #50200C">Cari dan klik bahan di bawah untuk menambahkan.</small>
                 </div>`;
-            console.log("ℹ️ No ingredients in recipe");
             return;
         }
 
@@ -229,40 +218,36 @@
             const clone = template.content.cloneNode(true);
             const row = clone.querySelector(".ingredient-item");
 
+            // Set Data
             row.setAttribute("data-ing-id", item.id);
             row.querySelector(".ingredient-name").textContent = item.name;
-            row.querySelector(
-                ".ingredient-unit"
-            ).textContent = `Satuan: ${item.unit}`;
+            row.querySelector(".ingredient-unit").textContent = `Satuan: ${item.unit}`;
 
             const qtyInput = row.querySelector(".qty-input");
             qtyInput.value = item.qty;
 
+            // Event: Ganti Jumlah
             qtyInput.addEventListener("change", function () {
                 const newQty = parseFloat(this.value);
                 if (newQty > 0) {
                     currentRecipe[index].qty = newQty;
-                    console.log(`📊 Updated qty for ${item.name}: ${newQty}`);
+                } else {
+                    this.value = currentRecipe[index].qty; // Reset kalau user input <= 0
                 }
             });
 
-            row.querySelector(".btn-remove-ing").addEventListener(
-                "click",
-                function () {
-                    console.log(`🗑️ Removing ingredient: ${item.name}`);
-                    currentRecipe.splice(index, 1);
-                    renderRecipeList();
-                }
-            );
+            // Event: Hapus Bahan
+            row.querySelector(".btn-remove-ing").addEventListener("click", function () {
+                currentRecipe.splice(index, 1);
+                renderRecipeList();
+            });
 
             container.appendChild(clone);
         });
-
-        console.log("✅ Rendered", currentRecipe.length, "ingredients");
     }
 
     // ============================================
-    // 5. SAVE RECIPE
+    // 5. SAVE RECIPE (Simpan Kanan)
     // ============================================
     const btnSaveRecipe = document.getElementById("btnSaveRecipe");
     if (btnSaveRecipe) {
@@ -270,18 +255,23 @@
             const menuId = document.getElementById("editingMenuId").value;
 
             if (!menuId || currentRecipe.length === 0) {
-                toastr.warning(
-                    "Data tidak lengkap. Pastikan menu dipilih dan minimal ada 1 bahan."
-                );
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Data Belum Lengkap',
+                    text: 'Pastikan menu dipilih dan minimal ada 1 bahan baku.',
+                    confirmButtonColor: '#50200C',
+                    customClass: {
+                        title: "text-50200C",
+                        htmlContainer: "text-50200C"
+                    }
+                });
                 return;
             }
 
-            console.log("💾 Saving recipe for menu:", menuId);
-            console.log("📦 Data to save:", currentRecipe);
-
+            // Loading State
+            const originalText = this.innerHTML;
             this.disabled = true;
-            this.innerHTML =
-                '<i class="fas fa-spinner fa-spin me-2"></i> Menyimpan...';
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Menyimpan...';
 
             const payload = {
                 menu_id: menuId,
@@ -291,8 +281,6 @@
                 })),
             };
 
-            console.log("📤 Payload:", payload);
-
             fetch(window.recipeConfig.updateRoute, {
                 method: "POST",
                 headers: {
@@ -301,147 +289,117 @@
                 },
                 body: JSON.stringify(payload),
             })
-                .then((response) => {
-                    console.log("📥 Save response status:", response.status);
-                    return response.json();
-                })
-                .then((data) => {
-                    console.log("📥 Save response:", data);
-
-                    if (data.status === "success") {
-                        toastr.success("Resep berhasil disimpan!");
-                        setTimeout(() => location.reload(), 1000);
-                    } else {
-                        toastr.error("Gagal menyimpan: " + data.message);
-                        this.disabled = false;
-                        this.innerHTML =
-                            '<i class="fas fa-save me-2"></i> Simpan Resep Menu Ini';
-                    }
-                })
-                .catch((error) => {
-                    console.error("❌ Error saving recipe:", error);
-                    toastr.error("Terjadi kesalahan sistem: " + error.message);
-                    this.disabled = false;
-                    this.innerHTML =
-                        '<i class="fas fa-save me-2"></i> Simpan Resep Menu Ini';
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.status === "success" || data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Tersimpan!',
+                        text: 'Resep menu berhasil diperbarui.',
+                        timer: 1500,
+                        showConfirmButton: false,
+                        confirmButtonColor: '#50200C'
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    throw new Error(data.message || "Gagal menyimpan.");
+                }
+            })
+            .catch((error) => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: error.message,
+                    confirmButtonColor: '#50200C'
                 });
+                this.disabled = false;
+                this.innerHTML = originalText;
+            });
         });
     }
 
     // ============================================
-    // 6. RESET FORM
-    // ============================================
-    window.resetForm = function () {
-        console.log("🔄 Resetting form...");
-
-        document.getElementById("editingMenuName").innerHTML =
-            '<span class="text-primary">Mode Tambah Baru: Silakan pilih menu di samping dulu.</span>';
-        document.getElementById("editingMenuId").value = "";
-        currentRecipe = [];
-        renderRecipeList();
-        document.getElementById("btnSaveRecipe").disabled = true;
-    };
-
-    // ============================================
-    // 7. SEARCH FEATURES
+    // 6. SEARCH MENU (Pencarian Menu)
     // ============================================
     const searchMenu = document.getElementById("searchMenu");
     if (searchMenu) {
         searchMenu.addEventListener("keyup", function () {
             const value = this.value.toLowerCase();
-            document.querySelectorAll(".menu-item-card").forEach((card) => {
+            const cards = document.querySelectorAll(".menu-item-card");
+            
+            cards.forEach((card) => {
                 const name = card.getAttribute("data-name");
-                card.style.display = name.includes(value) ? "block" : "none";
+                if (name.includes(value)) {
+                    // Tampilkan (hapus display: none inline style jika ada)
+                    card.style.display = ""; 
+                    // Pastikan class bootstrap col tetap bekerja
+                    card.classList.remove("d-none");
+                } else {
+                    // Sembunyikan
+                    card.style.display = "none";
+                }
             });
         });
     }
 
+    // ============================================
+    // 7. SEARCH INGREDIENT (Pencarian Bahan)
+    // ============================================
     const searchIngredient = document.getElementById("searchIngredient");
     if (searchIngredient) {
         searchIngredient.addEventListener("keyup", function () {
             const value = this.value.toLowerCase();
-            document
-                .querySelectorAll(".available-ingredient-item")
-                .forEach((item) => {
-                    const name = item
-                        .getAttribute("data-ing-name")
-                        .toLowerCase();
-                    item.style.display = name.includes(value) ? "flex" : "none";
-                });
-        });
-    }
-    // ============================================
-    // 8. DELETE MENU (SWEETALERT2) - NEW FEATURE!
-    // ============================================
-    const deleteButtons = document.querySelectorAll(".btn-delete-menu");
-
-    deleteButtons.forEach((button) => {
-        button.addEventListener("click", function (e) {
-            e.preventDefault(); // Mencegah form submit langsung
-
-            // 1. Ambil elemen form pembungkusnya
-            const form = this.closest(".form-delete-menu");
-
-            // 2. Ambil nama menu
-            const menuName = this.getAttribute("data-name");
-
-            // 3. Tampilkan SweetAlert
-            Swal.fire({
-                title: "Hapus Menu?",
-                html: `Yakin ingin menghapus <b>${menuName}</b>?<br><small class="text-danger">Semua resep terkait juga akan dihapus permanen!</small>`,
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#d33", // Merah
-                cancelButtonColor: "#50200C", // Coklat Tema Kamu
-                confirmButtonText: "Ya, Hapus!",
-                cancelButtonText: "Batal",
-                reverseButtons: true,
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // 4. Submit form jika user bilang YES
-                    form.submit();
+            document.querySelectorAll(".available-ingredient-item").forEach((item) => {
+                const name = item.getAttribute("data-ing-name").toLowerCase();
+                // Toggle visibility menggunakan d-flex / d-none
+                if (name.includes(value)) {
+                    item.classList.remove("d-none");
+                    item.classList.add("d-flex");
+                } else {
+                    item.classList.remove("d-flex");
+                    item.classList.add("d-none");
                 }
             });
         });
-    });
+    }
 
     // ============================================
-    // 8. DELETE MENU (SWEETALERT2) - NEW FEATURE!
+    // 8. DELETE MENU (SWEETALERT2) - FIXED
     // ============================================
-    const deleteButtons = document.querySelectorAll(".btn-delete-menu");
+    // Menggunakan Delegation juga untuk tombol delete di dalam dropdown
+    document.addEventListener('click', function(e) {
+        // Cari tombol delete menu terdekat
+        const deleteBtn = e.target.closest('.btn-delete-menu');
+        
+        if (deleteBtn) {
+            e.preventDefault();
+            const form = deleteBtn.closest("form");
+            const menuName = deleteBtn.getAttribute("data-name");
 
-    deleteButtons.forEach((button) => {
-        button.addEventListener("click", function (e) {
-            e.preventDefault(); // Mencegah form submit langsung
-
-            // 1. Ambil elemen form pembungkusnya
-            const form = this.closest(".form-delete-menu");
-
-            // 2. Ambil nama menu
-            const menuName = this.getAttribute("data-name");
-
-            // 3. Tampilkan SweetAlert
             Swal.fire({
                 title: "Hapus Menu?",
-                html: `Yakin ingin menghapus <b>${menuName}</b>?<br><small class="text-50200C">Semua resep terkait juga akan dihapus permanen!</small>`,
+                html: `Yakin ingin menghapus <b>${menuName}</b>?<br><small style="color: #A94442">Semua resep terkait juga akan dihapus permanen!</small>`,
                 icon: "warning",
+                background: '#F7F3E4',
                 showCancelButton: true,
                 confirmButtonColor: "#F2C2B8",
                 cancelButtonColor: "#8FB8E1",
-                confirmButtonText: "Ya, Hapus!",
-                cancelButtonText: "Batal",
+                confirmButtonText: 'Ya, Kosongkan!',
+                cancelButtonText: 'Batal',
+                iconColor: '#50200C',
                 customClass: {
                     confirmButton: "text-50200C",
                     cancelButton: "text-50200C",
-                },
+                    title: "text-50200C",
+                    htmlContainer: "text-50200C"
+                }
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // 4. Submit form jika user bilang YES
                     form.submit();
                 }
             });
-        });
+        }
     });
 
-    console.log("✅ Recipe Editor initialized successfully!");
 })();

@@ -10,27 +10,28 @@ class TransactionRepository implements TransactionRepositoryInterface
 {
     public function store($request, $customer, $room)
     {
-        // 1. Ambil data checkin/checkout sekadar untuk disimpan
+        // Mendefinisikan variabel Count (WAJIB ADA)
+        $countPerson = $request->input('count_person', 1);
+        $countChild  = $request->input('count_child', 0);
+
+        // Jika Anda ingin tetap ada Carbon (boleh, tapi tidak wajib)
         $check_in = Carbon::parse($request->check_in);
         $check_out = Carbon::parse($request->check_out);
 
-        // 2. SIMPAN TRANSAKSI
         return Transaction::create([
             'user_id'     => auth()->id(), 
             'customer_id' => $customer->id,
             'room_id'     => $room->id,
-            'check_in'    => $request->check_in,
-            'check_out'   => $request->check_out,
+            
+            // Kalau mau pakai Carbon yg diatas, di sini harus diganti jadi variabelnya
+            'check_in'    => $check_in,   
+            'check_out'   => $check_out,
+            
             'status'      => 'Reservation', 
-            
+            'count_person'  => $countPerson,
+            'count_child'   => $countChild,
             'breakfast'   => $request->breakfast ?? 'No',
-            
-            // Simpan Total Tagihan
             'total_price' => $request->total_price,
-
-            // [PERBAIKAN WAJIB DISINI]
-            // Simpan Total Bayar sama persis dengan Total Tagihan.
-            // Ini membuat status transaksi di database menjadi LUNAS (Sisa Bayar = 0).
             'paid_amount' => $request->total_price 
         ]);
     }

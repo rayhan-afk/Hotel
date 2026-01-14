@@ -65,7 +65,7 @@
                                                 </td>
                                                 <td class="align-middle" style="background-color: #F7F3E4;">
                                                     {{-- Simulasi Status Active --}}
-                                                    <span class="badge rounded-pill bg-success" style="font-weight: normal;">
+                                                    <span class="badge rounded-pill badge-approved" style="font-weight: normal;">
                                                         Active
                                                     </span>
                                                 </td>
@@ -153,15 +153,19 @@
                 title: "Yakin ingin menghapus?",
                 text: "Data " + user_name + " tidak bisa dikembalikan!",
                 icon: "warning",
+                background: '#F7F3E4',
                 showCancelButton: true,
                 confirmButtonColor: "#F2C2B8",
                 cancelButtonColor: "#8FB8E1",
-                confirmButtonText: "Ya, Hapus!",
-                cancelButtonText: "Batal",
+                confirmButtonText: 'Ya, Kosongkan!',
+                cancelButtonText: 'Batal',
+                iconColor: '#50200C',
                 customClass: {
                     confirmButton: "text-50200C",
                     cancelButton: "text-50200C",
-                },
+                    title: "text-50200C",
+                    htmlContainer: "text-50200C"
+                }
             }).then((result) => {
                 if (result.isConfirmed) {
                     id = '#delete-post-form-' + user_id

@@ -10,13 +10,19 @@ return new class extends Migration
     {
         Schema::create('amenity_stock_opnames', function (Blueprint $table) {
             $table->id();
-            // Hubungkan ke tabel amenities
-            $table->foreignId('amenity_id')->constrained('amenities')->onDelete('cascade'); 
             
-            $table->decimal('system_stock', 10, 2);   // Stok di komputer
-            $table->decimal('physical_stock', 10, 2); // Stok fisik
-            $table->decimal('difference', 10, 2);     // Selisih
-            $table->text('notes')->nullable();        // Catatan
+            // Relasi ke amenities
+            $table->foreignId('amenity_id')
+                  ->constrained('amenities')
+                  ->onDelete('cascade'); 
+
+            // Gunakan Bahasa Inggris
+            $table->integer('system_stock');
+            $table->integer('physical_stock');
+            $table->integer('difference'); // Selisih
+            
+            $table->text('note')->nullable(); // Catatan
+
             $table->timestamps();
         });
     }

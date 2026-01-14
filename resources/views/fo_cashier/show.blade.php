@@ -437,20 +437,27 @@
         Swal.fire({
             title: 'Pelunasan Tagihan',
             html: `
-                <div class="text-center mb-3">
-                    <div class="mb-2 text-muted">Total Kekurangan Pembayaran</div>
-                    <h2 class="text-danger fw-bold">Rp ${amount}</h2>
-                    <div class="badge bg-light text-dark mt-2 border">Tamu: ${name}</div>
-                </div>
-                <p class="text-muted small">Klik tombol di bawah untuk mencatat pelunasan tunai.</p>
-            `,
-            icon: 'info',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: '<i class="fas fa-check-circle me-1"></i> Lunasi Sekarang',
-            cancelButtonText: 'Batal'
-        }).then((result) => {
+                    <div class="text-center mb-3">
+                        <div class="mb-2" style="color: #50200C">Total Kekurangan Pembayaran</div>
+                        <h2 class="fw-bold" style="color: #A94442">${amount}</h2>
+                        <div class="badge bg-light mt-2 border" style="color: #50200C">Tamu: ${name}</div>
+                    </div>
+                    <p class="small" style="color: #50200C">Klik tombol di bawah untuk mencatat pelunasan tunai.</p>
+                `,
+                icon: 'warning',
+                background: '#F7F3E4',
+                showCancelButton: true,
+                confirmButtonColor: '#A8D5BA',
+                cancelButtonColor: '#F2C2B8',
+                confirmButtonText: '<i class="fas fa-check-circle me-1"></i> Lunasi Sekarang',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    confirmButton: "text-50200C",
+                    cancelButton: "text-50200C",
+                    title: "text-50200C",
+                    htmlContainer: "text-50200C"
+                }
+            }).then((result) => {
             if (result.isConfirmed) {
                 Swal.fire({ title: 'Memproses...', didOpen: () => { Swal.showLoading() } });
                 

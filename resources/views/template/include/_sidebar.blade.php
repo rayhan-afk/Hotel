@@ -208,9 +208,11 @@
                                         <i class="fas fa-carrot nav-icon-sub"></i> Bahan Baku
                                     </a>
                                 @endif
-                                <a href="{{ route('pos.index') }}" class="nav-subitem {{ request()->routeIs('pos.*') ? 'active' : '' }}">
-                                    <i class="fas fa-cash-register nav-icon-sub"></i> Kasir
-                                </a>
+                                @if($isSuper || $isManager || $isKasir)
+                                    <a href="{{ route('pos.index') }}" class="nav-subitem {{ request()->routeIs('pos.*') ? 'active' : '' }}">
+                                        <i class="fas fa-cash-register nav-icon-sub"></i> Kasir
+                                    </a>
+                                @endif
                                 @if(!$isAdmin)
                                     <a href="{{ route('recipes.index') }}" class="nav-subitem {{ request()->routeIs('recipes.*') ? 'active' : '' }}">
                                         <i class="fas fa-scroll nav-icon-sub"></i> Resep

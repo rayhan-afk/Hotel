@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Repositories\Interface\LaporanPosRepositoryInterface;
+use App\Models\TransactionPos;
+use Barryvdh\DomPDF\Facade\Pdf;
+
 
 class LaporanPosController extends Controller
 {
@@ -31,62 +34,75 @@ class LaporanPosController extends Controller
      */
     public function exportExcel(Request $request)
     {
-        // 1. Ambil data dari Repository (sudah terfilter tanggal)
-        $query = $this->laporanPosRepository->getLaporanPosQuery($request);
-        $transactions = $query->get();
+        // 1. Validasi Input
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date'   => 'required|date|after_or_equal:start_date',
+        ]);
 
-        // 2. Tentukan Header CSV dengan nama file
-        $fileName = 'laporan_kasir_' . date('d-m-Y_H-i') . '.csv';
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+        $startDate = $request->start_date;
+        $endDate   = $request->end_date;
+
+        // 2. Query Data
+        $transactions = TransactionPos::with(['details.menu'])
+            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // 3. Nama File
+        $fileName = 'Laporan_Kasir_' . date('d-m-Y_His') . '.xls';
+
+        // 4. Header agar browser menganggap ini file Excel
+        header("Content-Type: application/vnd.ms-excel");
+        header("Content-Disposition: attachment; filename=\"$fileName\"");
+        header("Pragma: no-cache");
+        header("Expires: 0");
+
+        // 5. Return View Blade yang tadi kita buat
+        // Pastikan nama view sesuai dengan lokasi file kamu
+        return view('laporan.kasir.excel', [
+            'transactions' => $transactions,
+            'startDate' => $startDate,
+            'endDate' => $endDate
+        ]);
+    }
+    public function exportPdf(Request $request)
+    {
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $startDate = $request->start_date;
+        $endDate = $request->end_date;
+
+        // Ambil data transaksi kasir dengan relasi
+        $transactions = TransactionPos::with(['details.menu'])
+            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Hitung total omset
+        $totalOmset = $transactions->sum('total_amount');
+
+        // Data untuk PDF
+        $data = [
+            'transactions' => $transactions,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'totalOmset' => $totalOmset,
+            'printDate' => now()->format('d/m/Y H:i'),
+            'totalTransaksi' => $transactions->count(),
         ];
 
-        // 3. Buat fungsi callback untuk streaming data
-        $callback = function() use ($transactions) {
-            $file = fopen('php://output', 'w');
-            
-            // Tambahkan BOM untuk encoding UTF-8 (agar Excel tidak error)
-            fputs($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
-
-            // Tulis Judul Kolom
-            fputcsv($file, [
-                'No Invoice', 
-                'Tanggal Transaksi', 
-                'Jam', 
-                'Metode Pembayaran', 
-                'Menu Terjual (Qty)', 
-                'Total Tagihan (Rp)', 
-                'Dibayar (Rp)', 
-                'Kembalian (Rp)'
-            ]);
-
-            // Tulis Data Transaksi per Baris
-            foreach ($transactions as $row) {
-                // Format list menu yang dibeli
-                $itemList = $row->details->map(function($detail) {
-                    return $detail->menu->name . ' (' . $detail->qty . ')';
-                })->implode('; '); 
-
-                $data = [
-                    // Tambahkan apostrophe (') agar Excel mengenali sebagai teks
-                    "'" . $row->invoice_number, 
-                    $row->created_at->format('d-m-Y'),
-                    $row->created_at->format('H:i'),
-                    $row->payment_method,
-                    $itemList,
-                    // Format angka dengan pemisah ribuan
-                    number_format($row->total_amount, 0, ',', '.'), 
-                    number_format($row->pay_amount, 0, ',', '.'),
-                    number_format($row->change_amount, 0, ',', '.')
-                ];
-
-                fputcsv($file, $data);
-            }
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        // Load view PDF
+        $pdf = PDF::loadView('laporan.kasir.pdf', $data);
+        
+        // Set paper size dan orientation (landscape karena banyak kolom)
+        $pdf->setPaper('a4', 'landscape');
+        
+        // Download PDF dengan nama file dinamis
+        $filename = 'Laporan_Kasir_' . date('Ymd_His') . '.pdf';
+        return $pdf->download($filename);
     }
 }

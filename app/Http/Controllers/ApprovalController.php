@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Approval;
 use App\Models\Type;
 use App\Models\RuangRapatPaket;
+use App\Models\TypePrice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -84,10 +85,52 @@ class ApprovalController extends Controller
             try {
                 // Cek item name secara aman
                 $itemName = 'Unknown';
-                if (method_exists($model, 'getApprovalModel')) {
-                    $itemModel = $model->getApprovalModel();
-                    $itemName = $itemModel ? ($itemModel->name ?? 'Tanpa Nama') : 'Item Terhapus';
+                // Tentukan prefix berdasarkan tipe
+         
+            $typePrefix = '';
+            $actualItemName = '';
+            
+            if ($model->type === 'type') {
+                // Untuk perubahan info tipe kamar
+                $typePrefix = 'Tipe Kamar';
+                $itemModel = Type::find($model->reference_id);
+                $actualItemName = $itemModel ? $itemModel->name : '(Terhapus)';
+                
+            } elseif ($model->type === 'type_price') {
+                // Untuk perubahan harga tipe kamar
+                $typePrefix = 'Harga Tipe Kamar';
+                $itemModel = Type::find($model->reference_id);
+                $actualItemName = $itemModel ? $itemModel->name : '(Terhapus)';
+                
+            } elseif ($model->type === 'ruang_rapat_paket') {
+                // Untuk paket ruang rapat
+                $typePrefix = 'Paket Ruang Rapat';
+                $itemModel = RuangRapatPaket::find($model->reference_id);
+                $actualItemName = $itemModel ? $itemModel->name : '(Terhapus)';
+                
+            } elseif ($model->type === 'room') {
+                // ========================================
+                // PERBAIKAN: Untuk kamar - Tambah Tipe Kamar
+                // ========================================
+                $typePrefix = 'Kamar';
+                $itemModel = \App\Models\Room::with('type')->find($model->reference_id);
+                
+                if ($itemModel) {
+                    $roomNumber = $itemModel->number;
+                    $roomTypeName = $itemModel->type ? $itemModel->type->name : 'Tipe Tidak Diketahui';
+                    $actualItemName = "No. {$roomNumber} ({$roomTypeName})";
+                } else {
+                    $actualItemName = '(Terhapus)';
                 }
+                
+            } else {
+                // Fallback
+                $typePrefix = 'Unknown';
+                $actualItemName = '';
+            }
+            
+            // Gabungkan Prefix + Nama Item
+            $itemName = trim("{$typePrefix} - {$actualItemName}");
 
                 $data[] = [
                     'id' => $model->id,
@@ -188,12 +231,54 @@ class ApprovalController extends Controller
             }
         }
 
+         // 2. [BARU] Logic untuk Perubahan Harga Tipe Kamar
+        if ($approval->type === 'type_price') {
+            $this->applyPriceChanges($approval);
+        }
+
         // 3. [PERBAIKAN] Logic Baru untuk Kamar (Room)
         if ($approval->type === 'room') {
             $model = \App\Models\Room::find($approval->reference_id);
             if ($model) {
                 $model->update($approval->new_data);
             }
+        }
+    }
+    /**
+     * [BARU] Apply Price Changes untuk Type Price
+     */
+    private function applyPriceChanges(Approval $approval)
+    {
+        $typeId = $approval->reference_id;
+        $newPrices = $approval->new_data;
+        
+        if (!$newPrices || !is_array($newPrices)) {
+            throw new \Exception('Data harga tidak valid');
+        }
+
+        foreach($newPrices as $group => $data) {
+            $weekday = $data['weekday'] ?? null;
+            $weekend = $data['weekend'] ?? null;
+
+            // Jika kedua input kosong, hapus data (reset ke default)
+            if(empty($weekday) && empty($weekend)) {
+                TypePrice::where('type_id', $typeId)
+                         ->where('customer_group', $group)
+                         ->delete();
+                continue;
+            }
+
+            // Update atau Create harga baru
+            TypePrice::updateOrCreate(
+                [
+                    'type_id' => $typeId, 
+                    'customer_group' => $group
+                ],
+                [
+                    'price_weekday' => $weekday ?? 0,
+                    'price_weekend' => $weekend ?? 0
+                ]
+            );
         }
     }
 }

@@ -79,7 +79,9 @@ class Approval extends Model
     {
         return match($this->type) {
             'type' => 'Tipe Kamar',
+            'type_price' => 'Harga Tipe Kamar',
             'ruang_rapat_paket' => 'Paket Ruang Rapat',
+            'room' => 'Kamar',
             default => 'Unknown'
         };
     }

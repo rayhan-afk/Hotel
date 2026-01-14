@@ -78,22 +78,18 @@ $(function () {
                     return `<span class="badge rounded-pill" style="${styleBlue}">${method}</span>`;
                 },
             },
-            // 5. Total Amount (DIPERBAIKI AGAR TIDAK Rp 0 / RpNaN)
+            // 5. Total Amount
             {
-                data: "total_amount", // <--- Pastikan nama ini sama dengan di Controller (misal: grand_total)
+                data: "total_amount",
                 name: "total_amount",
                 className: "text-end fw-bold align-middle pe-3",
                 render: function (data, type, row) {
-                    // --- DEBUG LOG ---
-                    // Jika di browser console (F12) muncul "undefined", berarti nama kolom salah
-                    // console.log("Raw Data Row:", row);
-
                     // 1. Validasi Data Kosong
                     if (data === null || data === undefined || data === "") {
                         return "Rp 0";
                     }
 
-                    // 2. Konversi ke Angka (Handling String vs Number)
+                    // 2. Konversi ke Angka
                     let amount = parseFloat(data);
 
                     // 3. Cek apakah hasil konversi Valid
@@ -119,7 +115,7 @@ $(function () {
             zeroRecords: `<div class="d-flex flex-column align-items-center py-5 text-muted">
                             <i class="fas fa-folder-open fa-3x mb-3 opacity-25"></i>
                             <p class="mb-0 fw-bold">Belum ada data laporan</p>
-                        </div>`
+                        </div>`,
         },
         // Footer Callback (Hitung Total Halaman Ini)
         footerCallback: function (row, data, start, end, display) {
@@ -128,8 +124,6 @@ $(function () {
             // Helper: Hapus semua karakter kecuali angka dan minus, lalu parse float
             let intVal = function (i) {
                 if (typeof i === "string") {
-                    // Hapus Rp, titik ribuan, spasi, dll.
-                    // Jika format '15.000,00', ganti koma jadi titik dulu
                     let clean = i.replace(/[\Rp\.]/g, "").replace(",", ".");
                     return parseFloat(clean) || 0;
                 }
@@ -173,7 +167,114 @@ $(function () {
         datatable.ajax.reload();
     });
 
-    // Tombol Export Excel
+    // ========================================
+    // TOMBOL EXPORT PDF (DIPERBAIKI)
+    // ========================================
+    $("#btnExportPdf").on("click", function (e) {
+        e.preventDefault();
+
+        // PERBAIKAN: Gunakan selector yang benar (#startDate, bukan #start_date)
+        const startDate = $("#startDate").val();
+        const endDate = $("#endDate").val();
+
+        // Validasi: Cek apakah tanggal sudah dipilih
+        if (!startDate || !endDate) {
+            Swal.fire({
+                icon: "warning",
+                title: "Peringatan",
+                text: "Pilih periode tanggal terlebih dahulu!",
+                confirmButtonColor: "#50200C",
+            });
+            return;
+        }
+
+        // Validasi: Cek apakah tanggal mulai lebih besar dari tanggal selesai
+        if (new Date(startDate) > new Date(endDate)) {
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "Tanggal mulai tidak boleh lebih besar dari tanggal selesai!",
+                confirmButtonColor: "#50200C",
+            });
+            return;
+        }
+
+        // Show loading
+        Swal.fire({
+            title: "Mohon Tunggu",
+            text: "Sedang membuat PDF...",
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => {
+                Swal.showLoading();
+            },
+        });
+
+        // Redirect ke route export PDF dengan parameter
+        window.location.href = `/laporan/pos/export-pdf?start_date=${startDate}&end_date=${endDate}`;
+
+        // Close loading setelah 2 detik
+        setTimeout(() => {
+            Swal.close();
+        }, 2000);
+    });
+
+    // ========================================
+    // TOMBOL EXPORT EXCEL (DIPERBAIKI)
+    // ========================================
+    $("#btnExportExcel").on("click", function (e) {
+        e.preventDefault();
+
+        const startDate = $("#startDate").val();
+        const endDate = $("#endDate").val();
+        const baseUrl = $(this).data("route-export");
+
+        // Validasi: Cek apakah tanggal sudah dipilih
+        if (!startDate || !endDate) {
+            Swal.fire({
+                icon: "warning",
+                title: "Peringatan",
+                text: "Pilih periode tanggal terlebih dahulu!",
+                confirmButtonColor: "#50200C",
+            });
+            return;
+        }
+
+        // Validasi: Cek apakah tanggal mulai lebih besar dari tanggal selesai
+        if (new Date(startDate) > new Date(endDate)) {
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "Tanggal mulai tidak boleh lebih besar dari tanggal selesai!",
+                confirmButtonColor: "#50200C",
+            });
+            return;
+        }
+
+        // Show loading
+        Swal.fire({
+            title: "Mohon Tunggu",
+            text: "Sedang membuat Excel...",
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => {
+                Swal.showLoading();
+            },
+        });
+
+        // Buat URL Query String
+        let url = `${baseUrl}?start_date=${startDate}&end_date=${endDate}`;
+        window.location.href = url;
+
+        // Close loading setelah 2 detik
+        setTimeout(() => {
+            Swal.close();
+        }, 2000);
+    });
+
+    // ========================================
+    // TOMBOL EXPORT (Jika masih digunakan untuk Excel)
+    // ========================================
     $("#btnExport").on("click", function (e) {
         e.preventDefault();
         const tglMulai = $("#startDate").val();

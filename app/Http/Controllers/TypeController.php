@@ -9,7 +9,7 @@ use App\Models\TypePrice;
 use App\Models\Customer;
 use App\Repositories\Interface\TypeRepositoryInterface;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB; // [BARU] Tambahkan ini untuk Transaction
+use Illuminate\Support\Facades\DB;
 
 class TypeController extends Controller
 {
@@ -115,7 +115,7 @@ class TypeController extends Controller
         // 1. Ambil Data Grup dari Database (Real Data)
         $dbGroups = Customer::select('customer_group')
                     ->whereNotNull('customer_group')
-                    ->where('customer_group', '!=', '') // Pastikan tidak string kosong
+                    ->where('customer_group', '!=', '')
                     ->distinct()
                     ->pluck('customer_group')
                     ->toArray();
@@ -123,8 +123,7 @@ class TypeController extends Controller
         // 2. Definisi Grup Standar (Yang WAJIB selalu muncul)
         $defaultGroups = ['WalkIn', 'OTA', 'Corporate', 'OwnerReferral'];
 
-        // 3. [FIX] GABUNGKAN keduanya dan hapus duplikat
-        // Walaupun di DB cuma ada "General", Corporate dkk tetap muncul.
+        // 3. Gabungkan keduanya dan hapus duplikat
         $groups = array_unique(array_merge($defaultGroups, $dbGroups));
 
         $data = [];
@@ -141,10 +140,12 @@ class TypeController extends Controller
             ];
         }
         
-        // array_values untuk mereset index array agar JSON rapi (0, 1, 2...)
         return response()->json(array_values($data));
     }
 
+    /**
+     * Store Prices - Dengan Approval System untuk Admin
+     */
     public function storePrices(Request $request)
     {
         $request->validate([
@@ -154,8 +155,44 @@ class TypeController extends Controller
 
         $typeId = $request->type_id;
         $prices = $request->prices;
+        $user = auth()->user();
+        
+        // === LOGIKA APPROVAL UNTUK HARGA ===
+        // Jika user adalah Admin, buat approval request
+        if ($user->role === 'Admin') {
+            
+            // Ambil data harga lama untuk perbandingan
+            $oldPrices = [];
+            foreach($prices as $group => $data) {
+                $existingPrice = TypePrice::where('type_id', $typeId)
+                                          ->where('customer_group', $group)
+                                          ->first();
+                
+                $oldPrices[$group] = [
+                    'weekday' => $existingPrice ? $existingPrice->price_weekday : null,
+                    'weekend' => $existingPrice ? $existingPrice->price_weekend : null,
+                ];
+            }
+            
+            // Simpan ke approval table
+            Approval::create([
+                'type' => 'type_price', // Bedakan dengan 'type' untuk info kamar
+                'reference_id' => $typeId,
+                'requested_by' => $user->id,
+                'old_data' => $oldPrices,
+                'new_data' => $prices,
+                'status' => 'pending',
+            ]);
+            
+            $typeName = Type::find($typeId)->name;
+            
+            return response()->json([
+                'success' => 'Perubahan harga tipe "'.$typeName.'" telah dikirim ke Manager untuk approval.',
+                'requires_approval' => true
+            ]);
+        }
 
-        // Gunakan Database Transaction agar aman
+        // === LANGSUNG UPDATE (Manager/Super) ===
         DB::beginTransaction();
         try {
             foreach($prices as $group => $data) {
@@ -183,11 +220,11 @@ class TypeController extends Controller
                 );
             }
             
-            DB::commit(); // Simpan permanen
+            DB::commit();
             return response()->json(['success' => 'Aturan harga berhasil diperbarui!']);
 
         } catch (\Exception $e) {
-            DB::rollback(); // Batalkan jika ada error
+            DB::rollback();
             return response()->json(['message' => 'Gagal menyimpan harga: ' . $e->getMessage()], 500);
         }
     }

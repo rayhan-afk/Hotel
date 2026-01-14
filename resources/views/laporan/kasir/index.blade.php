@@ -74,13 +74,18 @@
                     </table>
                 </div>
                 
-                {{-- FOOTER: TOMBOL EXPORT --}}
-                <div class="table-footer d-flex justify-content-end align-items-center p-4">
+               <div class="table-footer d-flex justify-content-end align-items-center p-4">
                     <button type="button" id="btnExport" 
                             data-route-export="{{ route('laporan.pos.export') }}"
                             class="btn btn-lg text-white shadow-sm btn-brown px-4">
                         <i class="fas fa-file-excel me-2"></i> Export Excel
                     </button>
+
+                    <li style="list-style: none;"> <a href="#" id="btnExportPdf" 
+                        class="btn btn-lg text-white shadow-sm btn-brown px-4 ms-2"> 
+                            <i class="fas fa-file-pdf me-2"></i> Export PDF
+                        </a>
+                    </li>
                 </div>
 
             </div>

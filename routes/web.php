@@ -218,7 +218,11 @@ Route::delete('/recipes/delete-menu/{id}', [RecipeController::class, 'destroyMen
 Route::group(['middleware' => ['auth', 'checkRole:Super,Manager,Kasir']], function () {
     Route::prefix('laporan')->name('laporan.')->group(function () {
         Route::get('/pos', [LaporanPosController::class, 'index'])->name('pos.index');
+        
+        // PERBAIKAN DI SINI: Arahkan ke 'exportExcel'
         Route::get('/pos/export', [LaporanPosController::class, 'exportExcel'])->name('pos.export');
+        
+        Route::get('/pos/export-pdf', [LaporanPosController::class, 'exportPdf'])->name('pos.exportPdf');
     });
 });
 /*

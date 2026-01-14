@@ -82,8 +82,8 @@ $(function () {
 
                         return `
                             <div class="fw-bold" style="color: #50200C;">${dateStr}</div>
-                            <small class="text-muted" style="font-size: 0.85em;">
-                                <i class="fas fa-clock me-1 text-primary"></i>${timeStr}
+                            <small class="" style="color: #50200C; font-size: 0.85em;">
+                                <i class="fas fa-clock me-1" style="color: #50200C"></i>${timeStr}
                             </small>
                         `;
                     }
@@ -139,7 +139,7 @@ $(function () {
                             return `
                                 <button class="btn btn-sm btn-pay-remaining d-flex align-items-center justify-content-between p-1 pe-3 shadow-sm mx-auto" 
                                         style="background-color: #fff5f5; border: 1px solid #ffc9c9; border-radius: 50px; min-width: 145px; transition: all 0.2s; cursor: pointer;"
-                                        onmouseover="this.style.backgroundColor='#ffe0e0'; this.style.borderColor='#ff8f8f';"
+                                        onmouseover="this.style.backgroundColor='#ffe0e0'; this.style.borderColor='#A94442';"
                                         onmouseout="this.style.backgroundColor='#fff5f5'; this.style.borderColor='#ffc9c9';"
                                         data-id="${row.id}"
                                         data-amount="${formatted}"
@@ -147,17 +147,17 @@ $(function () {
                                         data-bs-toggle="tooltip"
                                         title="Klik untuk melunasi tagihan">
                                     
-                                    <span class="badge rounded-pill bg-danger text-white me-2" style="font-size: 10px; padding: 5px 10px;">
+                                    <span class="badge rounded-pill bg-danger me-2" style="color: #F7F3E4; font-size: 10px; padding: 5px 10px;">
                                         BAYAR <i class="fas fa-chevron-right ms-1"></i>
                                     </span>
                                     
-                                    <span class="text-danger" style="font-size: 12px; font-weight: 800;">${formatted}</span>
+                                    <span class="" style="color: #A94442; font-size: 12px; font-weight: 800;">${formatted}</span>
                                 </button>
                             `;
                         }
                         // LUNAS
                         return `
-                            <span class="badge rounded-pill d-inline-flex align-items-center" style="background-color: #e8f5e9; color: #1b5e20; border: 1px solid #c8e6c9; padding: 6px 12px;">
+                            <span class="badge rounded-pill" style="background-color: #A8D5BA; color: #50200C; font-size: 10px; padding: 6px 12px; font-weight: 700;">
                                 <i class="fas fa-check-circle me-1"></i> Lunas
                             </span>
                         `;
@@ -381,18 +381,25 @@ $(function () {
                 title: 'Pelunasan Tagihan',
                 html: `
                     <div class="text-center mb-3">
-                        <div class="mb-2 text-muted">Total Kekurangan Pembayaran</div>
-                        <h2 class="text-danger fw-bold">${amount}</h2>
-                        <div class="badge bg-light text-dark mt-2 border">Tamu: ${name}</div>
+                        <div class="mb-2" style="color: #50200C">Total Kekurangan Pembayaran</div>
+                        <h2 class="fw-bold" style="color: #A94442">${amount}</h2>
+                        <div class="badge bg-light mt-2 border" style="color: #50200C">Tamu: ${name}</div>
                     </div>
-                    <p class="text-muted small">Klik tombol di bawah untuk mencatat pelunasan tunai.</p>
+                    <p class="small" style="color: #50200C">Klik tombol di bawah untuk mencatat pelunasan tunai.</p>
                 `,
-                icon: 'info',
+                icon: 'warning',
+                background: '#F7F3E4',
                 showCancelButton: true,
-                confirmButtonColor: '#28a745',
-                cancelButtonColor: '#6c757d',
+                confirmButtonColor: '#A8D5BA',
+                cancelButtonColor: '#F2C2B8',
                 confirmButtonText: '<i class="fas fa-check-circle me-1"></i> Lunasi Sekarang',
-                cancelButtonText: 'Batal'
+                cancelButtonText: 'Batal',
+                customClass: {
+                    confirmButton: "text-50200C",
+                    cancelButton: "text-50200C",
+                    title: "text-50200C",
+                    htmlContainer: "text-50200C"
+                }
             }).then((result) => {
                 if (result.isConfirmed) {
                     Swal.fire({ title: 'Memproses...', didOpen: () => { Swal.showLoading() } });

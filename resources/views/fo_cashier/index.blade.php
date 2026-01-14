@@ -98,18 +98,38 @@
                                         <i class="fas fa-calendar-check me-1" style="color: #8FB8E1"></i> Check-in: {{ \Carbon\Carbon::parse($trx->check_in)->format('d M Y, H:i') }}
                                     </div>
 
-                                    {{-- Info Durasi & Sisa Tagihan --}}
+                                    {{-- Info Durasi & Jumlah Tamu & Sisa Tagihan --}}
                                     <div class="d-flex align-items-center gap-2 flex-wrap">
+                                        
+                                        {{-- 1. Badge Durasi (SUDAH DIPERBAIKI SESUAI REQUEST) --}}
                                         <span class="badge bg-light border rounded-pill px-3" style="color: #50200C">
-                                            <i class="fas fa-clock me-1" style="color: #50200C"></i> {{ $trx->getDateDifferenceWithPlural() }}
+                                            <i class="fas fa-clock me-1" style="color: #50200C"></i> 
+                                            @php
+                                                $start = \Carbon\Carbon::parse($trx->check_in)->startOfDay();
+                                                $end   = \Carbon\Carbon::parse($trx->check_out)->startOfDay();
+                                                $days = $start->diffInDays($end);
+                                                // Jika 0 hari, anggap 1 hari (minimal)
+                                                $totalDays = $days == 0 ? 1 : $days;
+                                            @endphp
+                                            {{ $totalDays }} {{ Str::plural('Day', $totalDays) }}
                                         </span>
 
+                                        {{-- 2. Badge Jumlah Tamu --}}
+                                        <span class="badge bg-light border rounded-pill px-3" style="color: #50200C">
+                                            <i class="fas fa-users me-1" style="color: #50200C"></i> 
+                                            {{ $trx->count_person ?? 1 }} Dewasa
+                                            @if($trx->count_child > 0)
+                                                , {{ $trx->count_child }} Anak
+                                            @endif
+                                        </span>
+
+                                        {{-- Logic Sisa Bayar --}}
                                         @php
                                             $sisaBayar = $trx->total_price - $trx->paid_amount;
                                         @endphp
 
                                         @if($sisaBayar > 0)
-                                            {{-- [MODERN] BUTTON BAYAR LUNAS (MIRIP CHECKIN) --}}
+                                            {{-- BUTTON BAYAR LUNAS (QUICK PAY) --}}
                                             <button type="button" 
                                                     class="btn btn-sm d-flex align-items-center justify-content-between p-1 pe-3 shadow-sm btn-quick-pay"
                                                     style="background-color: #fff5f5; border: 1px solid #ffc9c9; border-radius: 50px; min-width: 145px; transition: all 0.2s;"
@@ -127,6 +147,7 @@
                                                 </span>
                                             </button>
                                         @else
+                                            {{-- Badge Lunas --}}
                                             <span class="badge rounded-pill d-inline-flex align-items-center" 
                                                   style="background-color: #e8f5e9; color: #1b5e20; border: 1px solid #c8e6c9; padding: 6px 12px;">
                                                 <i class="fas fa-check-circle me-1"></i> Lunas

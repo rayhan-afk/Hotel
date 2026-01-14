@@ -33,11 +33,34 @@ $(function () {
                     data: "customer_name",
                     className: "fw-bold text-primary"
                 },
-                // 3. Kamar
+                
+                // [KOLOM BARU] 3. Jml. Tamu
+                { 
+                    name: "transactions.count_person", // Pastikan field ini ada di repository
+                    data: "count_person",
+                    className: "text-center",
+                    searchable: false,
+                    render: function(data, type, row) {
+                        // Safety Check: Default 1 Dewasa, 0 Anak
+                        let personCount = (data !== null && data !== undefined) ? data : 1;
+                        let childCount  = (row.count_child !== null && row.count_child !== undefined) ? row.count_child : 0;
+
+                        let text = `<span class="fw-bold">${personCount}</span> Dewasa`;
+                        
+                        if (childCount > 0) {
+                            text += `<br><span class="small text-muted"><span class="fw-bold">${childCount}</span> Anak</span>`;
+                        }
+                        
+                        return `<div class="d-flex flex-column align-items-center">${text}</div>`;
+                    }
+                },
+
+                // 4. Kamar
                 { 
                     name: "rooms.number", 
                     data: "room_info",
                     render: function(data) {
+                        if(!data) return '-';
                         return `
                             <div class="d-flex flex-column">
                                 <span class="fw-bold" style="color: #50200C">${data.number}</span>
@@ -47,7 +70,7 @@ $(function () {
                     }
                 },
                 
-                // 4. CHECK IN
+                // 5. CHECK IN
                 { 
                     name: "transactions.check_in", 
                     data: "check_in",
@@ -66,7 +89,7 @@ $(function () {
                     }
                 },
 
-                // 5. Check Out
+                // 6. Check Out
                 { 
                     name: "transactions.check_out", 
                     data: "check_out",
@@ -77,7 +100,7 @@ $(function () {
                     }
                 },
                 
-                // 6. Sarapan
+                // 7. Sarapan
                 { 
                     name: "transactions.breakfast", 
                     data: "breakfast",
@@ -86,7 +109,7 @@ $(function () {
                     render: function(data) {
                         if (data === 'Yes') {
                             return `<span class="badge rounded-pill" style="background-color: #A8D5BA; color: #50200C; font-size: 10px; padding: 6px 12px; font-weight: 700;">
-                                        <i class="fas fa-utensils me-1" style="color: #50200C; font-size: 10px;"></i>Ya
+                                            <i class="fas fa-utensils me-1" style="color: #50200C; font-size: 10px;"></i>Ya
                                     </span>`;
                         } else {
                             return `<span class="badge rounded-pill" style="background-color: #F2C2B8; color: #50200C; font-size: 10px; padding: 6px 12px; font-weight: 700;">Tidak</span>`;
@@ -94,7 +117,7 @@ $(function () {
                     }
                 },
 
-                // 7. Total Harga
+                // 8. Total Harga
                 { 
                     name: "rooms.price", 
                     data: "total_price",
@@ -104,7 +127,7 @@ $(function () {
                     }
                 },
 
-                // 8. Sisa Bayar (DESAIN BARU: NOMINAL LEBIH TEBAL)
+                // 9. Sisa Bayar
                 { 
                     name: "transactions.paid_amount", 
                     data: "remaining_payment",
@@ -113,7 +136,6 @@ $(function () {
                         let formatted = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(data);
                         
                         if (data > 0) {
-                            // TOMBOL MODERN
                             return `
                                 <button class="btn btn-sm btn-pay-remaining d-flex align-items-center justify-content-between p-1 pe-3 shadow-sm mx-auto" 
                                         style="background-color: #fff5f5; border: 1px solid #ffc9c9; border-radius: 50px; min-width: 145px; transition: all 0.2s; cursor: pointer;"
@@ -133,7 +155,7 @@ $(function () {
                                 </button>
                             `;
                         }
-                        // BADGE LUNAS
+                        // LUNAS
                         return `
                             <span class="badge rounded-pill" style="background-color: #A8D5BA; color: #50200C; font-size: 10px; padding: 6px 12px; font-weight: 700;">
                                 <i class="fas fa-check-circle me-1"></i> Lunas
@@ -142,7 +164,7 @@ $(function () {
                     }
                 },
 
-                // 9. Status
+                // 10. Status
                 { 
                     name: "transactions.status", 
                     data: "status",
@@ -152,7 +174,7 @@ $(function () {
                     }
                 },
                 
-                // 10. AKSI
+                // 11. AKSI
                 {
                     data: 'id',
                     orderable: false,
@@ -160,7 +182,7 @@ $(function () {
                     className: "text-center align-middle",
                     render: function(id, type, row) {
                         let customerName = row.customer_name ? row.customer_name.replace(/"/g, '&quot;') : '-'; 
-                        let roomNumber = row.room_info.number;
+                        let roomNumber = row.room_info ? row.room_info.number : '-';
                         let remaining = row.remaining_payment; 
                         let planCheckout = row.check_out; 
 
@@ -186,12 +208,16 @@ $(function () {
                     }
                 }
             ],
-            order: [[3, 'desc']], 
+            // Order berdasarkan Tanggal Checkin (Kolom ke-5, index 4) atau Checkout (Kolom ke-6, index 5)
+            // Di kode asli Anda pakai index 3 (Check In), tapi karena ada sisipan kolom baru, sekarang jadi index 4.
+            order: [[4, 'desc']], 
             drawCallback: function() {
-                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-                var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                    return new bootstrap.Tooltip(tooltipTriggerEl)
-                })
+                if(typeof bootstrap !== 'undefined'){
+                    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+                    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                        return new bootstrap.Tooltip(tooltipTriggerEl)
+                    })
+                }
             },
             language: {
                 emptyTable: "Tidak ada data tamu yang check in saat ini.",
@@ -199,6 +225,10 @@ $(function () {
                 zeroRecords: "Data tidak ditemukan"
             }
         });
+
+        // =======================================================
+        // EVENT HANDLERS (TIDAK BERUBAH)
+        // =======================================================
 
         // Event: Tombol Edit
         $(document).on('click', '.btn-edit', function() {

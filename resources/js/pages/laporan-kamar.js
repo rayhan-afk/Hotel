@@ -2,7 +2,7 @@ $(function () {
     const currentRoute = window.location.pathname;
     if (!currentRoute.includes("laporan/kamar")) return;
 
-    console.log("Laporan Kamar JS Loaded (Fixed Plan vs Actual)");
+    console.log("Laporan Kamar JS Loaded (With Guest Count)");
 
     // --- STYLE DEFINITIONS (Tetap) ---
     const styleGreen = 'background-color: #A8D5BA; color: #50200C; font-size: 10px; padding: 6px 12px; font-weight: 700;';
@@ -35,17 +35,32 @@ $(function () {
                 }
             },
 
-            // 1. TAMU & KAMAR
+            // 1. TAMU & KAMAR (DIPERBARUI)
             {
                 data: "customer_name",
                 name: "customers.name",
                 className: "align-middle",
                 render: function (data, type, row) {
+                    // Info Kamar
                     let roomNum = row.room ? row.room.number : '-';
                     let roomType = row.room ? row.room.type.name : '-';
+                    
+                    // Info Jumlah Tamu (Data dari Repository)
+                    let pCount = row.count_person || 1;
+                    let cCount = row.count_child || 0;
+                    let guestText = `${pCount} Dewasa`;
+                    if(cCount > 0) guestText += `, ${cCount} Anak`;
+
                     return `<div class="d-flex flex-column">
-                                <span class="fw-bold" style="color: #50200C">${data}</span>
-                                <small style="color: #50200C;"><i class="fas fa-bed me-1"></i>${roomNum} - ${roomType}</small>
+                                <span class="fw-bold" style="color: #50200C; font-size: 1.05em;">${data}</span>
+                                <div class="d-flex align-items-center mt-1">
+                                    <small style="color: #50200C;" class="me-2 border-end pe-2">
+                                        <i class="fas fa-bed me-1" style="color: #C49A6C"></i>${roomNum} - ${roomType}
+                                    </small>
+                                    <small class="text-muted">
+                                        <i class="fas fa-users me-1" style="color: #8FB8E1"></i>${guestText}
+                                    </small>
+                                </div>
                             </div>`;
                 }
             },
@@ -60,13 +75,14 @@ $(function () {
                     let planIn = moment(row.check_in);
                     let planOut = moment(row.check_out);
                     
+                    // Hitung durasi rencana
                     let duration = planOut.diff(planIn, 'days');
                     if (duration < 1) duration = 1; 
 
                     return `<div class="small" style="color: #50200C;">
                                 <div>In: ${planIn.format('DD/MM/YYYY')}</div>
-                                <div class="fw-bold">Durasi: ${duration} Malam</div>
-                                <div class="border-top mt-1 pt-1" style="color: #A94442">Out: ${planOut.format('DD/MM/YYYY')}</div>
+                                <div class="fw-bold my-1" style="font-size: 0.85rem;">Durasi: ${duration} Malam</div>
+                                <div class="text-muted">Out: ${planOut.format('DD/MM/YYYY')}</div>
                             </div>`;
                 }
             },
@@ -104,10 +120,12 @@ $(function () {
                         return `<span class="badge rounded-pill" style="${styleBlue}">Belum Keluar</span>`;
                     }
 
+                    // Gunakan updated_at sebagai waktu keluar real (saat status berubah jadi Done)
                     let actualOut = moment(data); 
                     let planOut = moment(row.check_out);
 
-                    let isLateOut = actualOut.hour() >= 12;
+                    // Logic Telat Checkout (Lebih dari jam 12 siang)
+                    let isLateOut = actualOut.hour() >= 12 && actualOut.minute() > 30; // Toleransi sampai 12:30
                     
                     let actualDateOnly = actualOut.clone().startOf('day');
                     let planDateOnly = planOut.clone().startOf('day');
@@ -192,7 +210,7 @@ $(function () {
         window.location.href = url;
     });
 
-    // === [BARU] EXPORT PDF ===
+    // EXPORT PDF
     $("#btn-export-pdf").on("click", function (e) {
         e.preventDefault();
         

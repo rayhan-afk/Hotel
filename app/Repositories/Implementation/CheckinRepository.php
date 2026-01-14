@@ -49,6 +49,13 @@ class CheckinRepository implements CheckinRepositoryInterface
             $formattedData[] = [
                 'id' => $trx->id,
                 'customer_name' => $trx->customer->name,
+                
+                // === [BAGIAN PENTING: TAMBAHKAN INI] ===
+                // Kirim data jumlah tamu ke JSON agar JavaScript bisa membacanya
+                'count_person' => $trx->count_person ?? 1,
+                'count_child'  => $trx->count_child ?? 0,
+                // ======================================
+
                 'room_info' => [
                     'number' => $trx->room->number,
                     'type' => $trx->room->type->name
@@ -58,8 +65,6 @@ class CheckinRepository implements CheckinRepositoryInterface
                 'check_in' => $trx->check_in,   
                 'check_out' => $trx->check_out, 
 
-                // [DIHAPUS] extra_bed dan extra_breakfast sudah dibuang dari sini
-                
                 'breakfast' => $trx->breakfast ?? 'No',
                 'total_price' => $totalPrice,
                 'remaining_payment' => (float) $remainingDisp, 
@@ -83,7 +88,8 @@ class CheckinRepository implements CheckinRepositoryInterface
 
     public function update($request, $id) 
     { 
-        return Transaction::findOrFail($id); 
+        // Biarkan kosong atau return null karena logic update sudah di Controller
+        return null; 
     }
 
     public function delete($id) 
@@ -103,13 +109,8 @@ class CheckinRepository implements CheckinRepositoryInterface
     {
         $transaction = Transaction::findOrFail($id);
         
-        // === SOLUSI FINAL: JANGAN UBAH KOLOM CHECK_OUT ===
-        // Biarkan 'check_out' tetap tanggal masa depan (Rencana).
-        // Waktu keluar asli akan kita ambil dari 'updated_at' (Waktu status berubah jadi Done).
-
         $transaction->update([
             'status'      => 'Done', 
-            // 'check_out' => ... (JANGAN DIUBAH SAMA SEKALI)
             'paid_amount' => $transaction->total_price 
         ]);
         

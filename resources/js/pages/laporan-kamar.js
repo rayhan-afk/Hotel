@@ -44,7 +44,7 @@ $(function () {
                     let roomNum = row.room ? row.room.number : '-';
                     let roomType = row.room ? row.room.type.name : '-';
                     return `<div class="d-flex flex-column">
-                                <span class="fw-bold text-dark">${data}</span>
+                                <span class="fw-bold" style="color: #50200C">${data}</span>
                                 <small style="color: #50200C;"><i class="fas fa-bed me-1"></i>${roomNum} - ${roomType}</small>
                             </div>`;
                 }
@@ -66,7 +66,7 @@ $(function () {
                     return `<div class="small" style="color: #50200C;">
                                 <div>In: ${planIn.format('DD/MM/YYYY')}</div>
                                 <div class="fw-bold">Durasi: ${duration} Malam</div>
-                                <div class="text-muted border-top mt-1 pt-1">Out: ${planOut.format('DD/MM/YYYY')}</div>
+                                <div class="border-top mt-1 pt-1" style="color: #A94442">Out: ${planOut.format('DD/MM/YYYY')}</div>
                             </div>`;
                 }
             },

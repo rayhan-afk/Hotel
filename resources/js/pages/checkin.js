@@ -314,11 +314,11 @@ $(function () {
                 }).format(remaining);
 
                 let debtAlert = `
-                    <div class="alert alert-danger dynamic-alert border-danger d-flex align-items-center mt-3" role="alert" style="background-color: #ffebee;">
-                        <i class="fas fa-exclamation-triangle me-3 fa-2x text-danger"></i>
+                    <div class="alert alert-light dynamic-alert border-danger d-flex align-items-center mt-3" role="alert">
+                        <i class="fas fa-exclamation-triangle me-3 fa-2x" style="color: #A94442"></i>
                         <div class="text-start">
-                            <strong class="d-block text-danger">BELUM LUNAS!</strong>
-                            <small style="color: #50200C">Tamu memiliki sisa tagihan sebesar <strong class="text-danger" style="font-size: 1.1em;">${formattedRemaining}</strong>.</small>
+                            <strong class="d-block" style="color: #A94442">BELUM LUNAS!</strong>
+                            <small style="color: #50200C">Tamu memiliki sisa tagihan sebesar <strong style="color: #A94442; font-size: 1.1em;">${formattedRemaining}</strong>.</small>
                         </div>
                     </div>
                 `;

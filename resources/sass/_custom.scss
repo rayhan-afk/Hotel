@@ -36,6 +36,11 @@ body {
     line-height: 1.6;
     color: #334155;
     overflow-x: hidden;
+    
+    /* === UBAH INI === */
+    /* 140px adalah titik mulai Sidebar. 
+       Jadi konten akan sejajar garis atasnya dengan Sidebar */
+    padding-top: 140px; 
 }
 
 body.sidebar-layout {
@@ -3058,6 +3063,11 @@ tr.total-text {
 
 .table-custom thead {
     background-color: #F7F3E4 !important;
+    color: #50200C !important;
+}
+
+.table-custom thead th{
+    background-color: #C49A6C !important;
     color: #50200C !important;
 }
 

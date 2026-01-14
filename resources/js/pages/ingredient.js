@@ -2,6 +2,8 @@ $(function () {
     const currentRoute = window.location.pathname;
     if (!currentRoute.includes("ingredient")) return;
 
+    console.log("🚀 Ingredient JS Loaded - Fixed Version");
+
     // === TAMBAH CSS ANIMASI UNTUK WARNING ===
     const style = document.createElement("style");
     style.textContent = `
@@ -29,7 +31,6 @@ $(function () {
             background-color: transparent !important;
         }
         
-        /* Pastikan badge tidak terpengaruh style row */
         .low-stock-row .badge {
             color: inherit !important;
             text-shadow: none !important;
@@ -66,7 +67,6 @@ $(function () {
             75% { transform: translateX(-5px) rotate(-8deg); }
         }
         
-        /* Override DataTable striping */
         .low-stock-row.odd,
         .low-stock-row.even {
             background-color: #ff6b6b !important;
@@ -78,26 +78,23 @@ $(function () {
     `;
     document.head.appendChild(style);
 
-    // === FUNGSI UNTUK MEMUTAR SUARA WARNING (Multiple Methods) ===
+    // === FUNGSI UNTUK MEMUTAR SUARA WARNING ===
     let hasPlayedWarningSound = false;
     let audioContext = null;
 
     function playWarningSound() {
         console.log("🔊 Attempting to play warning sound...");
-
-        // Method 1: Web Audio API (Beep Sound)
+        
         try {
             if (!audioContext) {
                 audioContext = new (window.AudioContext ||
                     window.webkitAudioContext)();
             }
-
-            // Unlock audio context (required for some browsers)
-            if (audioContext.state === "suspended") {
+            
+            if (audioContext.state === 'suspended') {
                 audioContext.resume();
             }
-
-            // Create beep sequence
+            
             const beeps = [
                 { freq: 900, start: 0, duration: 0.15 },
                 { freq: 700, start: 0.25, duration: 0.15 },
@@ -135,8 +132,7 @@ $(function () {
         } catch (error) {
             console.error("❌ Web Audio API failed:", error);
         }
-
-        // Method 2: Fallback HTML5 Audio dengan online sound
+        
         setTimeout(() => {
             try {
                 const audio = new Audio(
@@ -152,8 +148,7 @@ $(function () {
             }
         }, 100);
     }
-
-    // Unlock audio on first user interaction
+    
     function unlockAudio() {
         if (audioContext && audioContext.state === "suspended") {
             audioContext.resume();
@@ -162,9 +157,68 @@ $(function () {
         document.removeEventListener("touchstart", unlockAudio);
         console.log("🔓 Audio context unlocked!");
     }
+    
+    document.addEventListener('click', unlockAudio);
+    document.addEventListener('touchstart', unlockAudio);
 
-    document.addEventListener("click", unlockAudio);
-    document.addEventListener("touchstart", unlockAudio);
+    // ✅ CRITICAL FIX: Gunakan ID modal yang BENAR (#ingredient-modal, bukan #main-modal)
+    const ingredientModal = new bootstrap.Modal(document.getElementById("ingredient-modal"));
+    const stockOpnameModal = new bootstrap.Modal(document.getElementById("modalStockOpname"));
+    const laporanModal = new bootstrap.Modal(document.getElementById("modalLaporanIngredients"));
+
+    console.log("✅ Modals initialized:", {
+        ingredient: $('#ingredient-modal').length > 0,
+        stockOpname: $('#modalStockOpname').length > 0,
+        laporan: $('#modalLaporanIngredients').length > 0
+    });
+
+    // ✅ Reset ingredient modal ketika ditutup
+    $('#ingredient-modal').on('hidden.bs.modal', function () {
+        console.log("🧹 Ingredient modal closed - resetting");
+        $(this).find('.modal-body').html('');
+        $(this).find('.modal-title').text('Form');
+        $('#btn-modal-save').off('click');
+    });
+
+    // ✅ CRITICAL: Handler Stock Opname Button
+    $('#btn-stock-opname').on('click', function(e) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        
+        console.log("📋 ========== STOCK OPNAME CLICKED ==========");
+        
+        // Tutup modal ingredient
+        ingredientModal.hide();
+        laporanModal.hide();
+        
+        // Tunggu, lalu buka Stock Opname
+        setTimeout(() => {
+            console.log("✅ Opening Stock Opname modal");
+            stockOpnameModal.show();
+        }, 400);
+        
+        return false;
+    });
+
+    // ✅ CRITICAL: Handler Laporan Button
+    $('#btn-laporan').on('click', function(e) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        
+        console.log("📄 ========== LAPORAN CLICKED ==========");
+        
+        // Tutup modal ingredient
+        ingredientModal.hide();
+        stockOpnameModal.hide();
+        
+        // Tunggu, lalu buka Laporan
+        setTimeout(() => {
+            console.log("✅ Opening Laporan modal");
+            laporanModal.show();
+        }, 400);
+        
+        return false;
+    });
 
     const datatable = $("#ingredient-table").DataTable({
         processing: true,
@@ -180,25 +234,18 @@ $(function () {
                 console.error("Error:", xhr);
             },
             dataSrc: function (json) {
-                // Cek apakah ada bahan dengan stok kritis
-                const lowStockItems = json.aaData.filter(
-                    (item) => item.is_low_stock
-                );
+                const lowStockItems = json.aaData.filter(item => item.is_low_stock);
                 const hasLowStock = lowStockItems.length > 0;
 
                 console.log("📊 Low stock items found:", lowStockItems.length);
-
-                // Main suara warning jika ada stok kritis
+                
                 if (hasLowStock && !hasPlayedWarningSound) {
                     console.log("🚨 Playing warning sound...");
                     playWarningSound();
                     hasPlayedWarningSound = true;
-
-                    // Show toast notification
-                    if (typeof Swal !== "undefined") {
-                        const itemNames = lowStockItems
-                            .map((item) => item.name)
-                            .join(", ");
+                    
+                    if (typeof Swal !== 'undefined') {
+                        const itemNames = lowStockItems.map(item => item.name).join(', ');
                         Swal.fire({
                             toast: true,
                             position: "top-end",
@@ -303,10 +350,9 @@ $(function () {
                 );
             }
         },
-        drawCallback: function () {
-            // Force apply styles after draw
-            $(".low-stock-row").each(function () {
-                $(this).css("background-color", "#ff6b6b");
+        drawCallback: function() {
+            $('.low-stock-row').each(function() {
+                $(this).css('background-color', '#ff6b6b');
             });
         },
         language: {
@@ -321,58 +367,30 @@ $(function () {
         datatable.ajax.reload();
     });
 
-    // ✅ PERUBAHAN UTAMA: Fungsi helper untuk get/create modal instance
-    function getMainModal() {
-        const modalEl = document.getElementById("main-modal");
-        let modal = bootstrap.Modal.getInstance(modalEl);
-
-        // Jika belum ada instance, buat baru
-        if (!modal) {
-            modal = new bootstrap.Modal(modalEl);
-            console.log("✅ Main modal instance created");
-        }
-
-        return modal;
-    }
-
-    // ✅ FIX 1: Reset modal ketika ditutup
-    $("#main-modal").on("hidden.bs.modal", function () {
-        $(".modal-body").html("");
-        $("#main-modal .modal-title").text("");
-        $(".is-invalid").removeClass("is-invalid");
-        $(".error").text("");
-        console.log("✅ Modal #main-modal direset");
-    });
-
+    // ✅ Handler Tambah Bahan Baku
     $("#add-button").on("click", async function () {
-        // ✅ FIX 2: Tutup modal lain + cleanup
-        $("#modalStockOpname").modal("hide");
-        $("#modalHistory").modal("hide");
-        $("#modalLaporanIngredients").modal("hide");
-
-        await new Promise((resolve) => setTimeout(resolve, 300));
-        $(".modal-backdrop").remove();
-        $("body").removeClass("modal-open").css("overflow", "");
-
+        console.log("➕ ========== ADD BUTTON CLICKED ==========");
+        
+        // Tutup modal lain
+        stockOpnameModal.hide();
+        laporanModal.hide();
+        
         $("#btn-modal-save").text("Simpan").attr("disabled", true);
         $('button[data-bs-dismiss="modal"]:not(.btn-close)').text("Batal");
         $('.btn-close[data-bs-dismiss="modal"]').text("");
 
-        $("#main-modal .modal-title").text("Tambah Bahan Baku");
-        $(".modal-body").html(
-            '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>'
-        );
-
-        // ✅ GUNAKAN getMainModal() bukan modal.show()
-        getMainModal().show();
-
+        $("#ingredient-modal .modal-title").text("Tambah Bahan Baku");
+        $("#ingredient-modal .modal-body").html('<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>');
+        
+        setTimeout(() => {
+            ingredientModal.show();
+        }, 400);
+        
         try {
             const response = await $.get("/ingredient/create");
-            $(".modal-body").html(response.view);
+            $("#ingredient-modal .modal-body").html(response.view);
         } catch (e) {
-            $(".modal-body").html(
-                '<div class="text-danger">Gagal memuat form.</div>'
-            );
+            $("#ingredient-modal .modal-body").html('<div class="text-danger">Gagal memuat form.</div>');
         }
 
         $("#btn-modal-save").text("Simpan").attr("disabled", false);
@@ -380,36 +398,31 @@ $(function () {
         $('.btn-close[data-bs-dismiss="modal"]').text("");
     });
 
+    // ✅ Handler Edit Bahan Baku
     $(document).on("click", '[data-action="edit"]', async function () {
-        // ✅ FIX 3: Tutup modal lain + cleanup
-        $("#modalStockOpname").modal("hide");
-        $("#modalHistory").modal("hide");
-        $("#modalLaporanIngredients").modal("hide");
-
-        await new Promise((resolve) => setTimeout(resolve, 300));
-        $(".modal-backdrop").remove();
-        $("body").removeClass("modal-open").css("overflow", "");
-
+        console.log("✏️ ========== EDIT BUTTON CLICKED ==========");
+        
+        // Tutup modal lain
+        stockOpnameModal.hide();
+        laporanModal.hide();
+        
         $("#btn-modal-save").text("Simpan").attr("disabled", true);
         $('button[data-bs-dismiss="modal"]:not(.btn-close)').text("Batal");
         $('.btn-close[data-bs-dismiss="modal"]').text("");
 
         const id = $(this).data("id");
-        $("#main-modal .modal-title").text("Edit Bahan Baku");
-        $(".modal-body").html(
-            '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>'
-        );
-
-        // ✅ GUNAKAN getMainModal()
-        getMainModal().show();
-
+        $("#ingredient-modal .modal-title").text("Edit Bahan Baku");
+        $("#ingredient-modal .modal-body").html('<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>');
+        
+        setTimeout(() => {
+            ingredientModal.show();
+        }, 400);
+        
         try {
             const response = await $.get(`/ingredient/${id}/edit`);
-            $(".modal-body").html(response.view);
+            $("#ingredient-modal .modal-body").html(response.view);
         } catch (e) {
-            $(".modal-body").html(
-                '<div class="text-danger">Gagal memuat data.</div>'
-            );
+            $("#ingredient-modal .modal-body").html('<div class="text-danger">Gagal memuat data.</div>');
         }
 
         $("#btn-modal-save").text("Simpan").attr("disabled", false);
@@ -539,19 +552,18 @@ $(function () {
                 data: $(this).serialize(),
             });
 
-            // ✅ GUNAKAN getMainModal()
-            getMainModal().hide();
-
+            ingredientModal.hide();
+            
             Swal.fire({
                 icon: "success",
                 title: "Berhasil!",
                 text: response.message,
                 timer: 1500,
                 showConfirmButton: false,
-                iconColor: "#50200C",
+                iconColor: '#50200C',
                 customClass: {
-                    title: "swal-title-brown",
-                },
+                    title: 'swal-title-brown'
+                }
             });
             hasPlayedWarningSound = false;
             datatable.ajax.reload();
@@ -567,10 +579,10 @@ $(function () {
                     icon: "error",
                     title: "Error",
                     text: "Terjadi kesalahan!",
-                    iconColor: "#50200C",
+                    iconColor: '#50200C',
                     customClass: {
-                        title: "swal-title-brown",
-                    },
+                        title: 'swal-title-brown'
+                    }
                 });
             }
         } finally {
@@ -605,10 +617,10 @@ $(function () {
                         title: "Terhapus!",
                         text: "Data bahan baku berhasil dihapus.",
                         icon: "success",
-                        iconColor: "#50200C",
+                        iconColor: '#50200C',
                         customClass: {
-                            title: "swal-title-brown",
-                        },
+                            title: 'swal-title-brown'
+                        }
                     });
                     hasPlayedWarningSound = false;
                     datatable.ajax.reload();
@@ -617,10 +629,10 @@ $(function () {
                         title: "Gagal",
                         text: "Gagal menghapus data.",
                         icon: "error",
-                        iconColor: "#50200C",
+                        iconColor: '#50200C',
                         customClass: {
-                            title: "swal-title-brown",
-                        },
+                            title: 'swal-title-brown'
+                        }
                     });
                 }
             }

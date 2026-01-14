@@ -12,11 +12,52 @@
     @vite('resources/sass/app.scss')
     <title>@yield('title') - Hotel Sawunggaling</title>
     @yield('head')
+
+    {{-- === STYLE GLOBAL PERBAIKAN LAYOUT === --}}
+    <style>
+        /* 1. PELINDUNG CELAH ATAS (Warna Cream) */
+        .top-shield {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 25px;
+            background-color: #F7F3E4; /* KEMBALI KE CREAM */
+            z-index: 1000;
+        }
+
+        /* 2. PENGATURAN WRAPPER KONTEN */
+        #page-content-wrapper {
+            /* Jarak Atas (Biar sejajar Sidebar & ga ketutup Navbar) */
+            padding-top: 140px; 
+
+            /* Jarak Kiri (Diperkecil biar ga terlalu ketengah) */
+            /* Rumus: Lebar Sidebar (280px) + Margin (20px) + Gap (20px) = 320px */
+            margin-left: 25px; 
+
+            transition: all 0.3s ease;
+            
+            /* Background Cream */
+            min-height: 100vh;
+            background-color: #F7F3E4; 
+        }
+
+        /* 3. RESPONSIVE (Tampilan HP) */
+        @media (max-width: 992px) {
+            #page-content-wrapper {
+                margin-left: 0 !important;
+                padding-top: 120px !important;
+            }
+        }
+    </style>
+    {{-- =============================================== --}}
     
 </head>
 
-<body class="sidebar-layout">
+{{-- BODY BACKGROUND JUGA DIUBAH KE CREAM --}}
+<body class="sidebar-layout" style="background-color: #F7F3E4;">
     <main>
+        {{-- Modal Utama --}}
         <div class="modal fade" id="main-modal" tabindex="-1" aria-labelledby="main-modalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content border-0 shadow-lg" style="background-color: #F7F3E4; border-radius: 12px;">
@@ -35,6 +76,9 @@
             </div>
         </div>
 
+        {{-- Div Pelindung Celah Atas --}}
+        <div class="top-shield"></div>
+
         @include('template.include._mobile-header')
 
         @include('template.include._navbar-desktop')
@@ -42,6 +86,7 @@
         <div class="d-flex vh-100" id="wrapper">
             @include('template.include._sidebar')
 
+            {{-- Wrapper Konten --}}
             <div id="page-content-wrapper" class="flex-fill">
                 <div class="p-3 h-100">
                     @yield('content')
@@ -89,7 +134,6 @@
                 const targetElement = document.querySelector(targetId);
                 const arrow = toggle.querySelector('.nav-arrow');
 
-                // Set initial state based on whether submenu is shown (server-side rendered)
                 if (targetElement && targetElement.classList.contains('show')) {
                     toggle.setAttribute('aria-expanded', 'true');
                     if (arrow) {
@@ -102,20 +146,14 @@
                     }
                 }
 
-                // Handle click events for manual toggle
                 toggle.addEventListener('click', function(e) {
                     e.preventDefault();
-
-                    // Get or create Bootstrap Collapse instance
                     const collapse = bootstrap.Collapse.getOrCreateInstance(targetElement, {
                         toggle: false
                     });
-
-                    // Toggle the collapse
                     collapse.toggle();
                 });
 
-                // Listen to Bootstrap collapse events to update aria and arrow
                 targetElement.addEventListener('shown.bs.collapse', function() {
                     toggle.setAttribute('aria-expanded', 'true');
                     if (arrow) {
@@ -131,7 +169,6 @@
                 });
             });
 
-            // Auto-close mobile menu when clicking nav links
             const mobileNavLinks = document.querySelectorAll('#mobileOffcanvas .nav-item:not(.dropdown-nav), #mobileOffcanvas .nav-subitem');
             const offcanvasElement = document.getElementById('mobileOffcanvas');
 

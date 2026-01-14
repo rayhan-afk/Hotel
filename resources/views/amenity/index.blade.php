@@ -133,8 +133,8 @@
     <div class="modal-dialog modal-xl">
         <div class="modal-content border-0 shadow-lg">
             
-            <div class="modal-header border-bottom-0" style="background-color: #fdfbf7;">
-                <h5 class="modal-title fw-bold" style="color: #5c3a21;">
+            <div class="modal-header border-bottom-0" style="background-color: #F7F3E4; color: #50200C;">
+                <h5 class="modal-title fw-bold">
                     <i class="fas fa-clipboard-list me-2"></i> Form Stock Opname Amenities
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -142,10 +142,10 @@
             
             <form id="form-opname-amenity">
                 @csrf
-                <div class="modal-body p-4" style="background-color: #fff;">
+                <div class="modal-body p-4" style="background-color: #F7F3E4; color: #50200C;">
                     
                     <div class="alert border-0 d-flex align-items-center mb-4" role="alert" 
-                         style="background-color: #e3f2fd; color: #0d47a1; border-radius: 8px;">
+                         style="background-color: #FFFF; color: #50200C; border-radius: 8px;">
                         <i class="fas fa-info-circle fs-5 me-3"></i>
                         <div>
                             <strong>Instruksi:</strong> Masukkan jumlah stok fisik (real) yang ada di gudang/kamar. Sistem akan otomatis menghitung selisih.
@@ -153,8 +153,8 @@
                     </div>
 
                     <div class="table-responsive">
-                        <table class="table align-middle">
-                            <thead class="text-center" style="border-bottom: 2px solid #f0f0f0;">
+                        <table class="table table-custom">
+                            <thead class="text-center" style="border-bottom: 2px solid;">
                                 <tr>
                                     <th class="py-3 text-start" style="color: #5c3a21; width: 25%;">Nama Amenities</th>
                                     <th class="py-3" style="color: #5c3a21; width: 15%;">Stok Sistem</th>
@@ -164,17 +164,17 @@
                             </thead>
                             <tbody>
                                 @foreach($amenities as $item)
-                                <tr style="border-bottom: 1px solid #f8f9fa;">
-                                    <td class="py-3">
-                                        <span class="fw-bold text-dark">{{ $item->nama_barang }}</span>
-                                        <small class="text-muted ms-1">({{ $item->satuan }})</small>
+                                <tr style="border-bottom: 1px solid; background-color: #f7F3E4; color: #50200C;">
+                                    <td class="py-3" style="background-color: #f7F3E4; color: #50200C;">
+                                        <span class="fw-bold">{{ $item->nama_barang }}</span>
+                                        <small class="ms-1">({{ $item->satuan }})</small>
                                     </td>
 
-                                    <td class="text-center py-3">
+                                    <td class="text-center py-3" style="background-color: #f7F3E4; color: #50200C;">
                                         <span class="fw-bold fs-6">{{ $item->stok }}</span>
                                     </td>
 
-                                    <td class="py-3">
+                                    <td class="py-3" style="background-color: #f7F3E4; color: #50200C;">
                                         <input type="number" 
                                                step="1" 
                                                name="stocks[{{ $item->id }}]" 
@@ -184,7 +184,7 @@
                                                style="border-color: #d4a373; color: #5c3a21;">
                                     </td>
 
-                                    <td class="py-3">
+                                    <td class="py-3" style="background-color: #f7F3E4; color: #50200C;">
                                         <input type="text" 
                                                name="notes[{{ $item->id }}]" 
                                                class="form-control" 
@@ -198,7 +198,7 @@
                     </div>
                 </div>
 
-                <div class="modal-footer border-top-0 pt-0 pb-4 pe-4 bg-white">
+                <div class="modal-footer border-top-0 pt-0 pb-4 pe-4" style="background-color: #f7F3E4">
                     <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal" style="background-color: #d6cfc7; border: none; color: #5c3a21;">Batal</button>
                     <button type="submit" class="btn px-4 text-white" id="btn-save-opname" style="background-color: #5c3a21;">
                         <i class="fas fa-save me-2"></i> Simpan Penyesuaian
@@ -211,7 +211,7 @@
 {{-- Modal Kosong untuk Wadah History --}}
 <div class="modal fade" id="modalHistoryAmenity" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg"> 
-        <div class="modal-content">
+        <div class="modal-content" style="background-color: #f7F3E4; color: #50200C;">
             <div class="modal-header">
                 <h5 class="modal-title">Riwayat Stock Opname Amenities</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -225,19 +225,19 @@
 {{-- MODAL PILIH TANGGAL LAPORAN --}}
 <div class="modal fade" id="modalLaporanAmenities" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
+        <div class="modal-content" style="background-color: #F7F3E4; color: #50200C;">
             
-            <div class="modal-header" style="background-color: #5c3a21; color: white;">
+            <div class="modal-header" style="background-color: #F7F3E4; color: #50200C;">
                 <h5 class="modal-title">
                     <i class="fas fa-print me-2"></i>Cetak Laporan Amenities
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-brown" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             {{-- Form mengarah ke Route PDF --}}
             <form action="{{ route('laporan.amenities.pdf') }}" method="GET" target="_blank">
                 <div class="modal-body">
-                    <p class="text-muted">Pilih periode laporan yang ingin dicetak:</p>
+                    <p class="" style="color: #50200C">Pilih periode laporan yang ingin dicetak:</p>
                     
                     <div class="mb-3">
                         <label class="form-label fw-bold">Dari Tanggal</label>

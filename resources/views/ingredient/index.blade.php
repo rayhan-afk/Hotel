@@ -17,8 +17,8 @@
             <i class="fas fa-plus me-2"></i>Tambah Bahan Baku
         </button>
 
-        {{-- Tombol 2: Stock Opname (Pakai class add-room-btn) --}}
-        <button type="button" class="add-room-btn" data-bs-toggle="modal" data-bs-target="#modalStockOpname">
+        {{-- ✅ FIX: Tombol 2: Stock Opname - HAPUS data-bs-toggle dan data-bs-target --}}
+        <button id="btn-stock-opname" type="button" class="add-room-btn">
             <i class="fas fa-clipboard-check me-2"></i> Stock Opname
         </button>
 
@@ -27,7 +27,8 @@
             <i class="fas fa-history me-2"></i> Riwayat Opname
         </button>
 
-        <button type="button" class="add-room-btn" data-bs-toggle="modal" data-bs-target="#modalLaporanIngredients">
+        {{-- ✅ FIX: Tombol 4: Laporan - HAPUS data-bs-toggle dan data-bs-target --}}
+        <button id="btn-laporan" type="button" class="add-room-btn">
             <i class="fas fa-file-pdf me-2"></i> Laporan
         </button>
         
@@ -36,7 +37,7 @@
     {{-- 2. STATUS STOK WIDGET (Ubah jadi col-md-5 biar seimbang) --}}
     <div class="col-md-5 col-12 d-flex justify-content-md-end justify-content-start">
         <div class="stock-status-compact d-flex align-items-center flex-wrap" 
-             style="background-color: #F7F3E4; border: 1px solid #e0e0e0; padding: 10px 20px; border-radius: 12px; gap: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);"></div>
+             style="background-color: #F7F3E4; border: 1px solid #e0e0e0; padding: 10px 20px; border-radius: 12px; gap: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
                 {{-- Label --}}
                 <div style="font-size: 14px; color: #50200C; font-weight: bold; white-space: nowrap;">
                     <i class="fas fa-chart-pie me-2"></i>Status Stok:
@@ -137,17 +138,16 @@
     </div>
 </div>
 
-{{-- MODAL --}}
-<div class="modal fade" id="main-modal" tabindex="-1" aria-hidden="true">
+{{-- ✅ MODAL INGREDIENT - ID DIGANTI JADI ingredient-modal BIAR GAK BENTROK --}}
+<div class="modal fade" id="ingredient-modal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="mainModalLabel">Form</h5>
+                <h5 class="modal-title" id="ingredientModalLabel">Form</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body"></div>
             <div class="modal-footer">
-                {{-- Updated Buttons --}}
                 <button type="button" class="btn btn-modal-close" data-bs-dismiss="modal">Batal</button>
                 <button type="button" class="btn btn-modal-save" id="btn-modal-save">Simpan</button>
             </div>
@@ -164,14 +164,14 @@
             </div>
             <form action="{{ route('ingredients.opname') }}" method="POST">
                 @csrf
-                <div class="modal-body">
-                    <div class="alert alert-info">
+                <div class="modal-body" style="background-color: #F7F3E4">
+                    <div class="alert" style="background-color: #FFFF; color: #50200C">
                         <i class="fas fa-info-circle me-1"></i> Masukkan jumlah stok fisik yang real. Sistem akan otomatis menghitung selisih.
                     </div>
                     
                     <div class="table-responsive">
-                        <table class="table table-bordered table-sm">
-                            <thead class="text-center" style="background-color: #D4A373; color: white;">
+                        <table class="table table-custom table-sm">
+                            <thead class="text-center">
                                 <tr>
                                     <th>Nama Bahan</th>
                                     <th width="15%">Stok Sistem</th>
@@ -182,20 +182,20 @@
                             <tbody>
                                 @foreach($ingredients as $item)
                                 <tr>
-                                    <td class="align-middle">
-                                        {{ $item->name }} <small class="text-muted">({{ $item->unit }})</small>
+                                    <td class="align-middle" style="background-color: #F7F3E4; color: #50200C;">
+                                        {{ $item->name }} <small class="">({{ $item->unit }})</small>
                                         <input type="hidden" name="items[{{ $loop->index }}][id]" value="{{ $item->id }}">
                                         <input type="hidden" name="items[{{ $loop->index }}][system_stock]" value="{{ $item->stock }}">
                                     </td>
-                                    <td class="align-middle text-center bg-light">
+                                    <td class="align-middle text-center" style="background-color: #F7F3E4; color: #50200C;">
                                         <strong>{{ $item->stock }}</strong>
                                     </td>
-                                    <td>
+                                    <td style="background-color: #F7F3E4; color: #50200C;">
                                         <input type="number" step="0.01" name="items[{{ $loop->index }}][physical_stock]" 
                                                class="form-control form-control-sm text-center border-warning" 
-                                               value="{{ $item->stock }}" required>
+                                               value="{{ $item->stock }}" required> 
                                     </td>
-                                    <td>
+                                    <td style="background-color: #F7F3E4; color: #50200C;">
                                         <input type="text" name="items[{{ $loop->index }}][notes]" 
                                                class="form-control form-control-sm" placeholder="Contoh: Basi / Hilang">
                                     </td>
@@ -205,7 +205,7 @@
                         </table>
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer" style="background-color: #F7F3E4">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
                     <button type="submit" class="btn btn-primary" style="background-color: #50200C;">
                         <i class="fas fa-save me-2"></i>Simpan Penyesuaian
@@ -215,9 +215,10 @@
         </div>
     </div>
 </div>
+
 <div class="modal fade" id="modalHistory" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg"> 
-        <div class="modal-content">
+        <div class="modal-content" style="background-color: #F7F3E4; color: #50200C;">
             <div class="modal-header">
                 <h5 class="modal-title">Riwayat Stock Opname</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -228,18 +229,18 @@
         </div>
     </div>
 </div>
+
 <div class="modal fade" id="modalLaporanIngredients" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header" style="background-color: #5c3a21; color: white;">
+            <div class="modal-header" style="background-color: #F7F3E4; color: #50200C;">
                 <h5 class="modal-title">Cetak Laporan Bahan Baku</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-brown" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
-            {{-- PENTING: Action Form harus ke route yang baru --}}
             <form action="{{ route('laporan.ingredients.pdf') }}" method="GET" target="_blank">
                 
-                <div class="modal-body">
+                <div class="modal-body" style="background-color: #F7F3E4; color: #50200C;">
                     <div class="mb-3">
                         <label class="form-label">Dari Tanggal</label>
                         <input type="date" name="start_date" class="form-control" value="{{ date('Y-m-01') }}" required>
@@ -250,7 +251,7 @@
                     </div>
                 </div>
 
-                <div class="modal-footer">
+                <div class="modal-footer" style="background-color: #F7F3E4;">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
                     <button type="submit" class="btn btn-primary" style="background-color: #5c3a21; border: none;">
                         Download PDF
@@ -266,25 +267,20 @@
 @push('scripts')
 <script>
     function showOpnameHistory() {
-        // Tampilkan modal
         $('#modalHistory').modal('show');
         
-        // Tampilkan loading dulu
         $('#modalHistoryBody').html('<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div><br>Sedang memuat data...</div>');
 
-        // Panggil Controller via AJAX
         $.ajax({
             url: "{{ route('ingredients.history') }}",
             type: 'GET',
             success: function(response) {
-                // Masukkan hasil tabel ke dalam body modal
                 $('#modalHistoryBody').html(response.view);
             },
             error: function(xhr) {
-                $('#modalHistoryBody').html('<p class="text-danger text-center">Gagal memuat riwayat.</p>');
+                $('#modalHistoryBody').html('<p class="text-center" style="color: #50200C">Gagal memuat riwayat.</p>');
             }
         });
     }
 </script>
 @endpush
-
